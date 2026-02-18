@@ -372,6 +372,31 @@
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
     </div>
     <button onclick={locateMe} class="absolute bottom-24 right-4 z-10 p-2.5 bg-white/90 backdrop-blur border border-slate-200 rounded-sm shadow-lg text-slate-600 hover:text-blue-600 active:scale-95 transition-all" title="Locate Me">{@html icons.locate}</button>
+
+    <!-- Imperial Logo: Roman Coin -->
+    <div class="absolute bottom-4 right-4 z-20 pointer-events-none select-none drop-shadow-2xl">
+        <svg width="64" height="64" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="coinGrad" cx="50%" cy="50%" r="50%" fx="35%" fy="35%">
+                    <stop offset="0%" style="stop-color:#f1f5f9;stop-opacity:1" />
+                    <stop offset="40%" style="stop-color:#cbd5e1;stop-opacity:1" />
+                    <stop offset="85%" style="stop-color:#64748b;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+                </radialGradient>
+                <filter id="metalRelief">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+                    <feSpecularLighting in="blur" surfaceScale="5" specularConstant="0.8" specularExponent="20" lighting-color="#ffffff" result="specOut">
+                        <fePointLight x="-5000" y="-10000" z="20000" />
+                    </feSpecularLighting>
+                    <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
+                    <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" />
+                </filter>
+            </defs>
+            <circle cx="128" cy="128" r="120" fill="url(#coinGrad)" stroke="#475569" stroke-width="2" />
+            <path d="M128,40 c-30,0 -50,25 -50,60 c0,40 20,60 50,85 c5,5 15,10 15,25 l0,15 l35,0 l0,-20 c0,-15 -10,-25 -20,-35 c-20,-20 -30,-35 -30,-70 c0,-25 15,-40 35,-40 c20,0 35,15 35,40 c0,35 -10,50 -30,70" fill="#94a3b8" filter="url(#metalRelief)" opacity="0.9" />
+            <circle cx="128" cy="128" r="115" fill="none" stroke="#ffffff" stroke-width="1" stroke-dasharray="2,4" opacity="0.3" />
+        </svg>
+    </div>
 </div>
 
 <style>
