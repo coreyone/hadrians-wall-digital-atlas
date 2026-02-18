@@ -27,7 +27,14 @@
     let searchQuery = $state('');
     let isHeadingUp = $state(false);
     let mapComponent: any = $state();
+    let isMobile = $state(false);
     
+    onMount(() => {
+        const mql = window.matchMedia('(max-width: 768px)');
+        isMobile = mql.matches;
+        mql.addEventListener('change', (e) => isMobile = e.matches);
+    });
+
     type AppMode = 'plan' | 'explore';
     let mode = $state<AppMode>('plan');
     let selectedStageId = $state<number | null>(null);
@@ -99,7 +106,7 @@
 </svelte:head>
 
 <div class="flex h-screen w-full overflow-hidden bg-white text-slate-900 font-sans antialiased text-[13px]">
-    <aside class="{isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-20 w-[300px] bg-white border-r border-slate-200 transition-transform duration-200 md:relative md:translate-x-0 flex flex-col shadow-sm">
+    <aside class="{isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 w-full md:w-[300px] bg-white/95 backdrop-blur-xl border-r border-slate-200 transition-transform duration-300 md:relative md:translate-x-0 flex flex-col shadow-2xl">
         <header class="p-4 border-b border-slate-100 flex flex-col gap-3">
             <div class="flex items-center justify-between">
                 <span class="font-bold text-slate-900 tracking-tight flex items-center gap-2 uppercase text-[11px]"><div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>Hadrian's Wall Path</span>
@@ -332,7 +339,7 @@
 
     <main class="flex-1 relative bg-slate-100 overflow-hidden">
         <div class="absolute inset-0">
-            <Map bind:this={mapComponent} initialPOIs={data.initialPOIs} bind:selectedPOI {selectedStageId} {mapStyle} {selectedRoute} {isHeadingUp} onPoiSelect={handlePOIClick} />
+            <Map bind:this={mapComponent} initialPOIs={data.initialPOIs} bind:selectedPOI {selectedStageId} {mapStyle} {selectedRoute} {isHeadingUp} {isMobile} onPoiSelect={handlePOIClick} />
         </div>
         <div class="absolute top-4 right-4 z-30 flex flex-col items-end gap-2">
             <!-- Navigation Instruments -->

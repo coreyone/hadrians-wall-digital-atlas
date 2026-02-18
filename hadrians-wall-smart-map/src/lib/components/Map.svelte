@@ -14,6 +14,7 @@
         mapStyle?: string;
         selectedRoute?: string;
         isHeadingUp?: boolean;
+        isMobile?: boolean;
         onPoiSelect?: (poi: any) => void;
     }
 
@@ -24,6 +25,7 @@
         mapStyle = 'topo', 
         selectedRoute = 'osm',
         isHeadingUp = false,
+        isMobile = false,
         onPoiSelect 
     }: Props = $props();
 
@@ -129,7 +131,10 @@
                     const bounds = new maplibregl.LngLatBounds();
                     bounds.extend(hubs[fromIdx].coords as [number, number]);
                     bounds.extend(hubs[toIdx].coords as [number, number]);
-                    map.fitBounds(bounds, { padding: { top: 100, bottom: 100, left: 450, right: 100 }, duration: 1500 });
+                    map.fitBounds(bounds, { 
+                        padding: isMobile ? 40 : { top: 100, bottom: 100, left: 450, right: 100 }, 
+                        duration: 1500 
+                    });
                 }
             }
         } else if (map && !selectedStageId) {
@@ -301,8 +306,8 @@
             // Flight to Once Brewed as the strategic center of the full route
             map.flyTo({
                 center: onceBrewed,
-                zoom: 9.8,
-                padding: { top: 50, bottom: 50, left: 450, right: 50 },
+                zoom: isMobile ? 9.0 : 9.8,
+                padding: isMobile ? { top: 20, bottom: 20, left: 20, right: 20 } : { top: 50, bottom: 50, left: 450, right: 50 },
                 duration: 2500,
                 essential: true,
                 curve: 1.2,
@@ -458,7 +463,12 @@
         if (!map) return;
         const coords = poi.coords || [poi.lon, poi.lat];
         if (coords && coords[0] && coords[1]) {
-            map.flyTo({ center: coords as [number, number], zoom: 15, duration: 2000 });
+            map.flyTo({ 
+                center: coords as [number, number], 
+                zoom: 15, 
+                padding: isMobile ? 40 : { top: 50, bottom: 50, left: 450, right: 50 },
+                duration: 2000 
+            });
         }
     }
 </script>
