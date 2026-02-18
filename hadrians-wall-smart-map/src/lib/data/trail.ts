@@ -314,19 +314,127 @@ export const overnightStops = [
     { name: "Corbridge", coords: [-2.0183, 54.9746], type: "hub" }
 ];
 
-export const englishHeritageSites = [
-    { name: "Carlisle Castle", coords: [-2.9419, 54.8973], pageid: 856932, hours: "10:00 - 17:00", visitDay: "Sun, Apr 12", staffed: true, intel: "Built 1092 by William Rufus. Prison for Mary, Queen of Scots.", fryeIntel: "An evolution of the frontier: where Roman stone met medieval blood. Frye notes that few civilized people have ever lived without such barriers." },
-    { name: "Tullie House Museum", coords: [-2.9400, 54.8960], pageid: 312242, hours: "10:00 - 17:00", visitDay: "Sun, Apr 12", staffed: true, intel: "Jacobean mansion detailing Roman occupancy and Border Reivers." },
-    { name: "Lanercost Priory", coords: [-2.6949, 54.9662], pageid: 967234, hours: "10:00 - 17:00", visitDay: "Sun, Apr 12", staffed: true, intel: "Founded 1165. Built from stone taken from Hadrian's Wall." },
-    { name: "Birdoswald Roman Fort", coords: [-2.6023, 54.9894], pageid: 2143239, hours: "10:00 - 17:00", visitDay: "Mon, Apr 13", staffed: true, intel: "Known as Banna ('spur'). Commanding position overlooking meander of River Irthing.", fryeIntel: "Frye reminds us that Hadrian was the first to build a wall 'to separate the barbarians and the Romans.' Banna was a vital cog in that machine." },
-    { name: "Roman Army Museum", coords: [-2.5130, 54.9910], pageid: 41263032, hours: "10:00 - 17:00", visitDay: "Tue, Apr 14", staffed: true, intel: "Experience life on the front line. Exclusive 3D Edge of Empire film." },
-    { name: "Walltown Crags", coords: [-2.5061, 54.9927], pageid: 41263032, hours: "Dawn - Dusk", visitDay: "Tue, Apr 14", staffed: false, intel: "One of the highest standing sections of the Wall.", fryeIntel: "The highest drama of the frontier. To Frye, these stones represent the attempt to create a safe space where civilization could flourish." },
+    { 
+        name: "Carlisle Castle", 
+        coords: [-2.9419, 54.8973], 
+        pageid: 856932, 
+        hours: "10:00 - 17:00", 
+        visitDay: "Sun, Apr 12", 
+        staffed: true, 
+        intel: "Built 1092 by William Rufus. Prison for Mary, Queen of Scots.",
+        fryeIntel: "An evolution of the frontier: where Roman stone met medieval blood. Frye notes that few civilized people have ever lived without such barriers.",
+        rickStevesIntel: "Carlisle serves as a convenient base for exploring the western sections of the wall."
+    },
+    { 
+        name: "Tullie House Museum", 
+        coords: [-2.9400, 54.8960], 
+        pageid: 312242, 
+        hours: "10:00 - 17:00", 
+        visitDay: "Sun, Apr 12", 
+        staffed: true, 
+        intel: "Jacobean mansion detailing Roman occupancy and Border Reivers.",
+        rickStevesIntel: "A surprisingly good museum with particularly praised Roman exhibits."
+    },
+    { 
+        name: "Lanercost Priory", 
+        coords: [-2.6949, 54.9662], 
+        pageid: 967234, 
+        hours: "10:00 - 17:00", 
+        visitDay: "Sun, Apr 12", 
+        staffed: true, 
+        intel: "Founded 1165. Built from stone taken from Hadrian's Wall." 
+    },
+    { 
+        name: "Birdoswald Roman Fort", 
+        coords: [-2.6023, 54.9894], 
+        pageid: 2143239, 
+        hours: "10:00 - 17:00", 
+        visitDay: "Mon, Apr 13", 
+        staffed: true, 
+        intel: "Known as Banna ('spur'). Commanding position overlooking meander of River Irthing.",
+        fryeIntel: "Frye reminds us that Hadrian was the first to build a wall 'to separate the barbarians and the Romans.' Banna was a vital cog in that machine.",
+        rickStevesIntel: "Birdoswald boasts the longest surviving stretch of the wall and is notably family-friendly."
+    },
+    { 
+        name: "Roman Army Museum", 
+        coords: [-2.5130, 54.9910], 
+        pageid: 41263032, 
+        hours: "10:00 - 17:00", 
+        visitDay: "Tue, Apr 14", 
+        staffed: true, 
+        intel: "Experience life on the front line. Exclusive 3D Edge of Empire film.",
+        rickStevesIntel: "Part of the essential six-mile central stretch that defines the Hadrian's Wall experience."
+    },
+    { 
+        name: "Walltown Crags", 
+        coords: [-2.5061, 54.9927], 
+        pageid: 41263032, 
+        hours: "Dawn - Dusk", 
+        visitDay: "Tue, Apr 14", 
+        staffed: false, 
+        intel: "One of the highest standing sections of the Wall.",
+        fryeIntel: "The highest drama of the frontier. To Frye, these stones represent the attempt to create a safe space where civilization could flourish.",
+        rickStevesIntel: "One of the highest standing and most dramatic sections of the frontier."
+    },
     { name: "Great Chesters (Aesica)", coords: [-2.4640, 54.9950], pageid: 18177794, hours: "Dawn - Dusk", visitDay: "Tue, Apr 14", staffed: false },
-    { name: "Housesteads Roman Fort", coords: [-2.3310, 55.0130], pageid: 1825118, hours: "10:00 - 17:00", visitDay: "Thu, Apr 16", staffed: true, intel: "Vercovicium. Stone AD 124. Best preserved Roman latrines in Britain.", fryeIntel: "The definitive 'monument to Roman supremacy.' Frye sees this not just as a border control, but as a statement of total military dominance over the wild north." },
-    { name: "Carrawburgh (Temple of Mithras)", coords: [-2.2230, 55.0360], pageid: 12246314, hours: "Dawn - Dusk", visitDay: "Wed, Apr 15", special: "mithras", staffed: false, intel: "Brocolitia. Built AD 200 by First Cohort of Batavians.", fryeIntel: "Where the blood of the cult met the brick of the wall. Rituals here were the spiritual glue for the men holding the civilized line." },
-    { name: "Chesters Roman Fort", coords: [-2.1390, 55.0260], pageid: 8768992, hours: "10:00 - 17:00", visitDay: "Thu, Apr 16", staffed: true, intel: "Cilurnum. Most complete Roman cavalry fort in Britain. AD 123.", fryeIntel: "The technological peak of the barrier. A cavalry hub designed to project Roman power far beyond the stone itself." },
-    { name: "Corbridge Roman Town", coords: [-2.0170, 54.9750], pageid: 373397, hours: "10:00 - 17:00", visitDay: "Sat, Apr 18", staffed: true, intel: "Major supply and industrial town. Granaries still standing.", fryeIntel: "The reward for the wall: a thriving industrial hub protected by the blood and brick of the northern frontier." }
+    { 
+        name: "Housesteads Roman Fort", 
+        coords: [-2.3310, 55.0130], 
+        pageid: 1825118, 
+        hours: "10:00 - 17:00", 
+        visitDay: "Thu, Apr 16", 
+        staffed: true, 
+        intel: "Vercovicium. Stone AD 124. Best preserved Roman latrines in Britain.",
+        fryeIntel: "The definitive 'monument to Roman supremacy.' Frye sees this not just as a border control, but as a statement of total military dominance over the wild north.",
+        rickStevesIntel: "A particularly well-preserved segment and a 'must-see'. The barracks and latrines illustrate daily Roman life vividly."
+    },
+    { 
+        name: "Carrawburgh (Temple of Mithras)", 
+        coords: [-2.2230, 55.0360], 
+        pageid: 12246314, 
+        hours: "Dawn - Dusk", 
+        visitDay: "Wed, Apr 15", 
+        special: "mithras", 
+        staffed: false, 
+        intel: "Brocolitia. Built AD 200 by First Cohort of Batavians.",
+        fryeIntel: "Where the blood of the cult met the brick of the wall. Rituals here were the spiritual glue for the men holding the civilized line."
+    },
+    { 
+        name: "Chesters Roman Fort", 
+        coords: [-2.1390, 55.0260], 
+        pageid: 8768992, 
+        hours: "10:00 - 17:00", 
+        visitDay: "Thu, Apr 16", 
+        staffed: true, 
+        intel: "Cilurnum. Most complete Roman cavalry fort in Britain. AD 123.",
+        fryeIntel: "The technological peak of the barrier. A cavalry hub designed to project Roman power far beyond the stone itself.",
+        rickStevesIntel: "Features the best remains of a Roman bath house and some of the best-preserved buildings along the entire Wall."
+    },
+    { 
+        name: "Corbridge Roman Town", 
+        coords: [-2.0170, 54.9750], 
+        pageid: 373397, 
+        hours: "10:00 - 17:00", 
+        visitDay: "Sat, Apr 18", 
+        staffed: true, 
+        intel: "Major supply and industrial town. Granaries still standing.",
+        fryeIntel: "The reward for the wall: a thriving industrial hub protected by the blood and brick of the northern frontier.",
+        rickStevesIntel: "A supply fort with massive granaries in a very pretty, large village on the River Tyne."
+    },
+    {
+        name: "Vindolanda",
+        coords: [-2.3608, 54.9911],
+        pageid: 373397, 
+        hours: "10:00 - 17:00",
+        visitDay: "Wed, Apr 15",
+        staffed: true,
+        intel: "Active excavation. Famous writing tablets detail daily Roman life.",
+        url: "https://en.wikipedia.org/wiki/Vindolanda",
+        fryeIntel: "The most human frontier site. Writing tablets here are the closest thing we have to hearing the voices of the people who lived on the edge of the world.",
+        rickStevesIntel: "A highlight and 'not to be missed'. Features an excellent small museum with shoes and letters revealing that even Roman women could write Latin."
+    }
 ];
+
 
 export const hospitalitySites = [
     { 

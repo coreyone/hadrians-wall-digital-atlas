@@ -20,6 +20,7 @@
         special?: string;
         bourdainIntel?: string;
         fryeIntel?: string;
+        rickStevesIntel?: string;
         name?: string;
     }
 
@@ -302,6 +303,13 @@
                             <div class="bg-white/5 border border-white/5 p-4 rounded-lg space-y-2.5">
                                 <span class="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] flex items-center gap-2">Frye's Perspective</span>
                                 <p class="text-[13px] font-medium text-slate-300 leading-relaxed italic">"{selectedPOI.fryeIntel}"</p>
+                            </div>
+                        {/if}
+
+                        {#if selectedPOI.rickStevesIntel}
+                            <div class="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-lg space-y-2.5">
+                                <span class="text-[10px] font-black uppercase text-emerald-500 tracking-[0.15em] flex items-center gap-2">Rick Steves' Advice</span>
+                                <p class="text-[13px] font-medium text-emerald-200/80 leading-relaxed italic">"{selectedPOI.rickStevesIntel}"</p>
                             </div>
                         {/if}
 
