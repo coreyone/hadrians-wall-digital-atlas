@@ -1,0 +1,7 @@
+[build]
+  base = "hadrians-wall-smart-map"
+  command = "npm run build"
+  publish = ".svelte-kit/output"
+
+[build.environment]
+  NODE_VERSION = "22.12.0"
