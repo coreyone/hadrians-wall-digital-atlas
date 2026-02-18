@@ -36,7 +36,7 @@ export interface Stage {
     timeHours: [number, number];
     elevationGainFt: number;
     elevationLossFt: number;
-    difficulty: 'Moderate' | 'Challenging' | 'Strenuous' | 'Rest';
+    difficulty: 'Moderate' | 'Challenging' | 'Strenuous' | 'Rest' | 'Departure';
     surface: string;
     terrain: string;
     lunchStrategy: string;
@@ -52,7 +52,7 @@ export interface Stage {
 export const itinerary: Stage[] = [
     {
         id: 1,
-        from: "Carlisle",
+        from: "Edinburgh (Rail) / Carlisle",
         to: "Lanercost",
         date: "Apr 12",
         romanDate: "PRID. ID. APR.",
@@ -67,13 +67,13 @@ export const itinerary: Stage[] = [
         terrain: "River Eden valley, farmland, urban transition to rural.",
         lunchStrategy: "Pack lunch from Carlisle supermarket.",
         fuelingLogistics: [
+            "Logistics: Train from Edinburgh Waverley to Carlisle Citadel.",
             "Primary: Buy lunch wrap + 2 days of trail snacks at Carlisle M&S Foodhall",
-            "Water: 1.5L sufficient; river-side walking is sheltered",
             "Intel: Cross the 'Memorial Bridge' (suspension bridge) to leave the city."
         ],
         milestones: [
+            { name: "Carlisle Citadel Station", mi: 0.0, intel: "Arrival from Scotland. Start of expedition." },
             { name: "Rickerby Park", mi: 1.5, intel: "Dedicated to the fallen of WWI. Authentic riverside path." },
-            { name: "River Eden Path", mi: 4.2, intel: "Quiet stretch. Watch for local fishermen." },
             { name: "Crosby-on-Eden", mi: 8.5, intel: "Raised foundations and vallum earthworks begin to appear." }
         ],
         dinner: "Abbey Farmhouse",
@@ -245,8 +245,8 @@ export const itinerary: Stage[] = [
     },
     {
         id: 7,
-        from: "Corbridge",
-        to: "Newcastle",
+        from: "Corbridge (Peak)",
+        to: "Corbridge",
         date: "Apr 18",
         romanDate: "A.D. XIV KAL. MAI.",
         mithraicGrade: "Pater (Father)",
@@ -258,21 +258,52 @@ export const itinerary: Stage[] = [
         difficulty: "Rest",
         surface: "Pavement",
         terrain: "Roman Town industrial hub.",
-        lunchStrategy: "Corbridge Larder.",
+        lunchStrategy: "Corbridge Larder feast.",
         fuelingLogistics: [
             "Intel: Corbridge was a major Roman supply and industrial town.",
-            "Celebration: Final Birthday dinner in Newcastle.",
-            "Grade: You have reached the rank of Pater."
+            "Ritual: Final Birthday Peak at the Roman Town ruins.",
+            "Grade: You have attained the rank of Pater."
         ],
         milestones: [
             { name: "Corbridge Roman Town", mi: 0.2, intel: "Industrial hub. Granaries still standing. See the Corbridge Lion." },
-            { name: "Newcastle Quayside", mi: 18.0, intel: "Final celebration overlooking the Tyne." }
+            { name: "Corbridge Bridge", mi: 0.5, intel: "Iconic five-arched bridge. Final spiritual boundary." }
         ],
-        dinner: "Newcastle Fine Dining",
+        dinner: "Golden Lion (Night 2)",
         supplyStatus: "High",
         shops: ["Corbridge High Street"],
         weather: { tempHigh: 58, tempLow: 43, condition: "Sunny", precipProb: 0 },
         celestial: { moonPhase: "Waxing Crescent (5%)", events: ["Birthday Peak: Lyrids Meteor Shower"] }
+    },
+    {
+        id: 8,
+        from: "Corbridge (Rail)",
+        to: "Edinburgh",
+        date: "Apr 19",
+        romanDate: "A.D. XIII KAL. MAI.",
+        mithraicGrade: "Emeritus",
+        mithraicSymbol: "🛡️",
+        distanceMi: 0,
+        timeHours: [2, 3],
+        elevationGainFt: 0,
+        elevationLossFt: 0,
+        difficulty: "Departure",
+        surface: "Rail",
+        terrain: "Return journey to Scotland.",
+        lunchStrategy: "Waverley Station.",
+        fuelingLogistics: [
+            "Logistics: Train from Corbridge Station to Edinburgh via Newcastle or Carlisle.",
+            "Post-Expedition: The Wall remains, but the Hiker returns.",
+            "Note: Last view of the Tyne Valley from the train."
+        ],
+        milestones: [
+            { name: "Corbridge Station", mi: 0.0, intel: "Final departure point." },
+            { name: "Edinburgh Waverley", mi: 100.0, intel: "Return to base. Expedition complete." }
+        ],
+        dinner: "Home (Edinburgh)",
+        supplyStatus: "High",
+        shops: ["Station Retail"],
+        weather: { tempHigh: 59, tempLow: 44, condition: "Sunny", precipProb: 0 },
+        celestial: { moonPhase: "Waxing Crescent (10%)", events: [] }
     }
 ];
 
@@ -286,105 +317,17 @@ export const overnightStops = [
 ];
 
 export const englishHeritageSites = [
-    { 
-        name: "Carlisle Castle", 
-        coords: [-2.9419, 54.8973], 
-        pageid: 856932, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Sun, Apr 12", 
-        staffed: true, 
-        intel: "Built 1092 by William Rufus. Prison for Mary, Queen of Scots.",
-        fryeIntel: "An evolution of the frontier: where Roman stone met medieval blood. Frye notes that few civilized people have ever lived without such barriers."
-    },
-    { 
-        name: "Tullie House Museum", 
-        coords: [-2.9400, 54.8960], 
-        pageid: 312242, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Sun, Apr 12", 
-        staffed: true, 
-        intel: "Jacobean mansion detailing Roman occupancy and Border Reivers." 
-    },
-    { 
-        name: "Lanercost Priory", 
-        coords: [-2.6949, 54.9662], 
-        pageid: 967234, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Sun, Apr 12", 
-        staffed: true, 
-        intel: "Founded 1165. Built from stone taken from Hadrian's Wall." 
-    },
-    { 
-        name: "Birdoswald Roman Fort", 
-        coords: [-2.6023, 54.9894], 
-        pageid: 2143239, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Mon, Apr 13", 
-        staffed: true, 
-        intel: "Known as Banna ('spur'). Commanding position overlooking meander of River Irthing.",
-        fryeIntel: "Frye reminds us that Hadrian was the first to build a wall 'to separate the barbarians and the Romans.' Banna was a vital cog in that machine."
-    },
-    { 
-        name: "Roman Army Museum", 
-        coords: [-2.5130, 54.9910], 
-        pageid: 41263032, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Tue, Apr 14", 
-        staffed: true, 
-        intel: "Experience life on the front line. Exclusive 3D Edge of Empire film." 
-    },
-    { 
-        name: "Walltown Crags", 
-        coords: [-2.5061, 54.9927], 
-        pageid: 41263032, 
-        hours: "Dawn - Dusk", 
-        visitDay: "Tue, Apr 14", 
-        staffed: false, 
-        intel: "One of the highest standing sections of the Wall.",
-        fryeIntel: "The highest drama of the frontier. To Frye, these stones represent the attempt to create a safe space where civilization could flourish."
-    },
+    { name: "Carlisle Castle", coords: [-2.9419, 54.8973], pageid: 856932, hours: "10:00 - 17:00", visitDay: "Sun, Apr 12", staffed: true, intel: "Built 1092 by William Rufus. Prison for Mary, Queen of Scots.", fryeIntel: "An evolution of the frontier: where Roman stone met medieval blood. Frye notes that few civilized people have ever lived without such barriers." },
+    { name: "Tullie House Museum", coords: [-2.9400, 54.8960], pageid: 312242, hours: "10:00 - 17:00", visitDay: "Sun, Apr 12", staffed: true, intel: "Jacobean mansion detailing Roman occupancy and Border Reivers." },
+    { name: "Lanercost Priory", coords: [-2.6949, 54.9662], pageid: 967234, hours: "10:00 - 17:00", visitDay: "Sun, Apr 12", staffed: true, intel: "Founded 1165. Built from stone taken from Hadrian's Wall." },
+    { name: "Birdoswald Roman Fort", coords: [-2.6023, 54.9894], pageid: 2143239, hours: "10:00 - 17:00", visitDay: "Mon, Apr 13", staffed: true, intel: "Known as Banna ('spur'). Commanding position overlooking meander of River Irthing.", fryeIntel: "Frye reminds us that Hadrian was the first to build a wall 'to separate the barbarians and the Romans.' Banna was a vital cog in that machine." },
+    { name: "Roman Army Museum", coords: [-2.5130, 54.9910], pageid: 41263032, hours: "10:00 - 17:00", visitDay: "Tue, Apr 14", staffed: true, intel: "Experience life on the front line. Exclusive 3D Edge of Empire film." },
+    { name: "Walltown Crags", coords: [-2.5061, 54.9927], pageid: 41263032, hours: "Dawn - Dusk", visitDay: "Tue, Apr 14", staffed: false, intel: "One of the highest standing sections of the Wall.", fryeIntel: "The highest drama of the frontier. To Frye, these stones represent the attempt to create a safe space where civilization could flourish." },
     { name: "Great Chesters (Aesica)", coords: [-2.4640, 54.9950], pageid: 18177794, hours: "Dawn - Dusk", visitDay: "Tue, Apr 14", staffed: false },
-    { 
-        name: "Housesteads Roman Fort", 
-        coords: [-2.3310, 55.0130], 
-        pageid: 1825118, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Thu, Apr 16", 
-        staffed: true, 
-        intel: "Vercovicium. Stone AD 124. Best preserved Roman latrines in Britain.",
-        fryeIntel: "The definitive 'monument to Roman supremacy.' Frye sees this not just as a border control, but as a statement of total military dominance over the wild north."
-    },
-    { 
-        name: "Carrawburgh (Temple of Mithras)", 
-        coords: [-2.2230, 55.0360], 
-        pageid: 12246314, 
-        hours: "Dawn - Dusk", 
-        visitDay: "Wed, Apr 15", 
-        special: "mithras", 
-        staffed: false, 
-        intel: "Brocolitia. Built AD 200 by First Cohort of Batavians.",
-        fryeIntel: "Where the blood of the cult met the brick of the wall. Rituals here were the spiritual glue for the men holding the civilized line."
-    },
-    { 
-        name: "Chesters Roman Fort", 
-        coords: [-2.1390, 55.0260], 
-        pageid: 8768992, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Thu, Apr 16", 
-        staffed: true, 
-        intel: "Cilurnum. Most complete Roman cavalry fort in Britain. AD 123.",
-        fryeIntel: "The technological peak of the barrier. A cavalry hub designed to project Roman power far beyond the stone itself."
-    },
-    { 
-        name: "Corbridge Roman Town", 
-        coords: [-2.0170, 54.9750], 
-        pageid: 373397, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Sat, Apr 18", 
-        staffed: true, 
-        intel: "Major supply and industrial town. Granaries still standing.",
-        fryeIntel: "The reward for the wall: a thriving industrial hub protected by the blood and brick of the northern frontier."
-    }
+    { name: "Housesteads Roman Fort", coords: [-2.3310, 55.0130], pageid: 1825118, hours: "10:00 - 17:00", visitDay: "Thu, Apr 16", staffed: true, intel: "Vercovicium. Stone AD 124. Best preserved Roman latrines in Britain.", fryeIntel: "The definitive 'monument to Roman supremacy.' Frye sees this not just as a border control, but as a statement of total military dominance over the wild north." },
+    { name: "Carrawburgh (Temple of Mithras)", coords: [-2.2230, 55.0360], pageid: 12246314, hours: "Dawn - Dusk", visitDay: "Wed, Apr 15", special: "mithras", staffed: false, intel: "Brocolitia. Built AD 200 by First Cohort of Batavians.", fryeIntel: "Where the blood of the cult met the brick of the wall. Rituals here were the spiritual glue for the men holding the civilized line." },
+    { name: "Chesters Roman Fort", coords: [-2.1390, 55.0260], pageid: 8768992, hours: "10:00 - 17:00", visitDay: "Thu, Apr 16", staffed: true, intel: "Cilurnum. Most complete Roman cavalry fort in Britain. AD 123.", fryeIntel: "The technological peak of the barrier. A cavalry hub designed to project Roman power far beyond the stone itself." },
+    { name: "Corbridge Roman Town", coords: [-2.0170, 54.9750], pageid: 373397, hours: "10:00 - 17:00", visitDay: "Sat, Apr 18", staffed: true, intel: "Major supply and industrial town. Granaries still standing.", fryeIntel: "The reward for the wall: a thriving industrial hub protected by the blood and brick of the northern frontier." }
 ];
 
 export const hospitalitySites = [
@@ -439,5 +382,42 @@ export const hospitalitySites = [
         category: 'cafe',
         summary: "Charming tea room in Gilsland.",
         bourdainIntel: "Proper tea and massive slices of cake. Essential morale booster before the crags."
+    },
+    {
+        name: "Abbey Farmhouse",
+        coords: [-2.6949, 54.9662],
+        category: 'hotel',
+        summary: "Bed and Breakfast located in the beautiful surroundings of Lanercost.",
+        url: "https://www.abbeyfarmhouse.com/",
+        bourdainIntel: "Peaceful, proximity to the Priory is the value play here."
+    },
+    {
+        name: "The George Hotel",
+        coords: [-2.1383, 55.0242],
+        category: 'hotel',
+        summary: "Charming hotel located on the banks of the North Tyne.",
+        url: "https://bespokehotels.com/the-george-hotel/",
+        bourdainIntel: "Classical riverside hospitality. Rest your legs by the fire."
+    },
+    {
+        name: "Battlesteads Hotel",
+        coords: [-2.2500, 55.0900],
+        category: 'hotel',
+        summary: "Sustainable hotel and restaurant in Wark.",
+        bourdainIntel: "Famed for their observatory and local game. A bit north, but a destination in itself."
+    },
+    {
+        name: "The Blue Bell",
+        coords: [-2.0187, 54.9739],
+        category: 'pub',
+        summary: "Traditional town center pub in Corbridge.",
+        bourdainIntel: "Classic Northumbrian pub vibes. Reliable for a mid-afternoon pint."
+    },
+    {
+        name: "The Kings Head",
+        coords: [-2.5831, 55.0063],
+        category: 'pub',
+        summary: "Traditional village pub in Gilsland.",
+        bourdainIntel: "Hearty food and local atmosphere. A solid choice if the Samson is full."
     }
 ];
