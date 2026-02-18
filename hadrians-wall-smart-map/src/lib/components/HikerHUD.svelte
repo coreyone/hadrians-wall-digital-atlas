@@ -59,6 +59,18 @@ $effect(() => {
         return Math.max(0, Math.min(100, (progress / goal) * 100));
     }
 
+    function formatPace(minutesPerMile: number | null, goalComplete: boolean, deadlinePassed: boolean) {
+        if (goalComplete) return 'Done';
+        if (deadlinePassed) return 'Past 5PM';
+        if (minutesPerMile === null || !Number.isFinite(minutesPerMile) || minutesPerMile <= 0) {
+            return '--';
+        }
+        const totalSeconds = Math.round(minutesPerMile * 60);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}/mi`;
+    }
+
 </script>
 
 <div class="fixed left-1/2 -translate-x-1/2 z-[60]" style="top: calc(env(safe-area-inset-top, 0px) + 0.75rem);" in:fly={{ y: -40, duration: 500 }}>
@@ -109,8 +121,14 @@ $effect(() => {
                 <p class="font-black tabular-nums text-amber-300">{$hikerMode.eta}</p>
             </div>
             <div>
-                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Speed</p>
-                <p class="font-black tabular-nums">{$hikerMode.speedMph.toFixed(1)} mph</p>
+                <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Pace to 5PM</p>
+                <p class="font-black tabular-nums">
+                    {formatPace(
+                        $hikerMode.requiredPaceMinPerMileToDailyGoal,
+                        $hikerMode.dailyRemainingMiles <= 0,
+                        $hikerMode.dailyGoalDeadlinePassed
+                    )}
+                </p>
             </div>
         </div>
 

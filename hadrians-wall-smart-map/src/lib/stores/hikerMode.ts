@@ -15,6 +15,9 @@ interface HikerState {
     distanceToday: number;
     dailyGoalMiles: number;
     dailyRemainingMiles: number;
+    requiredSpeedMphToDailyGoal: number | null;
+    requiredPaceMinPerMileToDailyGoal: number | null;
+    dailyGoalDeadlinePassed: boolean;
     distanceWalkedMiles: number;
     totalMiles: number;
     totalMilesRemaining: number;
@@ -45,6 +48,9 @@ const initialState: HikerState = {
     distanceToday: 0,
     dailyGoalMiles: 0,
     dailyRemainingMiles: 0,
+    requiredSpeedMphToDailyGoal: null,
+    requiredPaceMinPerMileToDailyGoal: null,
+    dailyGoalDeadlinePassed: false,
     distanceWalkedMiles: 0,
     totalMiles: 46,
     totalMilesRemaining: 46,

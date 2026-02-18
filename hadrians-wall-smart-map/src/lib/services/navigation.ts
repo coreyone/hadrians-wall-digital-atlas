@@ -20,6 +20,7 @@ export interface NavigationMetrics {
     totalMilesRemaining: number;
     speedMph: number;
     eta: string;
+    dailyEta: string;
     elevationGain: number;
     elevationLoss: number;
     weather: {
@@ -29,6 +30,9 @@ export interface NavigationMetrics {
     dailyGoalMiles: number;
     dailyProgressMiles: number;
     dailyRemainingMiles: number;
+    requiredSpeedMphToDailyGoal: number | null;
+    requiredPaceMinPerMileToDailyGoal: number | null;
+    dailyGoalDeadlinePassed: boolean;
     planTotalMiles: number;
     planProgressMiles: number;
     planRemainingMiles: number;
@@ -64,6 +68,8 @@ class NavigationService {
             Math.min(dailyGoalMiles, planProgressMiles - stage.startMile)
         );
         const dailyRemainingMiles = Math.max(0, dailyGoalMiles - dailyProgressMiles);
+        const dailyEta = this.computeEta(dailyRemainingMiles, speedMph, ts);
+        const dailyGoalPacing = this.computeDailyGoalPacing(dailyRemainingMiles, ts);
 
         const upcomingMiles = Math.min(
             NEXT_WINDOW_MILES,
@@ -82,11 +88,15 @@ class NavigationService {
             totalMilesRemaining,
             speedMph,
             eta,
+            dailyEta,
             elevationGain,
             elevationLoss,
             dailyGoalMiles,
             dailyProgressMiles,
             dailyRemainingMiles,
+            requiredSpeedMphToDailyGoal: dailyGoalPacing.requiredSpeedMphToDailyGoal,
+            requiredPaceMinPerMileToDailyGoal: dailyGoalPacing.requiredPaceMinPerMileToDailyGoal,
+            dailyGoalDeadlinePassed: dailyGoalPacing.dailyGoalDeadlinePassed,
             planTotalMiles: totalMiles,
             planProgressMiles,
             planRemainingMiles: totalMilesRemaining,
@@ -120,6 +130,38 @@ class NavigationService {
         const effectiveSpeed = speedMph > 0.4 ? speedMph : 2.8;
         const etaMs = nowTs + (milesRemaining / effectiveSpeed) * 3600000;
         return new Date(etaMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    private computeDailyGoalPacing(dailyRemainingMiles: number, nowTs: number) {
+        if (dailyRemainingMiles <= 0) {
+            return {
+                requiredSpeedMphToDailyGoal: 0,
+                requiredPaceMinPerMileToDailyGoal: 0,
+                dailyGoalDeadlinePassed: false
+            };
+        }
+
+        const deadline = new Date(nowTs);
+        deadline.setHours(17, 0, 0, 0);
+        const hoursRemaining = (deadline.getTime() - nowTs) / 3600000;
+
+        if (hoursRemaining <= 0) {
+            return {
+                requiredSpeedMphToDailyGoal: null,
+                requiredPaceMinPerMileToDailyGoal: null,
+                dailyGoalDeadlinePassed: true
+            };
+        }
+
+        const requiredSpeedMphToDailyGoal = dailyRemainingMiles / hoursRemaining;
+        const requiredPaceMinPerMileToDailyGoal =
+            requiredSpeedMphToDailyGoal > 0 ? 60 / requiredSpeedMphToDailyGoal : null;
+
+        return {
+            requiredSpeedMphToDailyGoal,
+            requiredPaceMinPerMileToDailyGoal,
+            dailyGoalDeadlinePassed: false
+        };
     }
 
     private resolveStage(distanceWalkedMiles: number) {

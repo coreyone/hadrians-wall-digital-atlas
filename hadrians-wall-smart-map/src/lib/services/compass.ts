@@ -28,7 +28,10 @@ interface HeadingReading {
 const CALIBRATION_WINDOW_MS = 3200;
 const CALIBRATION_VARIANCE_THRESHOLD_DEG = 15;
 const WEBKIT_ACCURACY_THRESHOLD_DEG = 28;
-const HEADING_STALE_MS = 2200;
+const HEADING_STALE_MS = 6500;
+const CALIBRATION_ENTER_DELAY_MS = 1800;
+const CALIBRATION_EXIT_DELAY_MS = 1400;
+const HEARTBEAT_MS = 500;
 const MOTION_RATE_ACTIVE_THRESHOLD = 18;
 const SMOOTHING_STILL = 0.14;
 const SMOOTHING_ACTIVE = 0.3;
@@ -40,6 +43,7 @@ class CompassService {
     private pendingHeading: HeadingReading | null = null;
     private lastHeadingTs = 0;
     private rafId: number | null = null;
+    private heartbeatId: number | null = null;
     private running = false;
     private permission: PermissionStateLike = 'prompt';
     private motionPermission: PermissionStateLike = 'prompt';
@@ -47,6 +51,9 @@ class CompassService {
     private accuracy: number | null = null;
     private motionRate = 0;
     private lastMotionTs = 0;
+    private calibrationLatched = false;
+    private unstableSinceTs: number | null = null;
+    private stableSinceTs: number | null = null;
 
     subscribe(listener: CompassListener) {
         this.listeners.add(listener);
@@ -130,6 +137,7 @@ class CompassService {
 
         window.addEventListener('deviceorientation', this.handleOrientation, true);
         window.addEventListener('devicemotion', this.handleMotion, true);
+        this.heartbeatId = window.setInterval(() => this.emit(), HEARTBEAT_MS);
         this.running = true;
         this.emit();
         return true;
@@ -147,9 +155,16 @@ class CompassService {
         this.lastMotionTs = 0;
         this.source = 'none';
         this.accuracy = null;
+        this.calibrationLatched = false;
+        this.unstableSinceTs = null;
+        this.stableSinceTs = null;
         if (this.rafId !== null) {
             cancelAnimationFrame(this.rafId);
             this.rafId = null;
+        }
+        if (this.heartbeatId !== null) {
+            clearInterval(this.heartbeatId);
+            this.heartbeatId = null;
         }
         this.emit();
     }
@@ -281,25 +296,42 @@ class CompassService {
     }
 
     private snapshot(): CompassState {
+        const now = Date.now();
         const variance = this.computeVariance();
         const heading = this.lastHeading ?? 0;
-        const stale = this.running && (Date.now() - this.lastHeadingTs > HEADING_STALE_MS || this.lastHeading === null);
+        const stale = this.running && (now - this.lastHeadingTs > HEADING_STALE_MS || this.lastHeading === null);
         const lowAccuracy =
             this.source === 'webkit' &&
             typeof this.accuracy === 'number' &&
             this.accuracy > WEBKIT_ACCURACY_THRESHOLD_DEG;
+        const permissionDenied = this.permission !== 'granted';
+        const rawUnstable = permissionDenied || stale || variance > CALIBRATION_VARIANCE_THRESHOLD_DEG || lowAccuracy;
+
+        if (rawUnstable) {
+            this.stableSinceTs = null;
+            this.unstableSinceTs ??= now;
+            if (permissionDenied || now - this.unstableSinceTs >= CALIBRATION_ENTER_DELAY_MS) {
+                this.calibrationLatched = true;
+            }
+        } else {
+            this.unstableSinceTs = null;
+            this.stableSinceTs ??= now;
+            if (
+                this.calibrationLatched &&
+                now - this.stableSinceTs >= CALIBRATION_EXIT_DELAY_MS
+            ) {
+                this.calibrationLatched = false;
+            }
+        }
+
         return {
             heading,
             variance,
-            needsCalibration:
-                this.permission !== 'granted' ||
-                stale ||
-                variance > CALIBRATION_VARIANCE_THRESHOLD_DEG ||
-                lowAccuracy,
+            needsCalibration: this.calibrationLatched,
             permission: this.permission,
             motionPermission: this.motionPermission,
             accuracy: this.accuracy,
-            source: stale ? 'none' : this.source,
+            source: this.lastHeading === null ? 'none' : this.source,
             secureContext: this.isSecureEnvironment()
         };
     }
