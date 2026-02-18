@@ -94,17 +94,77 @@
         if (map && selectedStageId) {
             const stage = itinerary.find(s => s.id === selectedStageId);
             if (stage) {
-                const slices: Record<number, [number, number]> = { 1: [1, 3], 2: [2, 4], 3: [3, 5], 4: [4, 6], 5: [5, 7] };
-                const [start, end] = slices[selectedStageId];
-                const coords = trailCoordinates.slice(start, end);
+                // Strategic slicing based on longitude bounds of the stage
+                const stageCoords = trailCoordinates.filter(c => {
+                    const hubs = overnightStops;
+                    const fromIdx = hubs.findIndex(h => h.name.includes(stage.from.split(' ')[0]));
+                    const toIdx = hubs.findIndex(h => h.name.includes(stage.to.split(' ')[0]));
+                    if (fromIdx === -1 || toIdx === -1) return true;
+                    const west = Math.min(hubs[fromIdx].coords[0], hubs[toIdx].coords[0]) - 0.01;
+                    const east = Math.max(hubs[fromIdx].coords[0], hubs[toIdx].coords[0]) + 0.01;
+                    return c[0] >= west && c[0] <= east;
+                });
+
                 const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
-                if (source) source.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords }, properties: {} });
+                if (source) source.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: stageCoords }, properties: {} });
+                
                 const bounds = new maplibregl.LngLatBounds();
-                coords.forEach(c => bounds.extend(c as [number, number]));
-                map.fitBounds(bounds, { padding: 80, duration: 1000 });
+                stageCoords.forEach(c => bounds.extend(c as [number, number]));
+                map.fitBounds(bounds, { padding: { top: 100, bottom: 100, left: 450, right: 100 }, duration: 1500 });
+
+                renderPaceMarkers(stageCoords, stage);
             }
+        } else if (map && !selectedStageId) {
+            const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
+            if (source) source.setData({ type: 'FeatureCollection', features: [] });
+            clearPaceMarkers();
         }
     });
+
+    let paceMarkers: maplibregl.Marker[] = [];
+    function clearPaceMarkers() {
+        paceMarkers.forEach(m => m.remove());
+        paceMarkers = [];
+    }
+
+    function renderPaceMarkers(coords: any[], stage: any) {
+        clearPaceMarkers();
+        if (coords.length < 2) return;
+
+        let totalDist = 0;
+        const speedMph = 2.8;
+        const startTime = 9; // 09:00 AM
+        
+        // Naismith-ish calculation: 2.8mph base + penalty for elevation
+        // Every 5 miles (~2 hours)
+        for (let i = 1; i < coords.length; i++) {
+            const p1 = turf.point(coords[i-1]);
+            const p2 = turf.point(coords[i]);
+            totalDist += turf.distance(p1, p2, { units: 'miles' });
+
+            if (totalDist >= 4.5 && paceMarkers.length === 0) addMarker(i, 2);
+            if (totalDist >= 9.0 && paceMarkers.length === 1) addMarker(i, 4);
+            if (totalDist >= 13.5 && paceMarkers.length === 2) addMarker(i, 6);
+        }
+
+        function addMarker(idx: number, hours: number) {
+            const el = document.createElement('div');
+            const time = startTime + hours;
+            const timeStr = `${time > 12 ? time - 12 : time}:00 ${time >= 12 ? 'PM' : 'AM'}`;
+            
+            el.className = 'pace-marker z-20 pointer-events-none';
+            el.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full border border-white shadow-sm mb-1"></div>
+                    <div class="bg-white/90 backdrop-blur-md border border-slate-200 px-1.5 py-0.5 rounded-sm shadow-xl">
+                        <span class="text-[8px] font-black text-slate-900 tabular-nums">+${hours}H · ${timeStr}</span>
+                    </div>
+                </div>
+            `;
+            const marker = new maplibregl.Marker({ element: el }).setLngLat(coords[idx] as [number, number]).addTo(map);
+            paceMarkers.push(marker);
+        }
+    }
 
     // Phosphor Icons (Raw SVGs)
     const icons = {
@@ -288,7 +348,7 @@
                 
                 el.innerHTML = `
                     <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95">
-                        <div class="marker-icon w-10 h-10 ${bgColor} rounded-sm border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
+                        <div class="marker-icon w-10 h-10 ${bgColor} rounded-[35%] border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
                             ${icon}
                         </div>
                         <div class="poi-label label-priority-${poi.priority} bg-slate-900/90 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
@@ -336,7 +396,7 @@
             
             el.innerHTML = `
                 <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-125 hover:z-40 active:scale-90 overflow-visible">
-                    <div class="marker-icon bg-white rounded-full border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${size}px; height: ${size}px;">
+                    <div class="marker-icon bg-white rounded-[35%] border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${size}px; height: ${size}px;">
                         <div class="text-blue-600 scale-[0.8]">
                             ${icons.discovery}
                         </div>
