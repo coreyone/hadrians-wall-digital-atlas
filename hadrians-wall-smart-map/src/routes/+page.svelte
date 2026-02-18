@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
     import Map from '$lib/components/Map.svelte';
     import type { PageData } from './$types';
     import { fetchPageSummary } from '$lib/services/wikipedia';

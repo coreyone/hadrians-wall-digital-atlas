@@ -184,8 +184,10 @@
                     </div>
                 </div>
             `;
-            const marker = new maplibregl.Marker({ element: el }).setLngLat(coords[idx] as [number, number]).addTo(map);
-            paceMarkers.push(marker);
+            if (map) {
+                const marker = new maplibregl.Marker({ element: el }).setLngLat(coords[idx] as [number, number]).addTo(map);
+                paceMarkers.push(marker);
+            }
         }
     }
 
@@ -203,6 +205,7 @@
     };
 
     function setupLayers() {
+        if (!map) return;
         const variants = routeVariants as Record<string, any>;
         
         // User Accuracy Circle (Communicate uncertainty)
@@ -241,6 +244,7 @@
 
     function locateMe() {
         navigator.geolocation.watchPosition(pos => {
+            if (!map) return;
             const { longitude, latitude, accuracy, heading } = pos.coords;
             userLocation = { lng: longitude, lat: latitude, accuracy };
             
@@ -278,139 +282,141 @@
             attributionControl: false
         });
 
-        map.on('zoom', () => { zoomLevel = map.getZoom(); });
+        if (map) {
+            map.on('zoom', () => { zoomLevel = map?.getZoom() || 12; });
 
-        map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
-        map.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
+            map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
+            map.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
 
-        map.on('mousemove', (e) => { mouseCoords = { lng: e.lngLat.lng, lat: e.lngLat.lat }; });
+            map.on('mousemove', (e) => { mouseCoords = { lng: e.lngLat.lng, lat: e.lngLat.lat }; });
 
-        map.on('idle', () => {
-            // Background Warming: Prefetch other styles into browser cache
-            const otherStyles = Object.keys(styles).filter(s => s !== mapStyle);
-            otherStyles.forEach(s => {
-                const url = styles[s];
-                if (typeof url === 'string') {
-                    fetch(url, { priority: 'low' }).catch(() => {});
-                }
-            });
-        });
-
-        map.on('load', () => {
-            setupLayers();
-            
-            const onceBrewed: [number, number] = [-2.3958, 55.0036];
-            const bounds = new maplibregl.LngLatBounds();
-            trailCoordinates.forEach(c => bounds.extend(c as [number, number]));
-
-            // Flight to Once Brewed as the strategic center of the full route
-            map.flyTo({
-                center: onceBrewed,
-                zoom: isMobile ? 9.0 : 9.8,
-                padding: isMobile ? { top: 20, bottom: 20, left: 20, right: 20 } : { top: 50, bottom: 50, left: 450, right: 50 },
-                duration: 2500,
-                essential: true,
-                curve: 1.2,
-                speed: 0.5
-            });
-
-            // Consolidate Official Sites by Coordinates
-            const registry = new Map<string, any>();
-            
-            const addSite = (site: any, type: string, priority: number) => {
-                const key = `${site.coords[0].toFixed(5)},${site.coords[1].toFixed(5)}`;
-                if (registry.has(key)) {
-                    const existing = registry.get(key);
-                    existing.types.push(type);
-                    existing.priority = Math.min(existing.priority, priority); // Keep highest priority
-                    existing.allData.push({ ...site, type });
-                    if (type === 'heritage' || type === 'hospitality') existing.title = site.name;
-                } else {
-                    registry.set(key, {
-                        title: site.name || site.title,
-                        coords: site.coords,
-                        types: [type],
-                        priority,
-                        allData: [{ ...site, type }],
-                        pageid: site.pageid,
-                        lat: site.coords[1],
-                        lon: site.coords[0]
-                    });
-                }
-            };
-
-            overnightStops.forEach(s => addSite(s, 'hub', 1));
-            englishHeritageSites.forEach(s => addSite(s, 'heritage', 2));
-            hospitalitySites.forEach(s => addSite(s, 'hospitality', 3));
-
-            registry.forEach((poi) => {
-                const el = document.createElement('div');
-                const isMulti = poi.types.length > 1;
-                
-                let bgColor = 'bg-blue-600';
-                let icon = icons.bed;
-                
-                if (poi.types.includes('heritage')) {
-                    bgColor = 'bg-slate-800';
-                    icon = icons.heritage;
-                } else if (poi.types.includes('hospitality')) {
-                    const hSite = poi.allData.find((d: any) => d.type === 'hospitality');
-                    if (hSite?.category === 'brewery') {
-                        bgColor = 'bg-amber-600';
-                        icon = icons.brewery;
-                    } else if (hSite?.category === 'cafe') {
-                        bgColor = 'bg-emerald-600';
-                        icon = icons.cafe;
-                    } else if (hSite?.category === 'restaurant') {
-                        bgColor = 'bg-rose-700';
-                        icon = icons.restaurant;
-                    } else if (hSite?.category === 'deli') {
-                        bgColor = 'bg-lime-700';
-                        icon = icons.deli;
-                    } else if (hSite?.category === 'hotel') {
-                        bgColor = 'bg-blue-600';
-                        icon = icons.bed;
-                    } else {
-                        bgColor = 'bg-orange-700';
-                        icon = icons.pub;
+            map.on('idle', () => {
+                // Background Warming: Prefetch other styles into browser cache
+                const otherStyles = Object.keys(styles).filter(s => s !== mapStyle);
+                otherStyles.forEach(s => {
+                    const url = styles[s];
+                    if (typeof url === 'string') {
+                        fetch(url, { priority: 'low' }).catch(() => {});
                     }
-                }
-
-                el.className = `poi-marker z-30`;
-                el.dataset.name = poi.title;
-                if (poi.pageid) el.dataset.pageid = poi.pageid.toString();
-                
-                el.innerHTML = `
-                    <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95">
-                        <div class="marker-icon w-10 h-10 ${bgColor} rounded-[35%] border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
-                            ${icon}
-                        </div>
-                        <div class="poi-label label-priority-${poi.priority} bg-slate-900/90 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
-                            <span class="text-[9px] font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
-                        </div>
-                    </div>
-                `;
-
-                el.onclick = (e) => {
-                    e.stopPropagation();
-                    const mergedPOI = {
-                        ...poi,
-                        summary: poi.allData.map((d: any) => d.summary || d.intel || "").filter(Boolean).join("\n\n"),
-                        bourdainIntel: poi.allData.find((d: any) => d.bourdainIntel)?.bourdainIntel,
-                        fryeIntel: poi.allData.find((d: any) => d.fryeIntel)?.fryeIntel,
-                        url: poi.allData.find((d: any) => d.url && d.url !== '#')?.url || (poi.pageid ? `https://en.wikipedia.org/?curid=${poi.pageid}` : '#')
-                    };
-                    if (onPoiSelect) onPoiSelect(mergedPOI);
-                    map.flyTo({ center: poi.coords as [number, number], zoom: 14 });
-                };
-                new maplibregl.Marker({ element: el }).setLngLat(poi.coords as [number, number]).addTo(map);
+                });
             });
 
-            if (initialPOIs.length > 0) renderPOIs(initialPOIs);
-            updatePOIs();
-        });
+            map.on('load', () => {
+                setupLayers();
+                
+                const onceBrewed: [number, number] = [-2.3958, 55.0036];
+                const bounds = new maplibregl.LngLatBounds();
+                trailCoordinates.forEach(c => bounds.extend(c as [number, number]));
 
-        map.on('moveend', updatePOIs);
+                // Flight to Once Brewed as the strategic center of the full route
+                map?.flyTo({
+                    center: onceBrewed,
+                    zoom: isMobile ? 9.0 : 9.8,
+                    padding: isMobile ? { top: 20, bottom: 20, left: 20, right: 20 } : { top: 50, bottom: 50, left: 450, right: 50 },
+                    duration: 2500,
+                    essential: true,
+                    curve: 1.2,
+                    speed: 0.5
+                });
+
+                // Consolidate Official Sites by Coordinates
+                const registry = new Map<string, any>();
+                
+                const addSite = (site: any, type: string, priority: number) => {
+                    const key = `${site.coords[0].toFixed(5)},${site.coords[1].toFixed(5)}`;
+                    if (registry.has(key)) {
+                        const existing = registry.get(key);
+                        existing.types.push(type);
+                        existing.priority = Math.min(existing.priority, priority); // Keep highest priority
+                        existing.allData.push({ ...site, type });
+                        if (type === 'heritage' || type === 'hospitality') existing.title = site.name;
+                    } else {
+                        registry.set(key, {
+                            title: site.name || site.title,
+                            coords: site.coords,
+                            types: [type],
+                            priority,
+                            allData: [{ ...site, type }],
+                            pageid: site.pageid,
+                            lat: site.coords[1],
+                            lon: site.coords[0]
+                        });
+                    }
+                };
+
+                overnightStops.forEach(s => addSite(s, 'hub', 1));
+                englishHeritageSites.forEach(s => addSite(s, 'heritage', 2));
+                hospitalitySites.forEach(s => addSite(s, 'hospitality', 3));
+
+                registry.forEach((poi) => {
+                    const el = document.createElement('div');
+                    const isMulti = poi.types.length > 1;
+                    
+                    let bgColor = 'bg-blue-600';
+                    let icon = icons.bed;
+                    
+                    if (poi.types.includes('heritage')) {
+                        bgColor = 'bg-slate-800';
+                        icon = icons.heritage;
+                    } else if (poi.types.includes('hospitality')) {
+                        const hSite = poi.allData.find((d: any) => d.type === 'hospitality');
+                        if (hSite?.category === 'brewery') {
+                            bgColor = 'bg-amber-600';
+                            icon = icons.brewery;
+                        } else if (hSite?.category === 'cafe') {
+                            bgColor = 'bg-emerald-600';
+                            icon = icons.cafe;
+                        } else if (hSite?.category === 'restaurant') {
+                            bgColor = 'bg-rose-700';
+                            icon = icons.restaurant;
+                        } else if (hSite?.category === 'deli') {
+                            bgColor = 'bg-lime-700';
+                            icon = icons.deli;
+                        } else if (hSite?.category === 'hotel') {
+                            bgColor = 'bg-blue-600';
+                            icon = icons.bed;
+                        } else {
+                            bgColor = 'bg-orange-700';
+                            icon = icons.pub;
+                        }
+                    }
+
+                    el.className = `poi-marker z-30`;
+                    el.dataset.name = poi.title;
+                    if (poi.pageid) el.dataset.pageid = poi.pageid.toString();
+                    
+                    el.innerHTML = `
+                        <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95">
+                            <div class="marker-icon w-10 h-10 ${bgColor} rounded-[35%] border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
+                                ${icon}
+                            </div>
+                            <div class="poi-label label-priority-${poi.priority} bg-slate-900/90 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
+                                <span class="text-[9px] font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    el.onclick = (e) => {
+                        e.stopPropagation();
+                        const mergedPOI = {
+                            ...poi,
+                            summary: poi.allData.map((d: any) => d.summary || d.intel || "").filter(Boolean).join("\n\n"),
+                            bourdainIntel: poi.allData.find((d: any) => d.bourdainIntel)?.bourdainIntel,
+                            fryeIntel: poi.allData.find((d: any) => d.fryeIntel)?.fryeIntel,
+                            url: poi.allData.find((d: any) => d.url && d.url !== '#')?.url || (poi.pageid ? `https://en.wikipedia.org/?curid=${poi.pageid}` : '#')
+                        };
+                        if (onPoiSelect) onPoiSelect(mergedPOI);
+                        map?.flyTo({ center: poi.coords as [number, number], zoom: 14 });
+                    };
+                    if (map) new maplibregl.Marker({ element: el }).setLngLat(poi.coords as [number, number]).addTo(map);
+                });
+
+                if (initialPOIs.length > 0) renderPOIs(initialPOIs);
+                updatePOIs();
+            });
+
+            map.on('moveend', updatePOIs);
+        }
     });
 
     let renderedPageIds = new Set<number>();
@@ -444,10 +450,12 @@
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (onPoiSelect) onPoiSelect({ ...poi });
-                map.flyTo({ center: [poi.lon, poi.lat], zoom: 14 });
+                map?.flyTo({ center: [poi.lon, poi.lat], zoom: 14 });
             });
-            new maplibregl.Marker({ element: el }).setLngLat([poi.lon, poi.lat]).addTo(map);
-            renderedPageIds.add(poi.pageid);
+            if (map) {
+                new maplibregl.Marker({ element: el }).setLngLat([poi.lon, poi.lat]).addTo(map);
+                renderedPageIds.add(poi.pageid);
+            }
         }
     }
 
