@@ -361,7 +361,7 @@
 
 <!-- Hiker HUD Overlay -->
 {#if $hikerMode.isActive}
-    <HikerHUD onToggleSimplified={toggleSimplifiedHUD} />
+    <HikerHUD onToggleSimplified={toggleSimplifiedHUD} onCoinTap={handleCoinTap} />
 {/if}
 
 {#if $hikerMode.isCalibrating && $hikerMode.isActive}
@@ -378,30 +378,23 @@
     </div>
 {/if}
 
-{#if isMobile}
-    <button
-        onclick={handleCoinTap}
-        class="fixed left-4 z-[75] flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_16px_rgba(59,130,246,0.45)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
-        style="bottom: calc(env(safe-area-inset-bottom, 0px) + 5.75rem);"
-        aria-label="Triple tap Roman Coin to toggle Hiker Mode"
-        title="Triple Tap Roman Coin"
-    >
-        <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-10 w-10 object-contain drop-shadow-md" />
-    </button>
-    <div class="fixed left-20 z-[74] rounded-full border border-white/15 bg-slate-900/85 px-2 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-amber-200 shadow-lg" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 6.35rem);">
-        Tap ×3
-    </div>
-{/if}
-
 <div class="flex h-screen w-full overflow-hidden bg-canvas text-slate-300 font-sans antialiased text-[13px] selection:bg-blue-500/30 relative">
     <!-- Sticky Header (Mobile) -->
     {#if isMobile}
         <header class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/5 safe-p-top transition-transform duration-300 {!isSidebarOpen ? 'translate-y-0' : '-translate-y-full'}" style="-webkit-backdrop-filter: blur(20px);">
-            <div class="flex items-center justify-between h-12 px-4">
+            <div class="flex items-center justify-between h-14 px-4">
                 <div class="flex flex-col">
                     <h1 class="text-white font-black uppercase text-[10px] tracking-[0.2em]">Hadrian Atlas</h1>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button
+                        onclick={handleCoinTap}
+                        class="flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.45)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_12px_rgba(59,130,246,0.35)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+                        aria-label="Triple tap Roman Coin to toggle Hiker Mode"
+                        title="Triple Tap Roman Coin"
+                    >
+                        <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-6 w-6 object-contain drop-shadow-sm" />
+                    </button>
                     <div class="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-white/5 border border-white/5">
                         <div class="w-1.5 h-1.5 rounded-full {isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]'} animate-pulse"></div>
                         <span class="text-[8px] font-black uppercase tracking-widest {isOnline ? 'text-emerald-500' : 'text-orange-500'}">{isOnline ? 'Live' : 'Offline'}</span>

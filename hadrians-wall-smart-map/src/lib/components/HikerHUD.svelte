@@ -2,11 +2,12 @@
     import { hikerMode } from '$lib/stores/hikerMode';
     import { fly } from 'svelte/transition';
 
-    interface Props {
-        onToggleSimplified?: () => void;
-    }
+interface Props {
+    onToggleSimplified?: () => void;
+    onCoinTap?: () => void;
+}
 
-    let { onToggleSimplified }: Props = $props();
+let { onToggleSimplified, onCoinTap }: Props = $props();
 
     function weatherGlyph(condition: string) {
         const normalized = condition.toLowerCase();
@@ -23,13 +24,19 @@
 
 </script>
 
-<div class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] pointer-events-none" in:fly={{ y: -40, duration: 500 }}>
+<div class="fixed left-1/2 -translate-x-1/2 z-[60]" style="top: calc(env(safe-area-inset-top, 0px) + 0.75rem);" in:fly={{ y: -40, duration: 500 }}>
     <div class="relative flex h-18 w-18 items-center justify-center">
         <div class="absolute inset-0 rounded-full border border-amber-300/40 animate-[spin_12s_linear_infinite]"></div>
         <div class="absolute inset-2 rounded-full border border-amber-100/40 border-dashed animate-[spin_18s_linear_infinite_reverse]"></div>
-        <div class="relative flex h-12 w-12 items-center justify-center rounded-full border border-amber-200/80 bg-slate-900/85 shadow-[0_0_20px_rgba(245,158,11,0.45)]">
+        <button
+            type="button"
+            onclick={onCoinTap}
+            class="relative flex h-12 w-12 items-center justify-center rounded-full border border-amber-200/80 bg-slate-900/85 shadow-[0_0_20px_rgba(245,158,11,0.45)]"
+            aria-label="Triple tap Roman Coin to exit Hiker Mode"
+            title="Triple tap to exit Hiker Mode"
+        >
             <img src="/logo-coin.png" alt="Roman Coin" class="h-8 w-8 object-contain" />
-        </div>
+        </button>
     </div>
 </div>
 
