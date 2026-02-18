@@ -342,27 +342,28 @@
         <div class="absolute inset-0">
             <Map bind:this={mapComponent} initialPOIs={data.initialPOIs} bind:selectedPOI {selectedStageId} {mapStyle} {selectedRoute} {isHeadingUp} {isMobile} onPoiSelect={handlePOIClick} />
         </div>
-        <div class="absolute top-4 right-4 z-30 flex flex-col items-end gap-2">
+        <div class="{isMobile ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30' : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}">
             <!-- Navigation Instruments -->
-            <div class="flex p-0.5 bg-white/90 backdrop-blur rounded border border-slate-200 shadow-2xl overflow-hidden">
-                <button onclick={() => isHeadingUp = !isHeadingUp} class="px-2 py-1.5 text-[8px] font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="Toggle Heading Up Mode">
+            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl rounded border border-slate-200 shadow-2xl overflow-hidden">
+                <button onclick={() => isHeadingUp = !isHeadingUp} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="Toggle Heading Up Mode">
                     {isHeadingUp ? 'Heading Up' : 'North Up'}
                 </button>
             </div>
 
             <!-- Route Switcher -->
-            <div class="flex p-0.5 bg-white/90 backdrop-blur rounded border border-slate-200 shadow-2xl overflow-hidden">
-                <button onclick={() => selectedRoute = 'osm'} class="px-2 py-1.5 text-[8px] font-black uppercase transition-all {selectedRoute === 'osm' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
-                <button onclick={() => selectedRoute = 'simplified'} class="px-2 py-1.5 text-[8px] font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
+            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl rounded border border-slate-200 shadow-2xl overflow-hidden">
+                <button onclick={() => selectedRoute = 'osm'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'osm' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
+                <button onclick={() => selectedRoute = 'simplified'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
             </div>
 
             <!-- Style Switcher -->
-            <div class="flex p-0.5 bg-white/90 backdrop-blur rounded border border-slate-200 shadow-2xl overflow-hidden">
-                <button onclick={() => mapStyle = 'topo'} class="px-2.5 py-1.5 text-[9px] font-black uppercase transition-all {mapStyle === 'topo' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Topo</button>
-                <button onclick={() => mapStyle = 'satellite'} class="px-2.5 py-1.5 text-[9px] font-black uppercase transition-all {mapStyle === 'satellite' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'} border-x border-slate-100">Sat</button>
-                <button onclick={() => mapStyle = 'streets'} class="px-2.5 py-1.5 text-[9px] font-black uppercase transition-all {mapStyle === 'streets' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Roads</button>
+            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl rounded border border-slate-200 shadow-2xl overflow-hidden">
+                <button onclick={() => mapStyle = 'topo'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'topo' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Topo</button>
+                <button onclick={() => mapStyle = 'satellite'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'satellite' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'} border-x border-slate-100">Sat</button>
+                <button onclick={() => mapStyle = 'streets'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'streets' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Roads</button>
             </div>
-            <button class="p-3 bg-white/90 backdrop-blur rounded border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" onclick={() => isSidebarOpen = !isSidebarOpen} title="Toggle Sidebar">{@html icons.search}</button>
+            
+            <button class="{isMobile ? 'p-4' : 'p-3'} bg-white/95 backdrop-blur-xl rounded border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" onclick={() => isSidebarOpen = !isSidebarOpen} title="Toggle Sidebar">{@html icons.search}</button>
         </div>
     </main>
 </div>

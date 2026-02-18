@@ -385,18 +385,17 @@
                     el.dataset.name = poi.title;
                     if (poi.pageid) el.dataset.pageid = poi.pageid.toString();
                     
-                    el.innerHTML = `
-                        <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95">
-                            <div class="marker-icon w-10 h-10 ${bgColor} rounded-[35%] border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
-                                ${icon}
-                            </div>
-                            <div class="poi-label label-priority-${poi.priority} bg-slate-900/90 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
-                                <span class="text-[9px] font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
-                            </div>
-                        </div>
-                    `;
-
-                    el.onclick = (e) => {
+                                    el.innerHTML = `
+                                        <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95">
+                                            <div class="marker-icon ${isMobile ? 'w-12 h-12' : 'w-10 h-10'} ${bgColor} rounded-[35%] border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
+                                                ${icon}
+                                            </div>
+                                            <div class="poi-label label-priority-${poi.priority} bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
+                                                <span class="${isMobile ? 'text-[11px]' : 'text-[9px]'} font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                        el.onclick = (e) => {
                         e.stopPropagation();
                         const mergedPOI = {
                             ...poi,
@@ -436,13 +435,13 @@
             
             el.innerHTML = `
                 <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-125 hover:z-40 active:scale-90 overflow-visible">
-                    <div class="marker-icon bg-white rounded-[35%] border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${size}px; height: ${size}px;">
-                        <div class="text-blue-600 scale-[0.8]">
+                    <div class="marker-icon bg-white rounded-[35%] border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 1.2 : size}px; height: ${isMobile ? size * 1.2 : size}px;">
+                        <div class="text-blue-600 ${isMobile ? 'scale-[0.9]' : 'scale-[0.8]'}">
                             ${icons.discovery}
                         </div>
                     </div>
-                    <div class="poi-label label-priority-4 bg-slate-900/90 backdrop-blur-md px-1.5 py-0.5 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
-                        <span class="text-[9px] font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
+                    <div class="poi-label label-priority-4 bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
+                        <span class="${isMobile ? 'text-[11px]' : 'text-[9px]'} font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
                     </div>
                 </div>
             `;
@@ -482,15 +481,15 @@
 </script>
 
 <div class="w-full h-full bg-slate-50 relative zoom-state-z{Math.floor(zoomLevel)}" bind:this={mapContainer}>
-    <div class="absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none">
+    <div class="absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none tabular-nums">
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
     </div>
     
-    <!-- Relocated Locate Me: Top-Right Tactical Stack -->
-    <button onclick={locateMe} class="absolute top-4 right-4 z-10 p-2.5 bg-white/90 backdrop-blur border border-slate-200 rounded-sm shadow-2xl text-slate-600 hover:text-blue-600 active:scale-95 transition-all" title="Locate Me">{@html icons.locate}</button>
+    <!-- Relocated Locate Me: Responsive placement -->
+    <button onclick={locateMe} class="absolute {isMobile ? 'bottom-24 right-4' : 'top-4 right-4'} z-10 p-3 bg-white/90 backdrop-blur border border-slate-200 rounded-sm shadow-2xl text-slate-600 hover:text-blue-600 active:scale-90 transition-all" title="Locate Me">{@html icons.locate}</button>
 
-    <!-- Imperial Logo: Moved to Bottom-Left for balance -->
-    <div class="absolute bottom-12 left-4 z-20 pointer-events-none select-none drop-shadow-2xl">
+    <!-- Imperial Logo: Calibrated for mobile safe zones -->
+    <div class="absolute {isMobile ? 'bottom-4 left-4' : 'bottom-12 left-4'} z-20 pointer-events-none select-none drop-shadow-2xl">
         <svg width="56" height="56" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <radialGradient id="coinGrad" cx="50%" cy="50%" r="50%" fx="35%" fy="35%">
