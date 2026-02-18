@@ -381,13 +381,14 @@
 {#if isMobile}
     <button
         onclick={handleCoinTap}
-        class="fixed left-4 bottom-[max(5.5rem,env(safe-area-inset-bottom)+4.75rem)] z-[75] flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/50 bg-slate-900/90 shadow-[0_0_16px_rgba(59,130,246,0.45)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+        class="fixed left-4 z-[75] flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_16px_rgba(59,130,246,0.45)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+        style="bottom: calc(env(safe-area-inset-bottom, 0px) + 5.75rem);"
         aria-label="Triple tap Roman Coin to toggle Hiker Mode"
         title="Triple Tap Roman Coin"
     >
         <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-10 w-10 object-contain drop-shadow-md" />
     </button>
-    <div class="fixed left-20 bottom-[max(6.1rem,env(safe-area-inset-bottom)+5.35rem)] z-[74] rounded-full border border-white/15 bg-slate-900/85 px-2 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-amber-200 shadow-lg">
+    <div class="fixed left-20 z-[74] rounded-full border border-white/15 bg-slate-900/85 px-2 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-amber-200 shadow-lg" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 6.35rem);">
         Tap ×3
     </div>
 {/if}
@@ -746,7 +747,7 @@
         {#if !isMobile}
             <button
                 onclick={handleCoinTap}
-                class="absolute bottom-6 left-6 z-40 flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/50 bg-slate-900/85 shadow-[0_0_16px_rgba(59,130,246,0.4)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+                class="absolute bottom-6 left-6 z-40 flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_16px_rgba(59,130,246,0.4)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
                 aria-label="Triple tap Roman Coin to toggle Hiker Mode"
                 title="Triple Tap Roman Coin"
             >

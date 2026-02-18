@@ -52,6 +52,7 @@
     let mapContainer: HTMLDivElement;
     let map = $state<maplibregl.Map | null>(null);
     let corridor: any;
+    let wikiCorridor: any;
     let mouseCoords = $state({ lng: -2.3958, lat: 55.0036 });
     let zoomLevel = $state(12);
     let userLocation = $state<{lng: number, lat: number, accuracy: number} | null>(null);
@@ -63,6 +64,7 @@
     let glowFrame: number | null = null;
     let lastGlowTick = 0;
     let lastFlyTo = 0;
+    const wikiWindowHubs = ['Carlisle', 'Lanercost/Brampton', 'Gilsland', 'Once Brewed', 'Chollerford', 'Corbridge'];
 
     const styles: Record<string, any> = {
         streets: 'https://tiles.openfreemap.org/styles/bright',
@@ -396,6 +398,46 @@
         paceMarkers = [];
     }
 
+    function nearestTrailIndex(target: [number, number]) {
+        let idx = 0;
+        let best = Infinity;
+        trailCoordinates.forEach((coord, i) => {
+            const d = turf.distance(
+                turf.point(coord as [number, number]),
+                turf.point(target),
+                { units: 'kilometers' }
+            );
+            if (d < best) {
+                best = d;
+                idx = i;
+            }
+        });
+        return idx;
+    }
+
+    function buildWikiWindowCorridor() {
+        const carlisle = overnightStops.find((hub) => hub.name === 'Carlisle');
+        const corbridge = overnightStops.find((hub) => hub.name === 'Corbridge');
+        if (!carlisle || !corbridge) {
+            wikiCorridor = corridor;
+            return;
+        }
+
+        const startIdx = nearestTrailIndex(carlisle.coords as [number, number]);
+        const endIdx = nearestTrailIndex(corbridge.coords as [number, number]);
+        const from = Math.min(startIdx, endIdx);
+        const to = Math.max(startIdx, endIdx);
+        const segmentCoords = trailCoordinates.slice(from, to + 1) as [number, number][];
+
+        if (segmentCoords.length < 2) {
+            wikiCorridor = corridor;
+            return;
+        }
+
+        const segmentLine = turf.lineString(segmentCoords);
+        wikiCorridor = turf.buffer(segmentLine, 1.1, { units: 'kilometers' });
+    }
+
     function renderPaceMarkers(coords: any[], stage: any) {
         clearPaceMarkers();
         if (coords.length < 2 || !showMilestones) return;
@@ -595,6 +637,7 @@
 
     onMount(() => {
         corridor = getCorridor(1.1); 
+        buildWikiWindowCorridor();
         map = new maplibregl.Map({
             container: mapContainer,
             // @ts-ignore
@@ -738,6 +781,7 @@
                 });
 
                 if (initialPOIs.length > 0) renderPOIs(initialPOIs);
+                preloadWikiPOIsForHikerSection();
                 updatePOIs();
             });
 
@@ -766,7 +810,8 @@
         const validPOIs = pois.filter(poi => {
             if (renderedPageIds.has(poi.pageid)) return false;
             const pt = turf.point([poi.lon, poi.lat]);
-            return turf.booleanPointInPolygon(pt, corridor);
+            const activeCorridor = wikiCorridor || corridor;
+            return turf.booleanPointInPolygon(pt, activeCorridor);
         });
 
         for (const poi of validPOIs) {
@@ -799,6 +844,23 @@
                 renderedPageIds.add(poi.pageid);
             }
         }
+    }
+
+    async function preloadWikiPOIsForHikerSection() {
+        const seeds = overnightStops.filter((hub) => wikiWindowHubs.includes(hub.name));
+        const batches = await Promise.allSettled(
+            seeds.map((hub) => fetchWikiPOIs(hub.coords[1], hub.coords[0], 8000))
+        );
+
+        const deduped = new Map<number, WikiPOI>();
+        batches.forEach((batch) => {
+            if (batch.status !== 'fulfilled') return;
+            batch.value.forEach((poi) => {
+                if (!deduped.has(poi.pageid)) deduped.set(poi.pageid, poi);
+            });
+        });
+
+        renderPOIs(Array.from(deduped.values()));
     }
 
     async function updatePOIs() {
@@ -846,15 +908,6 @@
         <div class="absolute inset-0 z-30 bg-black/10 backdrop-blur-[1px] pointer-events-auto"></div>
     {/if}
     
-    <!-- Imperial Logo: Custom Roman Coin with Figma Glow -->
-    <div class="absolute {isMobile ? 'bottom-4 left-4' : 'bottom-12 left-4'} z-20 pointer-events-none select-none">
-        <img 
-            src="/logo-coin.png" 
-            alt="Roman Coin" 
-            class="w-14 h-14 md:w-16 md:h-16 object-contain filter drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] drop-shadow-[0_0_2px_rgba(59,130,246,0.6)]"
-            style="image-rendering: -webkit-optimize-contrast;"
-        />
-    </div>
 </div>
 
 <style>
