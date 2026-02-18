@@ -322,7 +322,20 @@
                 }
             });
             // Path Hierarchy: Differentiation via texture (Dashed = Footpath)
-            map.addLayer({ id: 'trail-line', type: 'line', source: 'trail', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#1e293b', 'line-width': 4, 'line-opacity': 0.6, 'line-dasharray': [2, 1] } });
+            // Dynamic Contrast: Use white for Satellite mode, slate for others
+            const isSat = mapStyle === 'satellite';
+            map.addLayer({ 
+                id: 'trail-line', 
+                type: 'line', 
+                source: 'trail', 
+                layout: { 'line-join': 'round', 'line-cap': 'round' }, 
+                paint: { 
+                    'line-color': isSat ? '#ffffff' : '#1e293b', 
+                    'line-width': isSat ? 5 : 4, 
+                    'line-opacity': isSat ? 0.8 : 0.6, 
+                    'line-dasharray': [2, 1] 
+                } 
+            });
         }
         if (!map.getSource('corridor')) {
             map.addSource('corridor', { type: 'geojson', data: corridor });
