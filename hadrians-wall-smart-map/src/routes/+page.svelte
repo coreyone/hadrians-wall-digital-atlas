@@ -29,6 +29,7 @@
     let isHeadingUp = $state(false);
     let mapComponent: any = $state();
     let isMobile = $state(false);
+    let isOnline = $state(true);
     
     type AppMode = 'plan' | 'explore';
     let mode = $state<AppMode>('plan');
@@ -39,6 +40,10 @@
     let expandedMilestoneStages = $state(new Set<number>());
 
     onMount(() => {
+        isOnline = navigator.onLine;
+        window.addEventListener('online', () => isOnline = true);
+        window.addEventListener('offline', () => isOnline = false);
+
         const mql = window.matchMedia('(max-width: 768px)');
         isMobile = mql.matches;
         mql.addEventListener('change', (e) => isMobile = e.matches);
@@ -156,10 +161,14 @@
                     {#if isMobile}
                         <button onclick={() => isSidebarOpen = false} class="p-2 text-slate-500 hover:text-white transition-colors">{@html icons.close}</button>
                     {/if}
-                    <div class="flex gap-1">
-                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                        <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div>
-                    </div>
+                                    <div class="flex gap-1.5 items-center">
+                                        <div class="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-white/5 border border-white/5">
+                                            <div class="w-1.5 h-1.5 rounded-full {isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]'} animate-pulse"></div>
+                                            <span class="text-[8px] font-black uppercase tracking-widest {isOnline ? 'text-emerald-500' : 'text-orange-500'}">{isOnline ? 'Live' : 'Offline'}</span>
+                                        </div>
+                                        <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div>
+                                    </div>
+                    
                 </div>
             </div>
 
