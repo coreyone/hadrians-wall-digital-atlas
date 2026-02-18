@@ -1,0 +1,51 @@
+## Task List
+
+- [x] 1.0 Complete `getting_there.md`
+  - [x] 1.1 Review `background.md`
+  - [x] 1.2 Exhaustively complete `getting_there.md`
+  - [x] 1.3 Review first section for document goals (do not remove)
+  - [x] 1.4 Follow rules in `usability-rules.md`
+- [x] 2.0 Complete `food.md`
+  - [x] 2.1 Review `background.md`
+  - [x] 2.2 Exhaustively complete `food.md`
+  - [x] 2.3 Review first section for document goals (do not remove)
+  - [x] 2.4 Follow rules in `usability-rules.md`
+- [x] 3.0 Complete `historical_context.md`
+  - [x] 3.1 Review `background.md`
+  - [x] 3.2 Exhaustively complete `historical_context.md`
+  - [x] 3.3 Review first section for document goals (do not remove)
+  - [x] 3.4 Follow rules in `usability-rules.md`
+- [x] 4.0 Complete `language_survival.md`
+  - [x] 4.1 Review `background.md`
+  - [x] 4.2 Exhaustively complete `language_survival.md`
+  - [x] 4.3 Review first section for document goals (do not remove)
+  - [x] 4.4 Follow rules in `usability-rules.md`
+- [x] 5.0 Complete `itinerary.md`
+  - [x] 5.1 Review `background.md`, `food.md`, `historical_context.md`
+  - [x] 5.2 Exhaustively complete `itinerary.md` for the destination
+  - [x] 5.3 Consider trip length and time of year from `background.md`
+  - [x] 5.4 Follow rules in `usability-rules.md`
+- [x] 6.0 Complete `regional_areas.md`
+  - [x] 6.1 Review `background.md`, `food.md`, `historical_context.md`, `itinerary.md`
+  - [x] 6.2 Exhaustively complete `regional_areas.md` for the destinations
+  - [x] 6.3 Consider trip length and time of year from `background.md`
+  - [x] 6.4 Follow rules in `usability-rules.md`
+- [x] 7.0 Complete `practicalities.md`
+  - [x] 7.1 Review `background.md`, `food.md`, `historical_context.md`, `itinerary.md`, `regional_areas.md`
+  - [x] 7.2 Exhaustively complete `practicalities.md` for the destinations
+  - [x] 7.3 Consider trip length and time of year from `background.md`
+  - [x] 7.4 Follow rules in `usability-rules.md`
+
+
+## Relevant Files
+- `travel-tasks/task-list.md` — Active checklist for completing the travel docs.
+- `background.md` — Trip context, preferences, constraints, and tone.
+- `usability-rules.md` — Markdown layout and usability rules to follow.
+- `getting_there.md` — Transportation, airports, rail, and trailhead access.
+- `food.md` — Food and drink guide with local specialties and value picks.
+- `historical_context.md` — Timeline and historical context for the Wall and region.
+- `language_survival.md` — Local language tips, slang, and polite basics.
+- `itinerary.md` — Day-by-day plan with hubs, distances, and options.
+- `regional_areas.md` — Regional snapshots with must-sees and local tips.
+- `practicalities.md` — Logistics, weather, money, safety, and transport tips.
+- `hadrians_wall_reviews_breakdown.md` — Review-derived tips, pacing notes, and practical hacks.
