@@ -38,6 +38,7 @@
     let zoomLevel = $state(12);
     let userLocation = $state<{lng: number, lat: number, accuracy: number} | null>(null);
     let userMarker: maplibregl.Marker | null = null;
+    let watchId: number | null = null;
 
     const styles: Record<string, any> = {
         streets: 'https://tiles.openfreemap.org/styles/bright',
@@ -304,7 +305,8 @@
     }
 
     function locateMe() {
-        navigator.geolocation.watchPosition(pos => {
+        if (watchId !== null) return;
+        watchId = navigator.geolocation.watchPosition(pos => {
             if (!map) return;
             const { longitude, latitude, accuracy, heading } = pos.coords;
             userLocation = { lng: longitude, lat: latitude, accuracy };
@@ -539,6 +541,10 @@
             });
         }
     }
+
+    export function triggerLocateMe() {
+        locateMe();
+    }
 </script>
 
 <div class="w-full h-full bg-slate-50 relative zoom-state-z{Math.floor(zoomLevel)}" bind:this={mapContainer}>
@@ -546,9 +552,6 @@
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
     </div>
     
-    <!-- Relocated Locate Me: Responsive placement -->
-    <button onclick={locateMe} class="absolute {isMobile ? 'bottom-24 right-4' : 'top-4 right-4'} z-10 p-3 bg-white/90 backdrop-blur border border-slate-200 rounded-sm shadow-2xl text-slate-600 hover:text-blue-600 active:scale-90 transition-all" title="Locate Me">{@html icons.locate}</button>
-
     <!-- Imperial Logo: Custom Roman Coin with Figma Glow -->
     <div class="absolute {isMobile ? 'bottom-4 left-4' : 'bottom-12 left-4'} z-20 pointer-events-none select-none">
         <img 
