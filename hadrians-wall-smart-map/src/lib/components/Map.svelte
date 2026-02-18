@@ -28,7 +28,7 @@
     }: Props = $props();
 
     let mapContainer: HTMLDivElement;
-    let map: maplibregl.Map;
+    let map = $state<maplibregl.Map | null>(null);
     let corridor: any;
     let mouseCoords = $state({ lng: -2.3958, lat: 55.0036 });
     let zoomLevel = $state(12);
@@ -36,7 +36,7 @@
     let userMarker: maplibregl.Marker | null = null;
 
     const styles: Record<string, any> = {
-        streets: 'https://demotiles.maplibre.org/style.json',
+        streets: 'https://tiles.openfreemap.org/styles/bright',
         topo: 'https://tiles.openfreemap.org/styles/liberty', 
         satellite: {
             version: 8,
@@ -56,9 +56,34 @@
     $effect(() => {
         if (map && mapStyle && styles[mapStyle]) {
             map.setStyle(styles[mapStyle]);
-            map.once('styledata', setupLayers);
+            // Re-add layers once the new style has loaded
+            map.once('style.load', () => {
+                setupLayers();
+                // Ensure active stage is redrawn if selected
+                if (selectedStageId) {
+                    const stage = itinerary.find(s => s.id === selectedStageId);
+                    if (stage) updateStageLayer(stage);
+                }
+            });
         }
     });
+
+    function updateStageLayer(stage: any) {
+        if (!map) return;
+        const stageCoords = trailCoordinates.filter(c => {
+            const hubs = overnightStops;
+            const fromIdx = hubs.findIndex(h => h.name.includes(stage.from.split(' ')[0]));
+            const toIdx = hubs.findIndex(h => h.name.includes(stage.to.split(' ')[0]));
+            if (fromIdx === -1 || toIdx === -1) return true;
+            const west = Math.min(hubs[fromIdx].coords[0], hubs[toIdx].coords[0]) - 0.01;
+            const east = Math.max(hubs[fromIdx].coords[0], hubs[toIdx].coords[0]) + 0.01;
+            return c[0] >= west && c[0] <= east;
+        });
+
+        const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
+        if (source) source.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: stageCoords }, properties: {} });
+        renderPaceMarkers(stageCoords, stage);
+    }
 
     // React to route change
     $effect(() => {
@@ -94,25 +119,18 @@
         if (map && selectedStageId) {
             const stage = itinerary.find(s => s.id === selectedStageId);
             if (stage) {
-                // Strategic slicing based on longitude bounds of the stage
-                const stageCoords = trailCoordinates.filter(c => {
-                    const hubs = overnightStops;
-                    const fromIdx = hubs.findIndex(h => h.name.includes(stage.from.split(' ')[0]));
-                    const toIdx = hubs.findIndex(h => h.name.includes(stage.to.split(' ')[0]));
-                    if (fromIdx === -1 || toIdx === -1) return true;
-                    const west = Math.min(hubs[fromIdx].coords[0], hubs[toIdx].coords[0]) - 0.01;
-                    const east = Math.max(hubs[fromIdx].coords[0], hubs[toIdx].coords[0]) + 0.01;
-                    return c[0] >= west && c[0] <= east;
-                });
-
-                const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
-                if (source) source.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: stageCoords }, properties: {} });
+                updateStageLayer(stage);
                 
-                const bounds = new maplibregl.LngLatBounds();
-                stageCoords.forEach(c => bounds.extend(c as [number, number]));
-                map.fitBounds(bounds, { padding: { top: 100, bottom: 100, left: 450, right: 100 }, duration: 1500 });
-
-                renderPaceMarkers(stageCoords, stage);
+                // Framing
+                const hubs = overnightStops;
+                const fromIdx = hubs.findIndex(h => h.name.includes(stage.from.split(' ')[0]));
+                const toIdx = hubs.findIndex(h => h.name.includes(stage.to.split(' ')[0]));
+                if (fromIdx !== -1 && toIdx !== -1) {
+                    const bounds = new maplibregl.LngLatBounds();
+                    bounds.extend(hubs[fromIdx].coords as [number, number]);
+                    bounds.extend(hubs[toIdx].coords as [number, number]);
+                    map.fitBounds(bounds, { padding: { top: 100, bottom: 100, left: 450, right: 100 }, duration: 1500 });
+                }
             }
         } else if (map && !selectedStageId) {
             const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
