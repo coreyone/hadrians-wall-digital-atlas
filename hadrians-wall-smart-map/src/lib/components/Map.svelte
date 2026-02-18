@@ -438,11 +438,13 @@
     <div class="absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none">
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
     </div>
-    <button onclick={locateMe} class="absolute bottom-24 right-4 z-10 p-2.5 bg-white/90 backdrop-blur border border-slate-200 rounded-sm shadow-lg text-slate-600 hover:text-blue-600 active:scale-95 transition-all" title="Locate Me">{@html icons.locate}</button>
+    
+    <!-- Relocated Locate Me: Top-Right Tactical Stack -->
+    <button onclick={locateMe} class="absolute top-4 right-4 z-10 p-2.5 bg-white/90 backdrop-blur border border-slate-200 rounded-sm shadow-2xl text-slate-600 hover:text-blue-600 active:scale-95 transition-all" title="Locate Me">{@html icons.locate}</button>
 
-    <!-- Imperial Logo: Roman Coin -->
-    <div class="absolute bottom-4 right-4 z-20 pointer-events-none select-none drop-shadow-2xl">
-        <svg width="64" height="64" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+    <!-- Imperial Logo: Moved to Bottom-Left for balance -->
+    <div class="absolute bottom-12 left-4 z-20 pointer-events-none select-none drop-shadow-2xl">
+        <svg width="56" height="56" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <radialGradient id="coinGrad" cx="50%" cy="50%" r="50%" fx="35%" fy="35%">
                     <stop offset="0%" style="stop-color:#f1f5f9;stop-opacity:1" />
