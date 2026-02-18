@@ -58,6 +58,8 @@
         discovery: true
     });
 
+    let searchInput: HTMLInputElement;
+
     async function handlePOIClick(poi: any) {
         mode = 'explore';
         isSidebarOpen = true;
@@ -70,6 +72,14 @@
                 selectedPOI = { ...selectedPOI };
             }
         }
+    }
+
+    function toggleSearch() {
+        mode = 'explore';
+        isSidebarOpen = true;
+        selectedPOI = null;
+        // Focus input on next tick
+        setTimeout(() => searchInput?.focus(), 50);
     }
 
     function toggleStage(id: number) {
@@ -294,7 +304,7 @@
                     <div class="flex flex-col gap-4">
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors">{@html icons.search}</div>
-                            <input type="text" bind:value={searchQuery} placeholder="Search Registry..." class="w-full bg-inset border border-white/5 rounded-lg py-2.5 pl-9 pr-4 text-[12px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:bg-white/5 transition-all shadow-inner placeholder:text-slate-600" />
+                            <input type="text" bind:this={searchInput} bind:value={searchQuery} placeholder="Search Registry..." class="w-full bg-inset border border-white/5 rounded-lg py-2.5 pl-9 pr-4 text-[12px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:bg-white/5 transition-all shadow-inner placeholder:text-slate-600" />
                         </div>
                         
                         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
@@ -419,7 +429,7 @@
                 <button onclick={() => mapStyle = 'streets'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'streets' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Roads</button>
             </div>
             
-            <button class="{isMobile ? 'p-4 rounded-lg' : 'p-3 rounded-md'} bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" onclick={() => isSidebarOpen = !isSidebarOpen} title="Toggle Sidebar">{@html icons.search}</button>
+            <button class="{isMobile ? 'p-4 rounded-lg' : 'p-3 rounded-md'} bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" onclick={toggleSearch} title="Search Registry">{@html icons.search}</button>
         </div>
     </main>
 </div>
