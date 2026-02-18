@@ -620,11 +620,18 @@
     }
 
     /* Forced visibility for Active/Hovered points */
-    :global(.poi-marker.active-marker .poi-label),
-    :global(.poi-marker:hover .poi-label) {
+    :global(.poi-marker.active-marker .poi-label) {
         opacity: 1 !important;
         display: block !important;
         z-index: 100;
+    }
+
+    @media (hover: hover) {
+        :global(.poi-marker:hover .poi-label) {
+            opacity: 1 !important;
+            display: block !important;
+            z-index: 100;
+        }
     }
 
     /* Density Logic: Level 1 (Hubs) - Show at Z11+ */

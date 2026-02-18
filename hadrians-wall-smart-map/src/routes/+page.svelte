@@ -65,7 +65,7 @@
         discovery: true
     });
 
-    let searchInput: HTMLInputElement;
+    let searchInput = $state<HTMLInputElement>();
 
     async function handlePOIClick(poi: any) {
         mode = 'explore';
@@ -118,6 +118,9 @@
     // Phosphor Icons (Raw SVGs)
     const icons = {
         clock: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v40h48A8,8,0,0,1,192,128Z"></path></svg>`,
+        map: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.41,95.07,35.13a8,8,0,0,0-6.14,0L27.08,60.19A8,8,0,0,0,22,67.53V208a8,8,0,0,0,9.14,7.86l61.13-15.14,65.86,28.28a8,8,0,0,0,6.14,0l61.85-25.06A8,8,0,0,0,234,188.47V48A8,8,0,0,0,228.92,49.69ZM160,195.12l-64-27.43V60.88l64,27.43ZM38,196.29V75.47L80,59.13v108ZM218,180.53l-42,17.03V89.13l42-16.33Z"></path></svg>`,
+        compass: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.82l-32.55,81.38a8,8,0,0,1-4.47,4.47l-81.38,32.55a8,8,0,0,1-10.37-10.37l32.55-81.38a8,8,0,0,1,4.47-4.47L162.05,62.45a8,8,0,0,1,10.37,10.37ZM128,112a16,16,0,1,0,16,16A16,16,0,0,0,128,112Z"></path></svg>`,
+        list: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path></svg>`,
         mountain: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256"><path d="M252.92,210.14l-96-160a16,16,0,0,0-27.43,0l-25.15,41.91L78.29,50.14a16,16,0,0,0-27.43,0l-48,80a16,16,0,0,0,0,16.53l48,80A16,16,0,0,0,64.57,232h184a8,8,0,0,0,6.85-12.14ZM64.57,216,24,142.67,64.57,75.33,105.14,142.67Zm177.14,0H121.71l21.43-35.71,25.14,41.9a8,8,0,0,0,13.72-8.24l-31.15-51.91L192,92.67,241.71,175.33Z"></path></svg>`,
         shopping: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M239.38,90.47A15.94,15.94,0,0,0,224,80H64V56A16,16,0,0,0,48,40H24a8,8,0,0,0,0,16H48V192a16,16,0,0,0,16,16H192a8,8,0,0,0,0-16H64V96H224l-18.4,82.82A16,16,0,0,1,190,192H96a8,8,0,0,0,0,16h94a32,32,0,0,0,31.27-25.05L240,99.76A15.86,15.94,0,0,0,239.38,90.47ZM100,216a20,20,0,1,0,20,20A20,20,0,0,0,100,216Zm100,0a20,20,0,1,0,20,20A20,20,0,0,0,200,216Z"></path></svg>`,
         arrowLeft: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path></svg>`,
@@ -144,17 +147,41 @@
 </svelte:head>
 
 <div class="flex h-screen w-full overflow-hidden bg-canvas text-slate-300 font-sans antialiased text-[13px] selection:bg-blue-500/30 relative">
+    <!-- Sticky Header (Mobile) -->
+    {#if isMobile}
+        <header class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/5 safe-p-top transition-transform duration-300 {!isSidebarOpen ? 'translate-y-0' : '-translate-y-full'}" style="-webkit-backdrop-filter: blur(20px);">
+            <div class="flex items-center justify-between h-12 px-4">
+                <div class="flex flex-col">
+                    <h1 class="text-white font-black uppercase text-[10px] tracking-[0.2em]">Hadrian Atlas</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-white/5 border border-white/5">
+                        <div class="w-1.5 h-1.5 rounded-full {isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]'} animate-pulse"></div>
+                        <span class="text-[8px] font-black uppercase tracking-widest {isOnline ? 'text-emerald-500' : 'text-orange-500'}">{isOnline ? 'Live' : 'Offline'}</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+    {/if}
+
     <!-- Mobile Backdrop: Closes sidebar when map strip is tapped -->
     {#if isMobile && isSidebarOpen}
         <button 
             onclick={() => isSidebarOpen = false} 
-            class="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
-            style="-webkit-backdrop-filter: blur(4px);"
+            class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            style="-webkit-backdrop-filter: blur(8px);"
             aria-label="Return to Map"
         ></button>
     {/if}
 
-    <aside class="{isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 w-[calc(100%-64px)] md:w-[320px] bg-surface/95 backdrop-blur-2xl border-r border-white/5 transition-transform duration-300 md:relative md:translate-x-0 flex flex-col shadow-2xl" style="-webkit-backdrop-filter: blur(40px);">
+    <aside class="{isSidebarOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:-translate-x-full'} fixed inset-x-0 bottom-0 md:inset-y-0 md:left-0 z-40 h-[85vh] md:h-full md:w-[320px] bg-surface/95 backdrop-blur-2xl border-t md:border-t-0 md:border-r border-white/10 transition-transform duration-500 md:duration-300 md:relative flex flex-col shadow-2xl rounded-t-2xl md:rounded-none overflow-hidden" style="-webkit-backdrop-filter: blur(40px);">
+        <!-- Drawer Handle for Mobile -->
+        {#if isMobile}
+            <div class="w-full flex justify-center py-2 shrink-0">
+                <div class="w-12 h-1 bg-white/20 rounded-full"></div>
+            </div>
+        {/if}
+        
         <header class="p-4 border-b border-white/5 flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div class="flex flex-col">
@@ -182,7 +209,7 @@
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar">
+        <div class="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar pb-32">
             {#if mode === 'plan'}
                 <div class="p-4 space-y-4" in:fade>
                     <div class="space-y-3">
@@ -201,22 +228,34 @@
                     <div class="space-y-1.5">
                         {#each itinerary as stage, i}
                             <div in:fade={{ delay: i * 50 }}>
-                                <button onclick={() => toggleStage(stage.id)} class="w-full text-left p-3 rounded-lg border transition-all active:scale-[0.98] {selectedStageId === stage.id ? 'bg-white/5 border-blue-500/30 shadow-glow' : 'bg-transparent border-transparent hover:bg-white/5'}">
-                                    <div class="flex justify-between items-start mb-1.5">
+                                <div 
+                                    role="button" 
+                                    tabindex="0" 
+                                    onclick={() => toggleStage(stage.id)} 
+                                    onkeydown={(e) => e.key === 'Enter' && toggleStage(stage.id)}
+                                    class="w-full text-left p-3 rounded-lg border transition-all active:scale-[0.98] {selectedStageId === stage.id ? 'bg-white/5 border-blue-500/30 shadow-glow' : 'bg-transparent border-transparent hover:bg-white/5'}"
+                                >
+                                    <div class="flex justify-between items-start mb-1.5 pointer-events-none">
                                         <div class="flex flex-col">
                                             <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">{stage.romanDate}</span>
                                             <h3 class="text-[13px] font-bold text-white tracking-tight leading-tight">{stage.from} → {stage.to}</h3>
                                         </div>
                                         <div class="text-lg filter grayscale opacity-50">{stage.mithraicSymbol}</div>
                                     </div>
-                                    <div class="flex gap-3 text-[10px] text-slate-400 uppercase tracking-tighter font-bold tabular-nums">
+                                    <div class="flex gap-3 text-[10px] text-slate-400 uppercase tracking-tighter font-bold tabular-nums pointer-events-none">
                                         <span class="flex items-center gap-1">{@html icons.clock} {stage.timeHours[0]}-{stage.timeHours[1]}h</span>
                                         <span class="flex items-center gap-1">{@html icons.mountain} +{stage.elevationGainFt}ft</span>
                                         <span class="flex items-center gap-1 text-blue-400">{@html icons.footprints} {stage.distanceMi} mi</span>
                                     </div>
                                     
                                     {#if selectedStageId === stage.id}
-                                        <div class="mt-4 pt-4 border-t border-white/5 space-y-4" transition:slide>
+                                        <div 
+                                            class="mt-4 pt-4 border-t border-white/5 space-y-4" 
+                                            transition:slide 
+                                            role="presentation"
+                                            onclick={(e) => e.stopPropagation()}
+                                            onkeydown={(e) => e.key === 'Enter' && e.stopPropagation()}
+                                        >
                                             <div class="grid grid-cols-2 gap-2">
                                                 <div class="bg-inset p-2.5 rounded-md border border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Surface</span><span class="text-[11px] font-bold text-slate-300 truncate block">{stage.surface}</span></div>
                                                 <div class="bg-inset p-2.5 rounded-md border border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Logistics</span><span class="text-[11px] font-bold {stage.supplyStatus === 'Critical' ? 'text-orange-400' : 'text-slate-300'}">{stage.supplyStatus}</span></div>
@@ -262,7 +301,7 @@
                                             </div>
                                         </div>
                                     {/if}
-                                </button>
+                                </div>
                             </div>
                         {/each}
                     </div>
@@ -434,31 +473,67 @@
         <div class="{isMobile ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30' : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}">
             <!-- Navigation Instruments -->
             <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
-                <button onclick={() => mapComponent?.triggerLocateMe()} class="{isMobile ? 'p-2.5' : 'p-1.5'} text-slate-600 hover:text-blue-600 border-r border-slate-100 transition-all" title="Show My Location">{@html icons.locate}</button>
-                <button onclick={() => isHeadingUp = !isHeadingUp} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="Toggle Heading Up Mode">
+                <button onclick={() => mapComponent?.triggerLocateMe()} class="{isMobile ? 'p-2.5' : 'p-1.5'} text-slate-600 active:text-blue-600 border-r border-slate-100 transition-all" title="Show My Location">{@html icons.locate}</button>
+                <button onclick={() => isHeadingUp = !isHeadingUp} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'}" title="Toggle Heading Up Mode">
                     {isHeadingUp ? 'Heading' : 'North'}
                 </button>
-                <button onclick={() => showMilestones = !showMilestones} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {showMilestones ? 'bg-amber-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Toggle Milestones Layer">
+                <button onclick={() => showMilestones = !showMilestones} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {showMilestones ? 'bg-amber-600 text-white' : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100" title="Toggle Milestones Layer">
                     Logistics
                 </button>
             </div>
 
             <!-- Route Switcher -->
             <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
-                <button onclick={() => selectedRoute = 'osm'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'osm' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
-                <button onclick={() => selectedRoute = 'simplified'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
+                <button onclick={() => selectedRoute = 'osm'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'osm' ? 'bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
+                <button onclick={() => selectedRoute = 'simplified'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
             </div>
 
             <!-- Style Switcher -->
             <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
-                <button onclick={() => mapStyle = 'topo'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'topo' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Topo</button>
-                <button onclick={() => mapStyle = 'satellite'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'satellite' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'} border-x border-slate-100">Sat</button>
-                <button onclick={() => mapStyle = 'streets'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'streets' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Roads</button>
+                <button onclick={() => mapStyle = 'topo'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'topo' ? 'bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'}">Topo</button>
+                <button onclick={() => mapStyle = 'satellite'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'satellite' ? 'bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'} border-x border-slate-100">Sat</button>
+                <button onclick={() => mapStyle = 'streets'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'streets' ? 'bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'}">Roads</button>
             </div>
             
-            <button class="{isMobile ? 'p-4 rounded-lg' : 'p-3 rounded-md'} bg-white/95 border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);" onclick={toggleSearch} title="Search Registry">{@html icons.search}</button>
+            <button class="{isMobile ? 'p-4 rounded-lg' : 'p-3 rounded-md'} bg-white/95 border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 active:text-blue-600 flex items-center justify-center" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);" onclick={toggleSearch} title="Search Registry">{@html icons.search}</button>
         </div>
     </main>
+
+    <!-- Fixed Bottom Tab Bar (Mobile) -->
+    {#if isMobile}
+        <nav class="fixed bottom-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-white/10 safe-p-bottom transition-transform duration-300 {selectedPOI ? 'translate-y-full' : ''}" style="-webkit-backdrop-filter: blur(20px);">
+            <div class="flex items-center justify-around h-16">
+                <button 
+                    onclick={() => { mode = 'plan'; isSidebarOpen = true; selectedPOI = null; }}
+                    class="flex flex-col items-center gap-1 flex-1 {mode === 'plan' && isSidebarOpen ? 'text-blue-400' : 'text-slate-500'}"
+                >
+                    <div class="p-1">{@html icons.list}</div>
+                    <span class="text-[9px] font-black uppercase tracking-widest">Plan</span>
+                </button>
+                <button 
+                    onclick={() => { mode = 'explore'; isSidebarOpen = true; selectedPOI = null; }}
+                    class="flex flex-col items-center gap-1 flex-1 {mode === 'explore' && isSidebarOpen ? 'text-blue-400' : 'text-slate-500'}"
+                >
+                    <div class="p-1">{@html icons.compass}</div>
+                    <span class="text-[9px] font-black uppercase tracking-widest">Explore</span>
+                </button>
+                <button 
+                    onclick={() => isSidebarOpen = false}
+                    class="flex flex-col items-center gap-1 flex-1 {!isSidebarOpen ? 'text-blue-400' : 'text-slate-500'}"
+                >
+                    <div class="p-1">{@html icons.map}</div>
+                    <span class="text-[9px] font-black uppercase tracking-widest">Map</span>
+                </button>
+                <button 
+                    onclick={toggleSearch}
+                    class="flex flex-col items-center gap-1 flex-1 text-slate-500"
+                >
+                    <div class="p-1">{@html icons.search}</div>
+                    <span class="text-[9px] font-black uppercase tracking-widest">Registry</span>
+                </button>
+            </div>
+        </nav>
+    {/if}
 </div>
 
 <style>
