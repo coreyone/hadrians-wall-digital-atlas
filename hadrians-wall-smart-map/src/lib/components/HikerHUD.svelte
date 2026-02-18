@@ -41,12 +41,12 @@ $effect(() => {
     void tick().then(() => publishTopCoinLayout());
 });
 
-    function weatherGlyph(condition: string) {
+    function weatherIconClass(condition: string) {
         const normalized = condition.toLowerCase();
-        if (normalized.includes('rain') || normalized.includes('shower')) return '☔';
-        if (normalized.includes('cloud') || normalized.includes('overcast')) return '☁';
-        if (normalized.includes('wind')) return '🌀';
-        return '☀';
+        if (normalized.includes('rain') || normalized.includes('shower')) return 'hn-cloud';
+        if (normalized.includes('cloud') || normalized.includes('overcast')) return 'hn-cloud';
+        if (normalized.includes('wind')) return 'hn-refresh';
+        return 'hn-sun';
     }
 
     function progressPercent(progress: number, goal: number) {
@@ -86,17 +86,17 @@ $effect(() => {
 </div>
 
 <div class="fixed bottom-6 inset-x-3 z-[60]" in:fly={{ y: 40, duration: 500, delay: 120 }}>
-    <div class="rounded-2xl border border-white/15 p-3 shadow-2xl backdrop-blur-xl {$hikerMode.isDaytime ? 'bg-slate-900/82 text-white' : 'bg-slate-900/60 text-slate-100'} {$hikerMode.simplifiedHUD ? 'text-[15px]' : 'text-[13px]'}">
+    <div class="crt-hud-panel ds-panel ds-panel-strong rounded-2xl border p-3 shadow-2xl backdrop-blur-xl {$hikerMode.simplifiedHUD ? 'text-[15px]' : 'text-[13px]'}">
         <div class="mb-2 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em]">
-                <span>{weatherGlyph($hikerMode.weatherCondition)}</span>
+            <div class="hud-kicker flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em]">
+                <i class={`hn ${weatherIconClass($hikerMode.weatherCondition)} weather-pixel-icon`} aria-label={$hikerMode.weatherCondition}></i>
                 <span>{$hikerMode.weatherTempF.toFixed(0)}F · {$hikerMode.weatherCondition}</span>
             </div>
             <div class="flex items-center gap-2">
                 {#if $hikerMode.isLowBattery}
-                    <span class="rounded-full border border-orange-300/40 bg-orange-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.2em] text-orange-200">Low Battery</span>
+                    <span class="hud-alert-chip rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.2em]">Low Battery</span>
                 {/if}
-                <button onclick={onToggleSimplified} class="pointer-events-auto rounded-md border border-white/20 px-2 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-slate-100 hover:bg-white/10">
+                <button onclick={onToggleSimplified} class="hud-toggle ds-chip pointer-events-auto rounded-md border px-2 py-1 text-[9px] font-black uppercase tracking-[0.2em]">
                     {$hikerMode.simplifiedHUD ? 'Full HUD' : 'Simplified'}
                 </button>
             </div>
@@ -104,20 +104,20 @@ $effect(() => {
 
         <div class="mb-3 grid grid-cols-4 gap-2 text-center">
             <div>
-                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Walked</p>
-                <p class="font-black tabular-nums">{$hikerMode.distanceWalkedMiles.toFixed(1)} mi</p>
+                <p class="hud-label text-[9px] font-black uppercase tracking-[0.2em]">Walked</p>
+                <p class="hud-value font-black tabular-nums">{$hikerMode.distanceWalkedMiles.toFixed(1)} mi</p>
             </div>
             <div>
-                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Remain</p>
-                <p class="font-black tabular-nums">{$hikerMode.totalMilesRemaining.toFixed(1)} mi</p>
+                <p class="hud-label text-[9px] font-black uppercase tracking-[0.2em]">Remain</p>
+                <p class="hud-value font-black tabular-nums">{$hikerMode.totalMilesRemaining.toFixed(1)} mi</p>
             </div>
             <div>
-                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">ETA</p>
-                <p class="font-black tabular-nums text-amber-300">{$hikerMode.eta}</p>
+                <p class="hud-label text-[9px] font-black uppercase tracking-[0.2em]">ETA</p>
+                <p class="hud-highlight font-black tabular-nums">{$hikerMode.eta}</p>
             </div>
             <div>
-                <p class="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Pace to 5PM</p>
-                <p class="font-black tabular-nums">
+                <p class="hud-label text-[9px] font-black uppercase tracking-[0.16em]">Pace to 5PM</p>
+                <p class="hud-value font-black tabular-nums">
                     {formatPace(
                         $hikerMode.requiredPaceMinPerMileToDailyGoal,
                         $hikerMode.dailyRemainingMiles <= 0,
@@ -128,32 +128,32 @@ $effect(() => {
         </div>
 
         <div class="mb-3 space-y-2">
-            <div class="rounded-lg border border-amber-300/30 bg-amber-500/10 px-2.5 py-2">
-                <div class="mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.16em] text-amber-100">
+            <div class="hud-progress-card hud-progress-card--daily rounded-lg border px-2.5 py-2">
+                <div class="hud-progress-title mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.16em]">
                     <span>Daily Plan</span>
                     <span class="tabular-nums">{$hikerMode.distanceToday.toFixed(1)} / {$hikerMode.dailyGoalMiles.toFixed(1)} mi</span>
                 </div>
-                <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div class="hud-progress-track h-1.5 overflow-hidden rounded-full">
                     <span
-                        class="block h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-500"
+                        class="hud-progress-fill block h-full rounded-full"
                         style="width: {progressPercent($hikerMode.distanceToday, $hikerMode.dailyGoalMiles)}%;"
                     ></span>
                 </div>
             </div>
 
-            <div class="rounded-lg border border-blue-300/30 bg-blue-500/10 px-2.5 py-2">
-                <div class="mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.14em] text-blue-100">
+            <div class="hud-progress-card hud-progress-card--full rounded-lg border px-2.5 py-2">
+                <div class="hud-progress-title mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.14em]">
                     <span>Full Hike Carlisle to Corbridge</span>
                     <div class="flex items-center gap-2">
                         <span class="tabular-nums">{$hikerMode.fullTripProgressMiles.toFixed(1)} / {$hikerMode.fullTripGoalMiles.toFixed(1)} mi</span>
-                        <span class="rounded-full border border-blue-200/35 bg-blue-950/35 px-1.5 py-0.5 text-[8px] font-black tracking-[0.16em]">
+                        <span class="hud-integrity rounded-full border px-1.5 py-0.5 text-[8px] font-black tracking-[0.16em]">
                             {$hikerMode.integrity.toFixed(0)}%
                         </span>
                     </div>
                 </div>
-                <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div class="hud-progress-track h-1.5 overflow-hidden rounded-full">
                     <span
-                        class="block h-full rounded-full bg-gradient-to-r from-blue-300 to-blue-500"
+                        class="hud-progress-fill block h-full rounded-full"
                         style="width: {progressPercent($hikerMode.fullTripProgressMiles, $hikerMode.fullTripGoalMiles)}%;"
                     ></span>
                 </div>
@@ -161,13 +161,13 @@ $effect(() => {
         </div>
 
         <div class="mb-2 flex items-center justify-between text-[10px] font-bold">
-            <span class="flex items-center gap-1 text-emerald-300">▲ {$hikerMode.elevationGain} ft / 500m</span>
-            <span class="flex items-center gap-1 text-rose-300">▼ {$hikerMode.elevationLoss} ft / 500m</span>
-            <span class="text-slate-300">HDG {$hikerMode.heading.toFixed(0)}°</span>
+            <span class="hud-pos flex items-center gap-1">▲ {$hikerMode.elevationGain} ft / 500m</span>
+            <span class="hud-neg flex items-center gap-1">▼ {$hikerMode.elevationLoss} ft / 500m</span>
+            <span class="hud-heading">HDG {$hikerMode.heading.toFixed(0)}°</span>
         </div>
 
         {#if $hikerMode.isOffTrail}
-            <div class="mb-2 rounded-md border border-rose-300/40 bg-rose-500/20 px-2 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-rose-100">
+            <div class="hud-alert mb-2 rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-[0.18em]">
                 Off-trail drift: {$hikerMode.driftMeters.toFixed(0)}m
             </div>
         {/if}
@@ -175,9 +175,121 @@ $effect(() => {
         {#if $hikerMode.badges.length > 0}
             <div class="flex flex-wrap gap-1.5">
                 {#each $hikerMode.badges.slice(-3) as badge (badge.id)}
-                    <span class="rounded-full border border-emerald-300/35 bg-emerald-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-emerald-100">{badge.name}</span>
+                    <span class="hud-badge rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em]">{badge.name}</span>
                 {/each}
             </div>
         {/if}
     </div>
 </div>
+
+<style>
+    .crt-hud-panel {
+        position: relative;
+        color: var(--text-primary);
+        border-color: var(--stroke-default);
+        background:
+            radial-gradient(130% 95% at 18% 0%, oklch(0.940 0.070 255 / 0.24), transparent 56%),
+            linear-gradient(180deg, oklch(0.995 0.010 230 / 0.96), oklch(0.970 0.014 230 / 0.94));
+        box-shadow: var(--shadow-lg);
+    }
+
+    .crt-hud-panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        background: linear-gradient(180deg, oklch(0.995 0.010 230 / 0.65), transparent 30%);
+        opacity: 0.4;
+    }
+
+    .crt-hud-panel > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hud-kicker,
+    .hud-label {
+        color: var(--text-muted);
+    }
+
+    .weather-pixel-icon {
+        font-size: 0.9rem;
+        color: var(--action-primary);
+    }
+
+    .hud-value,
+    .hud-heading {
+        color: var(--text-primary);
+        text-shadow: none;
+    }
+
+    .hud-highlight {
+        color: var(--action-primary);
+        text-shadow: none;
+    }
+
+    .hud-toggle {
+        border-color: var(--stroke-default);
+        background: var(--surface-raised);
+        color: var(--text-secondary);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .hud-toggle:hover {
+        background: var(--surface-hover);
+    }
+
+    .hud-alert-chip,
+    .hud-alert {
+        border-color: var(--warning-200);
+        background: var(--warning-50);
+        color: oklch(0.440 0.130 85);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .hud-progress-card {
+        border-color: var(--stroke-default);
+        background: var(--surface);
+        box-shadow: inset 0 0 0 1px var(--stroke-subtle);
+    }
+
+    .hud-progress-title {
+        color: var(--text-secondary);
+    }
+
+    .hud-progress-track {
+        background: var(--n100);
+    }
+
+    .hud-progress-fill {
+        background: linear-gradient(90deg, var(--blue-400), var(--blue-600));
+        box-shadow: 0 1px 2px oklch(0.200 0.030 250 / 0.16);
+    }
+
+    .hud-progress-card--daily .hud-progress-fill {
+        background: linear-gradient(90deg, var(--blue-300), var(--blue-500));
+    }
+
+    .hud-progress-card--full .hud-progress-fill {
+        background: linear-gradient(90deg, var(--blue-400), var(--blue-600));
+    }
+
+    .hud-integrity {
+        border-color: var(--stroke-default);
+        background: var(--surface-raised);
+        color: var(--text-secondary);
+        text-shadow: none;
+    }
+
+    .hud-pos,
+    .hud-neg {
+        color: var(--text-secondary);
+    }
+
+    .hud-badge {
+        border-color: var(--info-200);
+        background: var(--info-50);
+        color: oklch(0.440 0.120 210);
+    }
+</style>

@@ -1,9 +1,10 @@
 import * as turf from '@turf/turf';
 import type { Feature, LineString } from 'geojson';
-import { itinerary, trailGeoJSON } from '$lib/data/trail';
+import { planAvgSpeedMidMph, planTotalMiles, trailGeoJSON, walkingStages } from '$lib/data/trail';
 
-const WALKING_STAGES = itinerary.filter((stage) => stage.distanceMi > 0);
-const PLAN_TOTAL_MILES = WALKING_STAGES.reduce((sum, stage) => sum + stage.distanceMi, 0);
+const WALKING_STAGES = walkingStages;
+const PLAN_TOTAL_MILES = planTotalMiles;
+const PLAN_BASELINE_SPEED_MPH = planAvgSpeedMidMph;
 const NEXT_WINDOW_MILES = 0.310686; // ~500m
 
 interface PositionSample {
@@ -127,7 +128,7 @@ class NavigationService {
     }
 
     private computeEta(milesRemaining: number, speedMph: number, nowTs: number) {
-        const effectiveSpeed = speedMph > 0.4 ? speedMph : 2.8;
+        const effectiveSpeed = speedMph > 0.4 ? speedMph : PLAN_BASELINE_SPEED_MPH;
         const etaMs = nowTs + (milesRemaining / effectiveSpeed) * 3600000;
         return new Date(etaMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }

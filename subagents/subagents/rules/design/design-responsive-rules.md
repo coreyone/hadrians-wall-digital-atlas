@@ -108,3 +108,50 @@ Each component must specify:
   - Keep key actions visible (e.g., Search, Cart, Primary CTA).
   - Keep the menu label clear (“Menu” + icon) if space permits.
 - For tablet and up, consider surfacing top-level categories or persistent nav.
+
+---
+
+## 6) Text wrapping policy (Tailwind execution rules)
+Use Tailwind text-wrap utilities intentionally so dense UIs stay scannable at narrow widths.
+
+### 6.1 Utility decision matrix
+- `text-wrap`:
+  - Default body behavior. Use when standard wrapping is fine.
+  - Good for list items, metadata, and paragraph copy.
+- `text-nowrap`:
+  - Keep short tokens on one line (badges, pills, micro-labels, tiny metrics).
+  - Never use for long strings or unknown-length content.
+- `text-balance`:
+  - Use for short headings and titles (typically <= 3 lines).
+  - Helps prevent awkward ragged line breaks in card/drawer headers.
+- `text-pretty`:
+  - Use for medium-length titles and descriptive copy.
+  - Prefer this for route names, POI names, and compact helper text where orphan words hurt scanability.
+
+### 6.2 Responsive wrapping rules
+- Mobile-first default:
+  - Prefer wrap-friendly behavior (`text-wrap` or `text-pretty`) on narrow viewports.
+- At larger breakpoints:
+  - Promote stable single-line UI labels with breakpoint overrides (for example, `text-pretty md:text-nowrap`).
+- Mixed content rows:
+  - If a row has fixed metrics + variable text, allow wrapping on the variable text and keep metrics non-wrapping.
+
+### 6.3 Drawer-specific standards (Plan/Explore)
+- Stage/POI titles:
+  - Use `text-pretty` (or `text-balance` for short hero titles), never hard truncation by default.
+- Chip labels and compact metrics:
+  - Use `text-nowrap`.
+- Status/utility rows:
+  - Use `flex-wrap` on mobile and tighten to `md:flex-nowrap` when space allows.
+- Avoid silent clipping:
+  - Do not rely on `truncate` unless text loss is acceptable and explicitly approved.
+
+### 6.4 Code patterns (Tailwind)
+- Heading:
+  - `class="text-balance"`
+- Dense title:
+  - `class="text-pretty leading-tight"`
+- Metric token:
+  - `class="text-nowrap tabular-nums"`
+- Responsive:
+  - `class="text-pretty md:text-nowrap"`

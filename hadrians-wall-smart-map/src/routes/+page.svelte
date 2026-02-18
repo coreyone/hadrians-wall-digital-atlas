@@ -5,7 +5,14 @@
     import { hikerMode } from '$lib/stores/hikerMode';
     import type { PageData } from './$types';
     import { fetchPageSummary } from '$lib/services/wikipedia';
-    import { itinerary, englishHeritageSites, hospitalitySites, overnightStops } from '$lib/data/trail';
+    import {
+        itinerary,
+        englishHeritageSites,
+        hospitalitySites,
+        overnightStops,
+        planAvgSpeedMidMph,
+        planTotalMiles
+    } from '$lib/data/trail';
     import { fade, fly, slide } from 'svelte/transition';
     import { compassService } from '$lib/services/compass';
     import { gamificationService } from '$lib/services/gamification';
@@ -64,6 +71,7 @@
     let showMobileSplash = $state(false);
     let splashMinElapsed = $state(false);
     let mapReady = $state(false);
+    let ukNowTick = $state(Date.now());
     let compassHeading = $state(0);
     let compassNeedsCalibration = $state(false);
     let compassUnstableSinceTs = $state<number | null>(null);
@@ -87,6 +95,59 @@
     const MOBILE_SPLASH_SHOW_DELAY_MS = 120;
     const MOBILE_SPLASH_MIN_VISIBLE_MS = 320;
     const MOBILE_SPLASH_HARD_TIMEOUT_MS = 1700;
+    const planAvgSpeedMidLabel = `${planAvgSpeedMidMph.toFixed(2)} MPH`;
+    const PLAN_LIGHT_START_DATE_KEY = '2026-04-11';
+    const PLAN_LIGHT_END_DATE_KEY = '2026-04-20';
+    const PLAN_LIGHT_WINDOWS = {
+        '2026-04-11': { goldenHour: '7:09 PM +', sunset: '8:09 PM', lastLight: '8:45 PM' },
+        '2026-04-12': { goldenHour: '7:11 PM +', sunset: '8:11 PM', lastLight: '8:47 PM' },
+        '2026-04-13': { goldenHour: '7:13 PM +', sunset: '8:13 PM', lastLight: '8:49 PM' },
+        '2026-04-14': { goldenHour: '7:15 PM +', sunset: '8:15 PM', lastLight: '8:52 PM' },
+        '2026-04-15': { goldenHour: '7:17 PM +', sunset: '8:17 PM', lastLight: '8:54 PM' },
+        '2026-04-16': { goldenHour: '7:19 PM +', sunset: '8:19 PM', lastLight: '8:56 PM' },
+        '2026-04-17': { goldenHour: '7:21 PM +', sunset: '8:21 PM', lastLight: '8:58 PM' },
+        '2026-04-18': { goldenHour: '7:23 PM +', sunset: '8:23 PM', lastLight: '9:00 PM' },
+        '2026-04-19': { goldenHour: '7:24 PM +', sunset: '8:24 PM', lastLight: '9:02 PM' },
+        '2026-04-20': { goldenHour: '7:26 PM +', sunset: '8:26 PM', lastLight: '9:04 PM' }
+    } as const;
+
+    function ukDateKey(nowMs = Date.now()) {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/London',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(new Date(nowMs));
+    }
+
+    function tripLightDateKey(nowMs = Date.now()) {
+        const currentKey = ukDateKey(nowMs);
+        if (currentKey < PLAN_LIGHT_START_DATE_KEY) return PLAN_LIGHT_START_DATE_KEY;
+        if (currentKey > PLAN_LIGHT_END_DATE_KEY) return PLAN_LIGHT_END_DATE_KEY;
+        return currentKey;
+    }
+
+    function tripLightDateLabel(dateKey: string) {
+        const date = new Date(`${dateKey}T12:00:00+01:00`);
+        const formatted = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/London',
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric'
+        }).format(date);
+        return `UK · ${formatted}`;
+    }
+
+    const planLightWindow = $derived.by(() => {
+        const dateKey = tripLightDateKey(ukNowTick);
+        const windows = PLAN_LIGHT_WINDOWS[dateKey as keyof typeof PLAN_LIGHT_WINDOWS];
+        return {
+            date: tripLightDateLabel(dateKey),
+            goldenHour: windows.goldenHour,
+            sunset: windows.sunset,
+            lastLight: windows.lastLight
+        };
+    });
 
     let filteredDiscovery = $derived.by(() => {
         const query = searchQuery.trim().toLowerCase();
@@ -169,6 +230,9 @@
         isMobile = mql.matches;
         const handleMedia = (e: MediaQueryListEvent) => (isMobile = e.matches);
         mql.addEventListener('change', handleMedia);
+        const ukTickInterval = setInterval(() => {
+            ukNowTick = Date.now();
+        }, 60000);
 
         let splashShowTimer: ReturnType<typeof setTimeout> | null = null;
         let splashMinTimer: ReturnType<typeof setTimeout> | null = null;
@@ -227,6 +291,7 @@
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
             mql.removeEventListener('change', handleMedia);
+            clearInterval(ukTickInterval);
             if (splashShowTimer) clearTimeout(splashShowTimer);
             if (splashMinTimer) clearTimeout(splashMinTimer);
             if (splashHardTimer) clearTimeout(splashHardTimer);
@@ -256,6 +321,35 @@
 
     let searchInput = $state<HTMLInputElement>();
 
+    let searchNeedle = $derived(searchQuery.trim().toLowerCase());
+
+    let visibleHeritageSites = $derived.by(() =>
+        englishHeritageSites.filter((site) => !searchNeedle || site.name.toLowerCase().includes(searchNeedle))
+    );
+
+    let visibleHospitalitySites = $derived.by(() =>
+        hospitalitySites.filter((site) => !searchNeedle || site.name.toLowerCase().includes(searchNeedle))
+    );
+
+    let visibleDiscoveryPOIs = $derived(filteredDiscovery.slice(0, 20));
+
+    let activeExploreCategoryCount = $derived.by(
+        () => Number(activeCategories.heritage) + Number(activeCategories.pubs) + Number(activeCategories.discovery)
+    );
+
+    let activeRegistryResultCount = $derived.by(() => {
+        let total = 0;
+        if (activeCategories.heritage) total += visibleHeritageSites.length;
+        if (activeCategories.pubs) total += visibleHospitalitySites.length;
+        if (activeCategories.discovery) total += visibleDiscoveryPOIs.length;
+        return total;
+    });
+
+    function resetExploreFilters() {
+        searchQuery = '';
+        activeCategories = { heritage: true, pubs: true, discovery: true };
+    }
+
     async function handlePOIClick(poi: any) {
         mode = 'explore';
         isSidebarOpen = true;
@@ -280,6 +374,10 @@
 
     function toggleStage(id: number) {
         selectedStageId = selectedStageId === id ? null : id;
+    }
+
+    function isSkinnyPlanStage(stage: { difficulty: string; id: number }) {
+        return stage.difficulty === 'Departure';
     }
 
     function toggleMilestones(id: number) {
@@ -331,7 +429,8 @@
     let lastTap = 0;
     let tapCount = 0;
 
-    async function activateHikerMode() {
+async function activateHikerMode() {
+        if (!isMobile) return;
         if (coinMorphBusy) return;
         coinMorphBusy = true;
         try {
@@ -384,6 +483,12 @@
         gpsHeading = null;
         latestGpsSpeedMph = 0;
     }
+
+    $effect(() => {
+        if (!isMobile && $hikerMode.isActive) {
+            deactivateHikerMode();
+        }
+    });
 
     async function deactivateHikerModeWithMorph() {
         if (coinMorphBusy) return;
@@ -620,7 +725,7 @@
 <svelte:window ontouchstart={handleHikerTouchStart} ontouchend={handleHikerTouchEnd} />
 
 <!-- Hiker HUD Overlay -->
-{#if $hikerMode.isActive}
+{#if $hikerMode.isActive && isMobile}
     <HikerHUD
         onToggleSimplified={toggleSimplifiedHUD}
         onCoinTap={handleCoinTap}
@@ -629,7 +734,7 @@
     />
 {/if}
 
-{#if showCompassFallbackNotice && $hikerMode.isActive}
+{#if showCompassFallbackNotice && $hikerMode.isActive && isMobile}
     <div class="fixed top-24 left-1/2 z-[70] flex w-[min(92vw,26rem)] -translate-x-1/2 items-center justify-between gap-2 rounded-xl border border-amber-300/35 bg-amber-500/90 px-3 py-2 text-slate-950 shadow-2xl">
         <p class="text-[10px] font-black uppercase tracking-[0.12em]">Compass unstable; using North-Up for now.</p>
         <button
@@ -667,13 +772,18 @@
     </div>
 {/if}
 
-<div class="flex h-screen w-full overflow-hidden bg-canvas text-slate-300 font-sans antialiased text-[13px] selection:bg-blue-500/30 relative">
+<div class="crt-workstation flex h-screen w-full overflow-hidden bg-canvas text-slate-300 antialiased text-[13px] selection:bg-blue-500/30 relative">
     <!-- Sticky Header (Mobile) -->
     {#if isMobile}
-        <header class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/5 safe-p-top transition-transform duration-300 {!isSidebarOpen ? 'translate-y-0' : '-translate-y-full'}" style="-webkit-backdrop-filter: blur(20px);">
+        <header class="crt-mobile-header fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-white/5 safe-p-top transition-transform duration-300 {!isSidebarOpen ? 'translate-y-0' : '-translate-y-full'}" style="-webkit-backdrop-filter: blur(20px);">
             <div class="flex items-center justify-between h-14 px-4">
-                <div class="flex flex-col">
-                    <h1 class="text-white font-black uppercase text-[10px] tracking-[0.2em]">Hadrian Atlas</h1>
+                <div class="flex items-center gap-2">
+                    <span class="atlas-logo-mark atlas-logo-mark-mobile" aria-hidden="true">
+                        <span class="atlas-logo-north-star"></span>
+                    </span>
+                    <div class="flex flex-col">
+                        <h1 class="text-white font-black uppercase text-[10px] tracking-[0.2em]">Hadrian Atlas</h1>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <button
@@ -704,7 +814,7 @@
         ></button>
     {/if}
 
-    <aside class="{isSidebarOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:-translate-x-full'} fixed inset-x-0 bottom-0 md:inset-y-0 md:left-0 z-40 h-[85vh] md:h-full md:w-[320px] bg-surface/95 backdrop-blur-2xl border-t md:border-t-0 md:border-r border-white/10 transition-transform duration-500 md:duration-300 md:relative flex flex-col shadow-2xl rounded-t-2xl md:rounded-none overflow-hidden" style="-webkit-backdrop-filter: blur(40px);">
+    <aside class="crt-sidebar crt-shell {isSidebarOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:-translate-x-full'} fixed inset-x-0 bottom-0 md:inset-y-0 md:left-0 z-40 h-[94vh] md:h-full md:w-[352px] bg-surface/95 backdrop-blur-2xl border-t md:border-t-0 md:border-r border-white/10 transition-transform duration-500 md:duration-300 md:relative flex flex-col shadow-2xl rounded-t-2xl md:rounded-none overflow-hidden" style="-webkit-backdrop-filter: blur(40px);">
         <!-- Drawer Handle for Mobile -->
         {#if isMobile}
             <button
@@ -722,9 +832,14 @@
         
         <header class="p-4 border-b border-white/5 flex flex-col gap-4">
             <div class="flex items-center justify-between">
-                <div class="flex flex-col">
-                    <h1 class="text-white font-black uppercase text-[11px] tracking-[0.2em]">Hadrian Atlas</h1>
-                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">v4.2 Tactical Instrument</span>
+                <div class="flex items-center gap-2.5">
+                    <span class="atlas-logo-mark" aria-hidden="true">
+                        <span class="atlas-logo-north-star"></span>
+                    </span>
+                    <div class="flex flex-col">
+                        <h1 class="text-white font-black uppercase text-[11px] tracking-[0.2em]">Hadrian Atlas</h1>
+                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">v4.2 Tactical Instrument</span>
+                    </div>
                 </div>
                 <div class="flex items-center gap-3">
                     {#if isMobile}
@@ -741,52 +856,100 @@
                 </div>
             </div>
 
-            <div class="flex p-0.5 bg-inset rounded-lg border border-white/5">
-                <button onclick={() => { mode = 'plan'; selectedPOI = null; }} class="flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all active:scale-95 {mode === 'plan' ? 'bg-white/10 shadow-sm text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}">Plan</button>
-                <button onclick={() => mode = 'explore'} class="flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all active:scale-95 {mode === 'explore' ? 'bg-white/10 shadow-sm text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}">Explore</button>
+            <div class="ds-segmented flex p-0.5 bg-inset rounded-lg border border-white/5">
+                <button onclick={() => { mode = 'plan'; selectedPOI = null; }} class="ds-segmented-btn flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all active:scale-95 {mode === 'plan' ? 'ds-segmented-btn-active bg-white/10 shadow-sm text-white' : 'ds-segmented-btn-inactive text-slate-500 hover:text-slate-300 hover:bg-white/5'}">Plan</button>
+                <button onclick={() => mode = 'explore'} class="ds-segmented-btn flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all active:scale-95 {mode === 'explore' ? 'ds-segmented-btn-active bg-white/10 shadow-sm text-white' : 'ds-segmented-btn-inactive text-slate-500 hover:text-slate-300 hover:bg-white/5'}">Explore</button>
             </div>
+
         </header>
 
-        <div class="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar pb-32">
+        <div class="flex-1 min-h-0 overflow-x-hidden scroll-smooth custom-scrollbar {selectedPOI ? 'overflow-hidden pb-0' : 'overflow-y-auto pb-32 md:pb-6'}">
             {#if mode === 'plan'}
                 <div class="p-4 space-y-4" in:fade>
                     <div class="space-y-3">
-                        <div class="flex items-center justify-between px-3 bg-inset py-2.5 rounded-lg border border-white/5 text-[10px] font-bold tabular-nums">
-                            <span class="flex items-center gap-2 text-slate-500 uppercase tracking-tighter">{@html icons.sun} 06:14 / 20:08</span>
-                            <span class="text-blue-400 uppercase tracking-widest">54°F · Mostly Clear</span>
+                        <div class="ds-panel flex items-center justify-between gap-2 px-3 bg-inset py-2.5 rounded-lg border border-white/5 text-[10px] font-bold tabular-nums">
+                            <span class="flex items-center gap-2 text-slate-500 uppercase tracking-tighter text-pretty md:text-nowrap"><i class="hn hn-clock plan-light-strip__icon" aria-hidden="true"></i>{planLightWindow.date}</span>
+                            <span class="text-blue-400 uppercase tracking-widest text-pretty text-right md:text-nowrap">54°F · Mostly Clear</span>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-1 bg-inset p-3 rounded-lg border border-white/5 text-white shadow-inner">
-                            <div class="text-center"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Distance</span><span class="font-bold text-xs tracking-tighter tabular-nums">46.0 MI</span></div>
+                        <div class="ds-panel plan-light-strip px-3 py-2 rounded-lg border border-white/5">
+                            <div class="plan-light-strip__grid text-[8px] font-black tracking-[0.06em] tabular-nums">
+                                <div class="plan-light-strip__cell">
+                                    <span class="plan-light-strip__label"><i class="hn hn-sun plan-light-strip__icon" aria-hidden="true"></i>Golden Hour</span>
+                                    <span class="plan-light-strip__value text-nowrap">{planLightWindow.goldenHour}</span>
+                                </div>
+                                <div class="plan-light-strip__cell">
+                                    <span class="plan-light-strip__label"><i class="hn hn-sun-solid plan-light-strip__icon" aria-hidden="true"></i>Sunset</span>
+                                    <span class="plan-light-strip__value text-nowrap">{planLightWindow.sunset}</span>
+                                </div>
+                                <div class="plan-light-strip__cell">
+                                    <span class="plan-light-strip__label"><i class="hn hn-moon plan-light-strip__icon" aria-hidden="true"></i>Last Light</span>
+                                    <span class="plan-light-strip__value text-nowrap">{planLightWindow.lastLight}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ds-panel grid grid-cols-3 gap-1 bg-inset p-3 rounded-lg border border-white/5 text-white shadow-inner">
+                            <div class="text-center"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Distance</span><span class="font-bold text-xs tracking-tighter tabular-nums">{planTotalMiles.toFixed(1)} MI</span></div>
                             <div class="text-center border-x border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Gain</span><span class="font-bold text-xs tracking-tighter tabular-nums">+3,508 FT</span></div>
-                            <div class="text-center"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Avg Pace</span><span class="font-bold text-xs tracking-tighter tabular-nums">2.8 MPH</span></div>
+                            <div class="text-center">
+                                <span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Plan Avg Speed</span>
+                                <span class="block font-bold text-xs tracking-tighter tabular-nums">{planAvgSpeedMidLabel}</span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="space-y-1.5">
+                        <div class="flex items-center px-1.5">
+                            <span class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Daily Stages</span>
+                        </div>
                         {#each itinerary as stage, i}
+                            {@const skinnyStage = isSkinnyPlanStage(stage)}
                             <div in:fade={{ delay: i * 50 }}>
+                                <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
                                 <div 
-                                    role="button" 
-                                    tabindex="0" 
-                                    onclick={() => toggleStage(stage.id)} 
-                                    onkeydown={(e) => e.key === 'Enter' && toggleStage(stage.id)}
-                                    class="w-full text-left p-3 rounded-lg border transition-all active:scale-[0.98] {selectedStageId === stage.id ? 'bg-white/5 border-blue-500/30 shadow-glow' : 'bg-transparent border-transparent hover:bg-white/5'}"
+                                    role={skinnyStage ? undefined : 'button'} 
+                                    tabindex={skinnyStage ? -1 : 0} 
+                                    onclick={() => {
+                                        if (!skinnyStage) toggleStage(stage.id);
+                                    }} 
+                                    onkeydown={(e) => {
+                                        if (e.key === 'Enter' && !skinnyStage) toggleStage(stage.id);
+                                    }}
+                                    class="ds-panel w-full text-left rounded-lg border transition-all {skinnyStage ? 'p-2.5 md:p-3' : 'p-3 active:scale-[0.98]'} {selectedStageId === stage.id && !skinnyStage ? 'bg-white/5 border-blue-500/30 shadow-glow' : 'bg-transparent border-transparent hover:bg-white/5'}"
                                 >
-                                    <div class="flex justify-between items-start mb-1.5 pointer-events-none">
-                                        <div class="flex flex-col">
-                                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">{stage.romanDate}</span>
-                                            <h3 class="text-[13px] font-bold text-white tracking-tight leading-tight">{stage.from} → {stage.to}</h3>
+                                    <div class="flex gap-2.5 items-start pointer-events-none">
+                                        <div class="shrink-0 {skinnyStage ? 'min-w-[56px]' : 'min-w-[52px]'} rounded-md border border-white/5 bg-inset px-2 py-1.5 text-center">
+                                            <span class="block text-[8px] font-black uppercase tracking-[0.14em] text-slate-500">Day {stage.id}</span>
+                                            <span class="block text-[10px] font-black text-slate-200 mt-0.5">{stage.date}</span>
                                         </div>
-                                        <div class="text-lg filter grayscale opacity-50">{stage.mithraicSymbol}</div>
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="text-[13px] font-bold text-white tracking-tight leading-tight text-pretty">{stage.from} → {stage.to}</h3>
+                                            <div class="mt-1 flex flex-wrap items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                                                {#if skinnyStage}
+                                                    {#if stage.planCardNote}
+                                                        <span class="rounded-sm border border-blue-500/25 px-1.5 py-0.5 bg-blue-500/10 text-blue-300 tracking-[0.08em]">{stage.planCardNote}</span>
+                                                    {/if}
+                                                {:else}
+                                                    <span class="rounded-sm border border-white/5 px-1.5 py-0.5 bg-inset">{stage.difficulty}</span>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                        <i class={`hn ${stage.mithraicIconClass} stage-mithraic-icon`} aria-label={`${stage.mithraicGrade} icon`}></i>
                                     </div>
-                                    <div class="flex gap-3 text-[10px] text-slate-400 uppercase tracking-tighter font-bold tabular-nums pointer-events-none">
-                                        <span class="flex items-center gap-1">{@html icons.clock} {stage.timeHours[0]}-{stage.timeHours[1]}h</span>
-                                        <span class="flex items-center gap-1">{@html icons.mountain} +{stage.elevationGainFt}ft</span>
-                                        <span class="flex items-center gap-1 text-blue-400">{@html icons.footprints} {stage.distanceMi} mi</span>
-                                    </div>
+                                    {#if !skinnyStage}
+                                        <div class="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1 text-[9px] uppercase tracking-[0.1em] font-bold tabular-nums pointer-events-none">
+                                            <span class="rounded-sm border border-white/5 bg-inset px-1.5 py-1 text-slate-300 text-center leading-tight">
+                                                <span class="block text-[8px] tracking-[0.12em]">TIME</span>
+                                                <span class="block text-[10px] tabular-nums">{stage.timeHours[0]}-{stage.timeHours[1]}H</span>
+                                            </span>
+                                            <span class="rounded-sm border border-blue-500/20 bg-blue-500/10 px-1.5 py-1 text-blue-400 text-center leading-tight">{stage.distanceMi} mi</span>
+                                            <span class="rounded-sm border border-white/5 bg-inset px-1.5 py-1 text-slate-300 text-center leading-tight">+{stage.elevationGainFt} ft</span>
+                                            <span class="rounded-sm border border-white/5 bg-inset px-1.5 py-1 text-center leading-tight {stage.supplyStatus === 'Critical' ? 'text-orange-400' : stage.supplyStatus === 'Low' ? 'text-amber-400' : 'text-emerald-400'}">{stage.supplyStatus}</span>
+                                        </div>
+                                    {/if}
                                     
-                                    {#if selectedStageId === stage.id}
+                                    {#if !skinnyStage && selectedStageId === stage.id}
                                         <div 
                                             class="mt-4 pt-4 border-t border-white/5 space-y-4" 
                                             transition:slide 
@@ -795,13 +958,18 @@
                                             onkeydown={(e) => e.key === 'Enter' && e.stopPropagation()}
                                         >
                                             <div class="grid grid-cols-2 gap-2">
-                                                <div class="bg-inset p-2.5 rounded-md border border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Surface</span><span class="text-[11px] font-bold text-slate-300 truncate block">{stage.surface}</span></div>
-                                                <div class="bg-inset p-2.5 rounded-md border border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Logistics</span><span class="text-[11px] font-bold {stage.supplyStatus === 'Critical' ? 'text-orange-400' : 'text-slate-300'}">{stage.supplyStatus}</span></div>
+                                                <div class="bg-inset p-2.5 rounded-md border border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5 text-nowrap">Surface</span><span class="text-[11px] font-bold text-slate-300 block text-pretty">{stage.surface}</span></div>
+                                                <div class="bg-inset p-2.5 rounded-md border border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5 text-nowrap">Terrain</span><span class="text-[11px] font-bold text-slate-300 leading-snug block text-pretty">{stage.terrain}</span></div>
                                             </div>
                                             
+                                            <div class="rounded-md border border-white/5 bg-inset px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                                                <span class="text-slate-500">Supplies:</span>
+                                                <span class="ml-1 {stage.supplyStatus === 'Critical' ? 'text-orange-400' : stage.supplyStatus === 'Low' ? 'text-amber-400' : 'text-emerald-400'}">{stage.supplyStatus}</span>
+                                            </div>
+
                                             <div class="bg-inset p-3 rounded-md border border-white/5 space-y-3">
                                                 <button onclick={(e) => { e.stopPropagation(); toggleMilestones(stage.id); }} class="w-full flex items-center justify-between group">
-                                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-400 transition-colors">Trail Milestones</span>
+                                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-400 transition-colors">Trail Milestones ({stage.milestones.length})</span>
                                                     <div class="text-slate-600 transition-transform {expandedMilestoneStages.has(stage.id) ? '' : '-rotate-90'}">{@html icons.caret}</div>
                                                 </button>
                                                 
@@ -811,10 +979,10 @@
                                                             <div class="flex items-start gap-3 border-l border-white/10 pl-3 relative group/ms">
                                                                 <div class="absolute -left-[3px] top-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                                                                 <div class="flex-1 min-w-0">
-                                                                    <div class="flex justify-between items-center gap-2 mb-1">
-                                                                        <span class="text-[11px] font-black uppercase tracking-tighter truncate text-slate-200">{ms.name}</span>
+                                                                    <div class="flex justify-between items-start gap-2 mb-1">
+                                                                        <span class="flex-1 min-w-0 text-[11px] font-black uppercase tracking-tighter text-slate-200 text-pretty">{ms.name}</span>
                                                                         <div class="flex items-center gap-2">
-                                                                            <span class="text-[10px] font-mono text-blue-400 tabular-nums">{new Date(new Date("2026-04-12T09:00:00").getTime() + (ms.mi / 2.8) * 3600000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                                            <span class="text-[10px] font-mono text-blue-400 tabular-nums text-nowrap">{new Date(new Date("2026-04-13T09:00:00").getTime() + (ms.mi / 2.8) * 3600000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                                                             <button onclick={(e) => { e.stopPropagation(); flyToMilestone(stage, ms); }} class="p-1 hover:bg-white/10 rounded transition-colors opacity-0 group-hover/ms:opacity-100">{@html icons.arrowRight}</button>
                                                                         </div>
                                                                     </div>
@@ -827,12 +995,12 @@
                                             </div>
 
                                             <div class="bg-white/5 p-3 rounded-md border border-white/5">
-                                                <span class="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Fueling Strategy</span>
+                                                <span class="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Food + Logistics Notes</span>
                                                 <ul class="space-y-1.5">
                                                     {#each stage.fuelingLogistics as item}
                                                         <li class="flex items-start gap-2 text-[11px] text-slate-400 leading-snug">
                                                             <div class="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0"></div>
-                                                            <span>{item}</span>
+                                                            <span class="text-pretty">{item}</span>
                                                         </li>
                                                     {/each}
                                                 </ul>
@@ -845,13 +1013,13 @@
                     </div>
                 </div>
             {:else if selectedPOI}
-                <div class="p-6 space-y-6 flex flex-col h-full overflow-hidden" in:fly={{ x: 20, duration: 300 }}>
+                <div class="p-4 md:p-5 space-y-4 md:space-y-5 flex flex-col h-full min-h-0 overflow-hidden" in:fly={{ x: 20, duration: 300 }}>
                     <button onclick={() => selectedPOI = null} class="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-500 hover:text-blue-400 transition-colors tracking-[0.2em] active:scale-95">{@html icons.arrowLeft} Back to Registry</button>
                     
-                    <div class="space-y-4">
+                    <div class="space-y-3 md:space-y-4">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex flex-col gap-1.5">
-                                <h2 class="text-xl font-bold text-white leading-tight tracking-tight">{selectedPOI.title || selectedPOI.name}</h2>
+                                <h2 class="text-xl font-bold text-white leading-tight tracking-tight text-balance">{selectedPOI.title || selectedPOI.name}</h2>
                                 {#if (selectedPOI as any).types}
                                     <div class="flex gap-1.5">
                                         {#each (selectedPOI as any).types as type}
@@ -871,36 +1039,36 @@
                         </div>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
+                    <div class="flex-1 min-h-0 overflow-y-auto pr-1 md:pr-2 custom-scrollbar space-y-4 md:space-y-5">
                         {#if selectedPOI.bourdainIntel}
                             <div class="bg-amber-500/5 border border-amber-500/10 p-4 rounded-lg space-y-2.5">
                                 <span class="text-[10px] font-black uppercase text-amber-500 tracking-[0.15em] flex items-center gap-2">Bourdain's Intel</span>
-                                <p class="text-[13px] font-medium text-amber-200/80 leading-relaxed italic">"{selectedPOI.bourdainIntel}"</p>
+                                <p class="text-[13px] font-medium text-amber-200/80 leading-relaxed italic text-pretty">"{selectedPOI.bourdainIntel}"</p>
                             </div>
                         {/if}
 
                         {#if selectedPOI.fryeIntel}
                             <div class="bg-white/5 border border-white/5 p-4 rounded-lg space-y-2.5">
                                 <span class="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] flex items-center gap-2">Frye's Perspective</span>
-                                <p class="text-[13px] font-medium text-slate-300 leading-relaxed italic">"{selectedPOI.fryeIntel}"</p>
+                                <p class="text-[13px] font-medium text-slate-300 leading-relaxed italic text-pretty">"{selectedPOI.fryeIntel}"</p>
                             </div>
                         {/if}
 
                         {#if selectedPOI.rickStevesIntel}
                             <div class="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-lg space-y-2.5">
                                 <span class="text-[10px] font-black uppercase text-emerald-500 tracking-[0.15em] flex items-center gap-2">Rick Steves' Advice</span>
-                                <p class="text-[13px] font-medium text-emerald-200/80 leading-relaxed italic">"{selectedPOI.rickStevesIntel}"</p>
+                                <p class="text-[13px] font-medium text-emerald-200/80 leading-relaxed italic text-pretty">"{selectedPOI.rickStevesIntel}"</p>
                             </div>
                         {/if}
 
                         {#if selectedPOI.photoIntel}
                             <div class="bg-indigo-500/5 border border-indigo-500/10 p-4 rounded-lg space-y-2.5">
                                 <span class="text-[10px] font-black uppercase text-indigo-400 tracking-[0.15em] flex items-center gap-2">{@html icons.camera} Photography Tips</span>
-                                <p class="text-[13px] font-medium text-indigo-200/80 leading-relaxed italic">"{selectedPOI.photoIntel}"</p>
+                                <p class="text-[13px] font-medium text-indigo-200/80 leading-relaxed italic text-pretty">"{selectedPOI.photoIntel}"</p>
                             </div>
                         {/if}
 
-                        <div class="font-serif italic text-[15px] text-slate-400 leading-relaxed border-t border-white/5 pt-6">"{selectedPOI.summary || "Extracting archaeological data..."}"</div>
+                        <div class="font-serif italic text-[15px] text-slate-400 leading-relaxed border-t border-white/5 pt-6 text-pretty">"{selectedPOI.summary || "Extracting archaeological data..."}"</div>
                     </div>
                 </div>
             {:else}
@@ -908,31 +1076,58 @@
                     <div class="flex flex-col gap-4">
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors">{@html icons.search}</div>
-                            <input type="text" bind:this={searchInput} bind:value={searchQuery} placeholder="Search Registry..." class="w-full bg-inset border border-white/5 rounded-lg py-2.5 pl-9 pr-4 text-[12px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:bg-white/5 transition-all shadow-inner placeholder:text-slate-600" />
+                            <input type="text" bind:this={searchInput} bind:value={searchQuery} placeholder="Search places by name..." class="ds-input w-full bg-inset border border-white/5 rounded-lg py-2.5 pl-9 pr-4 text-[12px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:bg-white/5 transition-all shadow-inner placeholder:text-slate-600" />
                         </div>
                         
-                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                            <button onclick={() => activeCategories.heritage = !activeCategories.heritage} class="px-2.5 py-1.5 rounded-md border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.heritage ? 'bg-slate-700 border-slate-600 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center gap-1.5 text-nowrap">Heritage {#if activeCategories.heritage} {@html icons.check} {/if}</button>
-                            <button onclick={() => activeCategories.pubs = !activeCategories.pubs} class="px-2.5 py-1.5 rounded-md border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.pubs ? 'bg-amber-600 border-amber-500 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center gap-1.5 text-nowrap">Pubs {#if activeCategories.pubs} {@html icons.check} {/if}</button>
-                            <button onclick={() => activeCategories.discovery = !activeCategories.discovery} class="px-2.5 py-1.5 rounded-md border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.discovery ? 'bg-blue-600 border-blue-500 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center gap-1.5 text-nowrap">Discovery {#if activeCategories.discovery} {@html icons.check} {/if}</button>
+                        <div class="grid grid-cols-3 gap-1.5 pb-1">
+                            <button onclick={() => activeCategories.heritage = !activeCategories.heritage} class="ds-chip w-full min-w-0 px-1.5 py-1.5 rounded-md border text-[9px] md:text-[10px] font-black uppercase tracking-[0.08em] transition-all {activeCategories.heritage ? 'ds-chip-active bg-slate-700 border-slate-600 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center justify-center gap-1 text-nowrap">Heritage <span class="tabular-nums">{visibleHeritageSites.length}</span>{#if activeCategories.heritage} {@html icons.check} {/if}</button>
+                            <button onclick={() => activeCategories.pubs = !activeCategories.pubs} class="ds-chip w-full min-w-0 px-1.5 py-1.5 rounded-md border text-[9px] md:text-[10px] font-black uppercase tracking-[0.08em] transition-all {activeCategories.pubs ? 'ds-chip-active bg-amber-600 border-amber-500 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center justify-center gap-1 text-nowrap">Pints & Eats <span class="tabular-nums">{visibleHospitalitySites.length}</span>{#if activeCategories.pubs} {@html icons.check} {/if}</button>
+                            <button onclick={() => activeCategories.discovery = !activeCategories.discovery} class="ds-chip w-full min-w-0 px-1.5 py-1.5 rounded-md border text-[9px] md:text-[10px] font-black uppercase tracking-[0.08em] transition-all {activeCategories.discovery ? 'ds-chip-active bg-blue-600 border-blue-500 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center justify-center gap-1 text-nowrap">Discovery <span class="tabular-nums">{visibleDiscoveryPOIs.length}</span>{#if activeCategories.discovery} {@html icons.check} {/if}</button>
+                        </div>
+
+                        <div class="ds-panel rounded-lg border border-white/5 bg-inset p-2.5 space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2 text-[9px] font-bold uppercase tracking-[0.12em]">
+                                <span class="text-slate-500 text-pretty">{activeRegistryResultCount} visible result{activeRegistryResultCount === 1 ? '' : 's'}</span>
+                                <div class="flex flex-wrap items-center gap-2 md:flex-nowrap">
+                                    <span class="text-slate-600 text-pretty md:text-nowrap">{activeExploreCategoryCount}/3 filters active</span>
+                                    {#if searchNeedle || activeExploreCategoryCount < 3}
+                                        <button onclick={resetExploreFilters} class="rounded-sm border border-white/10 px-2 py-1 text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-colors">Reset</button>
+                                    {/if}
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {#if activeRegistryResultCount === 0}
+                        <div class="rounded-lg border border-white/10 bg-inset px-3 py-3 text-[10px] uppercase tracking-[0.14em] text-slate-500 font-bold">
+                            No matches for current filters. Reset or broaden your search.
+                        </div>
+                    {/if}
 
                     <div class="space-y-6">
                         {#if activeCategories.heritage}
                             <section class="space-y-3">
                                 <button onclick={() => expandedSections.heritage = !expandedSections.heritage} class="w-full flex items-center justify-between px-1 group">
                                     <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300 transition-colors">English Heritage</span>
-                                    <div class="text-slate-600 transition-transform {expandedSections.heritage ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-black text-slate-600">{visibleHeritageSites.length}</span>
+                                        <div class="text-slate-600 transition-transform {expandedSections.heritage ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                                    </div>
                                 </button>
+                                <p class="px-1 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-600 text-pretty">Forts, museums, and archaeological landmarks</p>
                                 {#if expandedSections.heritage}
                                     <div class="grid grid-cols-1 bg-inset border border-white/5 rounded-lg divide-y divide-white/5 shadow-sm overflow-hidden" transition:slide>
-                                        {#each englishHeritageSites.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) as site}
+                                        {#if visibleHeritageSites.length === 0}
+                                            <div class="p-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">No heritage matches.</div>
+                                        {/if}
+                                        {#each visibleHeritageSites as site}
                                             <button class="w-full text-left p-3 hover:bg-white/5 transition-colors group flex flex-col gap-1 relative" onclick={() => handlePOIClick(site)}>
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-7 h-7 rounded-md bg-slate-800 border border-white/5 flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">{@html icons.landmark}</div>
+                                                    <div class="w-7 h-7 rounded-md bg-blue-950 border border-blue-300/45 flex items-center justify-center text-blue-100 shadow-[0_0_12px_rgba(59,130,246,0.24)] shrink-0 group-hover:scale-110 group-hover:bg-blue-900 group-hover:text-white transition-all">
+                                                        <span class="scale-110 leading-none">{@html icons.landmark}</span>
+                                                    </div>
                                                     <div class="flex-1 min-w-0 flex items-center gap-2">
-                                                        <span class="font-bold text-slate-300 group-hover:text-blue-400 truncate tracking-tight">{site.name}</span>
+                                                        <span class="flex-1 min-w-0 font-bold text-slate-300 group-hover:text-blue-400 tracking-tight text-pretty leading-tight">{site.name}</span>
                                                         {#if site.special === 'mithras'}<div class="text-amber-400 animate-pulse">{@html icons.star}</div>{/if}
                                                     </div>
                                                 </div>
@@ -949,15 +1144,22 @@
                         {#if activeCategories.pubs}
                             <section class="space-y-3">
                                 <button onclick={() => expandedSections.hospitality = !expandedSections.hospitality} class="w-full flex items-center justify-between px-1 group">
-                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300 transition-colors">Hospitality</span>
-                                    <div class="text-slate-600 transition-transform {expandedSections.hospitality ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300 transition-colors">Food + Pubs</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-black text-slate-600">{visibleHospitalitySites.length}</span>
+                                        <div class="text-slate-600 transition-transform {expandedSections.hospitality ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                                    </div>
                                 </button>
+                                <p class="px-1 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-600 text-pretty">Fuel stops, cafés, and inns on route</p>
                                 {#if expandedSections.hospitality}
                                     <div class="grid grid-cols-1 bg-inset border border-white/5 rounded-lg divide-y divide-white/5 shadow-sm overflow-hidden" transition:slide>
-                                        {#each hospitalitySites.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) as site}
+                                        {#if visibleHospitalitySites.length === 0}
+                                            <div class="p-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">No food + pub matches.</div>
+                                        {/if}
+                                        {#each visibleHospitalitySites as site}
                                             <button class="w-full text-left p-3 hover:bg-white/5 transition-colors group flex items-center gap-3 relative" onclick={() => handlePOIClick(site)}>
                                                 <div class="w-7 h-7 rounded-md {site.category === 'brewery' ? 'bg-amber-600' : 'bg-orange-700'} border border-white/5 flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">{@html icons.beer}</div>
-                                                <span class="font-bold text-slate-300 group-hover:text-blue-400 truncate tracking-tight">{site.name}</span>
+                                                <span class="flex-1 min-w-0 font-bold text-slate-300 group-hover:text-blue-400 tracking-tight text-pretty leading-tight">{site.name}</span>
                                                 {#if selectedPOI && (selectedPOI as any).name === site.name}
                                                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 shadow-glow"></div>
                                                 {/if}
@@ -971,18 +1173,25 @@
                         {#if activeCategories.discovery}
                             <section class="space-y-3">
                                 <button onclick={() => expandedSections.discovery = !expandedSections.discovery} class="w-full flex items-center justify-between px-1 group">
-                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300 transition-colors">Nearby Discovery</span>
-                                    <div class="text-slate-600 transition-transform {expandedSections.discovery ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300 transition-colors">Wikipedia Discovery</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-black text-slate-600">{visibleDiscoveryPOIs.length}</span>
+                                        <div class="text-slate-600 transition-transform {expandedSections.discovery ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                                    </div>
                                 </button>
+                                <p class="px-1 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-600 text-pretty">Nearby entries from the live discovery feed</p>
                                 {#if expandedSections.discovery}
                                     <div class="space-y-1.5" transition:slide>
-                                        {#each filteredDiscovery.slice(0, 20) as poi, i}
+                                        {#if visibleDiscoveryPOIs.length === 0}
+                                            <div class="rounded-lg border border-white/5 bg-inset px-3 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">No discovery matches.</div>
+                                        {/if}
+                                        {#each visibleDiscoveryPOIs as poi}
                                             <button class="w-full text-left p-3 bg-inset hover:bg-white/5 rounded-lg border border-white/5 hover:border-blue-500/30 transition-all group flex items-center gap-3 relative active:scale-[0.98]" onclick={() => handlePOIClick(poi)}>
                                                 <div class="text-slate-500 group-hover:text-blue-400 shrink-0 transition-colors">{@html icons.discovery}</div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="flex justify-between items-center mb-0.5">
-                                                        <span class="font-bold text-slate-300 group-hover:text-blue-400 truncate tracking-tight">{poi.title}</span>
-                                                        <span class="text-[9px] font-mono text-slate-600 tabular-nums">RANK {Math.round(poi.rank)}</span>
+                                                    <div class="flex justify-between items-start gap-2 mb-0.5">
+                                                        <span class="flex-1 min-w-0 font-bold text-slate-300 group-hover:text-blue-400 tracking-tight text-pretty">{poi.title}</span>
+                                                        <span class="text-[9px] font-mono text-slate-600 tabular-nums text-nowrap">RANK {Math.round(poi.rank)}</span>
                                                     </div>
                                                     <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
                                                         <div class="bg-blue-500/50 h-full transition-all duration-500" style="width: {Math.min(100, poi.rank * 2)}%"></div>
@@ -1001,7 +1210,9 @@
                 </div>
             {/if}
         </div>
-        <footer class="p-4 bg-inset border-t border-white/5 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] text-center">System Atlas · Hadrian Workstation v4.2</footer>
+        {#if !selectedPOI}
+            <footer class="p-4 bg-inset border-t border-white/5 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] text-center">FELICITAS TEMPORVM</footer>
+        {/if}
     </aside>
 
     <main class="flex-1 relative bg-slate-100 overflow-hidden">
@@ -1028,17 +1239,6 @@
             />
         </div>
 
-        {#if !isMobile}
-            <button
-                onclick={handleCoinTap}
-                class="absolute bottom-6 left-6 z-40 flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_16px_rgba(59,130,246,0.4)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
-                aria-label="Triple tap Roman Coin to toggle Hiker Mode"
-                title="Triple Tap Roman Coin"
-            >
-                <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-10 w-10 object-contain drop-shadow-md" />
-            </button>
-        {/if}
-
         {#if hikerIntelCard}
             <div class="absolute inset-0 z-[65] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
                 <div class="w-full max-w-md rounded-2xl border border-amber-300/30 bg-slate-900/95 p-5 shadow-2xl">
@@ -1053,38 +1253,38 @@
                 </div>
             </div>
         {/if}
-        <div class="{isMobile ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30' : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}">
+        <div class="crt-map-controls {isMobile ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30' : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}">
             <!-- Navigation Instruments -->
-            <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
-                <button onclick={() => mapComponent?.triggerLocateMe()} class="{isMobile ? 'p-2.5' : 'p-1.5'} text-slate-600 active:text-blue-600 border-r border-slate-100 transition-all" title="Show My Location">{@html icons.locate}</button>
-                <button onclick={() => isHeadingUp = !isHeadingUp} disabled={$hikerMode.simplifiedHUD} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'} {$hikerMode.simplifiedHUD ? 'opacity-40 cursor-not-allowed' : ''}" title="Toggle Heading Up Mode">
+            <div class="ds-control-pack flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
+                <button onclick={() => mapComponent?.triggerLocateMe()} class="ds-control-btn {isMobile ? 'p-2.5' : 'p-1.5'} text-slate-600 active:text-blue-600 border-r border-slate-100 transition-all" title="Show My Location">{@html icons.locate}</button>
+                <button onclick={() => isHeadingUp = !isHeadingUp} disabled={$hikerMode.simplifiedHUD} class="ds-control-btn {isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'ds-control-btn-active bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'} {$hikerMode.simplifiedHUD ? 'opacity-40 cursor-not-allowed' : ''}" title="Toggle Heading Up Mode">
                     {$hikerMode.simplifiedHUD ? 'North' : isHeadingUp ? 'Heading' : 'North'}
                 </button>
-                <button onclick={() => showMilestones = !showMilestones} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {showMilestones ? 'bg-amber-600 text-white' : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100" title="Toggle Milestones Layer">
+                <button onclick={() => showMilestones = !showMilestones} class="ds-control-btn {isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {showMilestones ? 'ds-control-btn-active bg-amber-600 text-white' : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100" title="Toggle Milestones Layer">
                     Logistics
                 </button>
             </div>
 
             <!-- Route Switcher -->
-            <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
-                <button onclick={() => selectedRoute = 'osm'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'osm' ? 'bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
-                <button onclick={() => selectedRoute = 'simplified'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
+            <div class="ds-control-pack flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
+                <button onclick={() => selectedRoute = 'osm'} class="ds-control-btn {isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'osm' ? 'ds-control-btn-active bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
+                <button onclick={() => selectedRoute = 'simplified'} class="ds-control-btn {isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'simplified' ? 'ds-control-btn-active bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
             </div>
 
             <!-- Style Switcher -->
-            <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
-                <button onclick={() => mapStyle = 'topo'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'topo' ? 'bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'}">Topo</button>
-                <button onclick={() => mapStyle = 'satellite'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'satellite' ? 'bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'} border-x border-slate-100">Sat</button>
-                <button onclick={() => mapStyle = 'streets'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'streets' ? 'bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'}">Roads</button>
+            <div class="ds-control-pack flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
+                <button onclick={() => mapStyle = 'topo'} class="ds-control-btn {isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'topo' ? 'ds-control-btn-active bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'}">Topo</button>
+                <button onclick={() => mapStyle = 'satellite'} class="ds-control-btn {isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'satellite' ? 'ds-control-btn-active bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'} border-x border-slate-100">Sat</button>
+                <button onclick={() => mapStyle = 'streets'} class="ds-control-btn {isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'streets' ? 'ds-control-btn-active bg-slate-900 text-white' : 'text-slate-500 active:bg-slate-50'}">Roads</button>
             </div>
             
-            <button class="{isMobile ? 'p-4 rounded-lg' : 'p-3 rounded-md'} bg-white/95 border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 active:text-blue-600 flex items-center justify-center" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);" onclick={toggleSearch} title="Search Registry">{@html icons.search}</button>
+            <button class="ds-control-fab {isMobile ? 'p-4 rounded-lg' : 'p-3 rounded-md'} bg-white/95 border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 active:text-blue-600 flex items-center justify-center" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);" onclick={toggleSearch} title="Search Registry">{@html icons.search}</button>
         </div>
     </main>
 
     <!-- Fixed Bottom Tab Bar (Mobile) -->
     {#if isMobile}
-        <nav class="fixed bottom-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-white/10 safe-p-bottom transition-transform duration-300 {selectedPOI ? 'translate-y-full' : ''}" style="-webkit-backdrop-filter: blur(20px);">
+        <nav class="crt-mobile-nav fixed bottom-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-white/10 safe-p-bottom transition-transform duration-300 {selectedPOI ? 'translate-y-full' : ''}" style="-webkit-backdrop-filter: blur(20px);">
             <div class="flex items-center justify-around h-16">
                 <button 
                     onclick={() => { mode = 'plan'; isSidebarOpen = true; selectedPOI = null; }}
@@ -1122,19 +1322,9 @@
 <style>
     :global(.custom-scrollbar::-webkit-scrollbar) { width: 4px; }
     :global(.custom-scrollbar::-webkit-scrollbar-track) { background: transparent; }
-    :global(.custom-scrollbar::-webkit-scrollbar-thumb) { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-    :global(.custom-scrollbar::-webkit-scrollbar-thumb:hover) { background: rgba(255, 255, 255, 0.2); }
+    :global(.custom-scrollbar::-webkit-scrollbar-thumb) { background: oklch(0.530 0.190 215 / 0.48); border-radius: 10px; }
+    :global(.custom-scrollbar::-webkit-scrollbar-thumb:hover) { background: oklch(0.660 0.220 215 / 0.72); }
     :global(.scrollbar-hide::-webkit-scrollbar) { display: none; }
-
-    :global(:root) {
-        --motion-duration-micro: 120ms;
-        --motion-duration-ui: 180ms;
-        --motion-duration-panel: 240ms;
-        --motion-duration-nav: 460ms;
-        --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-        --motion-ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
-        --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
-    }
 
     .splash-screen {
         animation: splash-fade-in var(--motion-duration-ui) var(--motion-ease-standard) both;
@@ -1158,6 +1348,181 @@
         transform-origin: 0 50%;
         animation: splash-progress 720ms var(--motion-ease-emphasized) 120ms both;
         will-change: transform, opacity;
+    }
+
+    .crt-workstation {
+        background: linear-gradient(180deg, var(--bg), var(--n50));
+        color: var(--text-primary);
+    }
+
+    .crt-mobile-header,
+    .crt-mobile-nav {
+        border-color: var(--stroke-default);
+        background: linear-gradient(180deg, var(--surface-raised), var(--surface));
+        box-shadow: var(--shadow-sm);
+    }
+
+    .crt-mobile-header h1,
+    .crt-sidebar h1,
+    .crt-sidebar h2 {
+        color: var(--text-primary);
+        text-shadow: none;
+    }
+
+    .crt-sidebar {
+        color: var(--text-primary);
+        border-color: var(--stroke-default);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .crt-sidebar > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .crt-sidebar header,
+    .crt-sidebar footer {
+        border-color: var(--stroke-default);
+        background: color-mix(in oklab, var(--surface-raised) 84%, var(--action-primary-tint) 16%);
+    }
+
+    .crt-sidebar .bg-inset {
+        background: var(--surface) !important;
+        border-color: var(--stroke-subtle) !important;
+        box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--action-primary-border) 28%, var(--stroke-subtle) 72%);
+    }
+
+    .crt-sidebar .text-white,
+    .crt-sidebar .text-slate-300,
+    .crt-sidebar .text-slate-200 {
+        color: var(--text-primary) !important;
+    }
+
+    .crt-sidebar .text-slate-400,
+    .crt-sidebar .text-slate-500,
+    .crt-sidebar .text-slate-600 {
+        color: var(--text-secondary) !important;
+    }
+
+    .crt-sidebar .text-slate-700 {
+        color: var(--text-muted) !important;
+    }
+
+    .crt-sidebar .text-blue-400,
+    .crt-sidebar .text-amber-400,
+    .crt-sidebar .text-amber-500 {
+        color: var(--action-primary) !important;
+        text-shadow: none;
+    }
+
+    .crt-sidebar .border-white\/5,
+    .crt-sidebar .border-white\/10,
+    .crt-sidebar .border-slate-500\/20,
+    .crt-sidebar .border-blue-500\/20,
+    .crt-sidebar .border-blue-500\/30,
+    .crt-sidebar .border-amber-500\/20,
+    .crt-sidebar .border-amber-500\/10,
+    .crt-sidebar .border-emerald-500\/10,
+    .crt-sidebar .border-indigo-500\/10 {
+        border-color: var(--stroke-default) !important;
+    }
+
+    .crt-sidebar .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+        border-color: var(--stroke-subtle) !important;
+    }
+
+    .crt-sidebar .bg-white\/5,
+    .crt-sidebar .bg-white\/10,
+    .crt-sidebar .bg-slate-500\/20,
+    .crt-sidebar .bg-amber-500\/20,
+    .crt-sidebar .bg-amber-500\/5,
+    .crt-sidebar .bg-emerald-500\/5,
+    .crt-sidebar .bg-indigo-500\/5,
+    .crt-sidebar .bg-blue-500\/20 {
+        background: color-mix(in oklab, var(--surface) 84%, var(--action-primary-tint) 16%) !important;
+    }
+
+    .crt-sidebar .bg-blue-600,
+    .crt-sidebar .bg-slate-700,
+    .crt-sidebar .bg-amber-600,
+    .crt-sidebar .bg-orange-700 {
+        background: var(--action-primary) !important;
+        color: var(--n0) !important;
+        border-color: var(--action-primary-border) !important;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .crt-sidebar .bg-blue-500\/50,
+    .crt-sidebar .bg-blue-500 {
+        background: var(--action-primary) !important;
+    }
+
+    .crt-sidebar .shadow-glow {
+        box-shadow: 0 0 0 1px color-mix(in oklab, var(--action-primary-border) 60%, var(--stroke-default) 40%), var(--shadow-sm);
+    }
+
+    .crt-sidebar .hover\:bg-white\/5:hover {
+        background: var(--surface-hover) !important;
+    }
+
+    .crt-sidebar .hover\:text-slate-300:hover,
+    .crt-sidebar .hover\:text-white:hover,
+    .crt-sidebar .hover\:text-blue-400:hover {
+        color: var(--text-primary) !important;
+        text-shadow: none;
+    }
+
+    .crt-sidebar .hover\:border-blue-500\/30:hover {
+        border-color: var(--action-primary-border) !important;
+    }
+
+    .crt-map-controls > div,
+    .crt-map-controls > button {
+        border-color: var(--stroke-default) !important;
+        background: color-mix(in oklab, var(--surface-raised) 88%, var(--action-primary-tint) 12%) !important;
+        box-shadow: var(--shadow-md);
+    }
+
+    .crt-map-controls button {
+        color: var(--text-secondary) !important;
+        text-shadow: none;
+    }
+
+    .crt-map-controls .bg-blue-600,
+    .crt-map-controls .bg-amber-600,
+    .crt-map-controls .bg-slate-900 {
+        background: var(--action-primary) !important;
+        color: var(--n0) !important;
+    }
+
+    .crt-map-controls .border-slate-100,
+    .crt-map-controls .border-slate-200 {
+        border-color: var(--stroke-default) !important;
+    }
+
+    .crt-map-controls .text-slate-500,
+    .crt-map-controls .text-slate-600,
+    .crt-map-controls .text-slate-900 {
+        color: var(--text-secondary) !important;
+    }
+
+    .crt-map-controls .active\:bg-slate-50:active {
+        background: var(--surface-hover) !important;
+    }
+
+    .crt-mobile-nav .text-slate-500 {
+        color: var(--icon-muted) !important;
+    }
+
+    .crt-mobile-nav .text-blue-400 {
+        color: var(--action-primary) !important;
+        text-shadow: none;
+    }
+
+    .stage-mithraic-icon {
+        font-size: 1.05rem;
+        color: var(--icon-default);
+        opacity: 0.92;
     }
 
     @keyframes splash-fade-in {

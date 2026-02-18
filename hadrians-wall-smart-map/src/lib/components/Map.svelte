@@ -3,9 +3,11 @@
     import maplibregl from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
     import * as turf from '@turf/turf';
+    import type { Feature, LineString } from 'geojson';
     import { trailGeoJSON, getCorridor, overnightStops, itinerary, trailCoordinates, englishHeritageSites, hospitalitySites } from '$lib/data/trail';
     import { routeVariants } from '$lib/data/routes';
     import { fetchWikiPOIs, type WikiPOI } from '$lib/services/wikipedia';
+    import { selectRenderableWikiPOIs } from '$lib/utils/wikiPins';
     import {
         navigationService,
         type NavigationMetrics
@@ -55,6 +57,7 @@
     let map = $state<maplibregl.Map | null>(null);
     let corridor: any;
     let wikiCorridor: any;
+    let wikiWindowLine: Feature<LineString> | null = null;
     let mouseCoords = $state({ lng: -2.3958, lat: 55.0036 });
     let zoomLevel = $state(12);
     let userLocation = $state<{lng: number, lat: number, accuracy: number} | null>(null);
@@ -121,7 +124,7 @@
                 setGlowVisibility(shouldGlow);
                 if (shouldGlow) startGlowPulse();
                 // Ensure active stage is redrawn if selected
-                if (selectedStageId) {
+                if (selectedStageId !== null) {
                     const stage = itinerary.find(s => s.id === selectedStageId);
                     if (stage) updateStageLayer(stage);
                 }
@@ -131,7 +134,7 @@
 
     // React to Milestone Toggle
     $effect(() => {
-        if (map && selectedStageId) {
+        if (map && selectedStageId !== null) {
             const stage = itinerary.find(s => s.id === selectedStageId);
             if (stage) updateStageLayer(stage);
         } else {
@@ -227,12 +230,12 @@
 
     // React to Stage selection (Fly to and highlight)
     $effect(() => {
-        if (map && selectedStageId) {
+        if (map && selectedStageId !== null) {
             const stage = itinerary.find(s => s.id === selectedStageId);
             if (stage) {
                 updateStageLayer(stage);
             }
-        } else if (map && !selectedStageId) {
+        } else if (map && selectedStageId === null) {
             const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
             if (source) source.setData({ type: 'FeatureCollection', features: [] });
             clearPaceMarkers();
@@ -290,7 +293,7 @@
             const el = document.createElement('button');
             el.className = 'hiker-floating-poi';
             el.innerHTML = `
-                <span class="hiker-floating-poi__icon">⛳</span>
+                <i class="hn hn-location-pin hiker-floating-poi__icon" aria-hidden="true"></i>
                 <span class="hiker-floating-poi__label">${poi.title}</span>
             `;
             el.onclick = (event) => {
@@ -422,6 +425,7 @@
         const corbridge = overnightStops.find((hub) => hub.name === 'Corbridge');
         if (!carlisle || !corbridge) {
             wikiCorridor = corridor;
+            wikiWindowLine = turf.lineString(trailCoordinates as [number, number][]);
             return;
         }
 
@@ -433,10 +437,12 @@
 
         if (segmentCoords.length < 2) {
             wikiCorridor = corridor;
+            wikiWindowLine = turf.lineString(trailCoordinates as [number, number][]);
             return;
         }
 
         const segmentLine = turf.lineString(segmentCoords);
+        wikiWindowLine = segmentLine;
         wikiCorridor = turf.buffer(segmentLine, 1.1, { units: 'kilometers' });
     }
 
@@ -505,17 +511,16 @@
         });
     }
 
-    // Phosphor Icons (Raw SVGs)
+    // RPG Awesome pin icon classes
     const icons = {
-        bed: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256"><path d="M208,80H32V56a8,8,0,0,0-16,0V200a8,8,0,0,0,16,0V176H224v24a8,8,0,0,0,16,0V112A32,32,0,0,0,208,80Zm16,80H32V96H208a16,16,0,0,1,16,16Z"></path></svg>`,
-        heritage: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256"><path d="M240,208H224V101.33l10.67,5.34a8,8,0,0,0,7.15-14.34l-104-52a8,8,0,0,0-7.15,0l-104,52a8,8,0,0,0,7.15,14.34L48,101.33V208H32a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16ZM64,109.33l64-32,64,32V208H64Z"></path></svg>`,
-        pub: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256"><path d="M216,64H192V56a16,16,0,0,0-16-16H40A16,16,0,0,0,24,56V200a24,24,0,0,0,24,24H168a24,24,0,0,0,24-24V184h8a24,24,0,0,0,24-24V88A24,24,0,0,0,216,64Zm-40,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V56H176Zm32-40a8,8,0,0,1-8,8H192V80h16a8,8,0,0,1,8,8Z"></path></svg>`,
-        brewery: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256"><path d="M232,104a32,32,0,0,0-32-32H184V56a16,16,0,0,0-16-16H40A16,16,0,0,0,24,56V208a32,32,0,0,0,32,32H160a32,32,0,0,0,32-32V184h8a32,32,0,0,0,32-32ZM176,208a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56H176Zm40-56a16,16,0,0,1-16,16H192V88h8a16,16,0,0,1,16,16Z"></path></svg>`,
-        locate: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM128,64a64,64,0,1,0,64,64A64.07,64.1,0,0,0,128,64Zm0,112a48,48,0,1,1,48-48A48.05,48.05,0,0,1,128,176Zm0-64a16,16,0,1,0,16,16A16,16,0,0,0,128,112Z"></path></svg>`,
-        discovery: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Zm-32,0a56,56,0,1,1-56-56A56.06,56.06,0,0,1,184,128Zm-16,0a40,40,0,1,0-40,40A40,40,0,0,0,168,128Z"></path></svg>`,
-        cafe: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256"><path d="M208,80H192V72a16,16,0,0,0-16-16H40A16,16,0,0,0,24,72V176a40,40,0,0,0,40,40h80a40,40,0,0,0,40-40V160h8a40,40,0,0,0,40-40V120A40,40,0,0,0,208,80Zm-32,96a24,24,0,0,1-24,24H64a24,24,0,0,1-24-24V72H176Zm40-56a24,24,0,0,1-24,24H192V96h16a24,24,0,0,1,24,24Z"></path></svg>`,
-        restaurant: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256"><path d="M208,32a8,8,0,0,0-8,8v88H160V40a8,8,0,0,0-16,0v88H112V40a8,8,0,0,0-16,0V128a40,40,0,0,0,40,40v56a8,8,0,0,0,16,0V168a40,40,0,0,0,40-40V40A8,8,0,0,0,208,32ZM80,32a48,48,0,0,0-48,48v88a8,8,0,0,0,16,0V80a32,32,0,0,1,64,0v88a8,8,0,0,0,16,0V80A48,48,0,0,0,80,32ZM72,216a8,8,0,0,1-8,8H56a8,8,0,0,1,0-16H64A8,8,0,0,1,72,216Z"></path></svg>`,
-        deli: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 256 256"><path d="M240,96,224,40a8,8,0,0,0-8-8H40a8,8,0,0,0-8,8L16,96a32,32,0,0,0,32,32h8v72a16,16,0,0,0,16,16h112a16,16,0,0,0,16-16V128h8A32,32,0,0,0,240,96ZM48,112a16,16,0,0,1-16-16l14-48H210l14,48a16,16,0,0,1-16,16H192a16,16,0,0,1-16-16,8,8,0,0,0-16,0,16,16,0,0,1-16,16,16,16,0,0,1-16-16,8,8,0,0,0-16,0,16,16,0,0,1-16,16,16,16,0,0,1-16-16,8,8,0,0,0-16,0,16,16,0,0,1-16,16Zm136,88H72V128H184Z"></path></svg>`
+        bed: `<i class="ra ra-castle-flag map-pin-glyph" aria-hidden="true"></i>`,
+        heritage: `<i class="ra ra-capitol map-pin-glyph" aria-hidden="true"></i>`,
+        pub: `<i class="ra ra-beer map-pin-glyph" aria-hidden="true"></i>`,
+        brewery: `<i class="ra ra-beer map-pin-glyph" aria-hidden="true"></i>`,
+        discovery: `<i class="ra ra-gem map-pin-glyph" aria-hidden="true"></i>`,
+        cafe: `<i class="ra ra-coffee-mug map-pin-glyph" aria-hidden="true"></i>`,
+        restaurant: `<i class="ra ra-knife-fork map-pin-glyph" aria-hidden="true"></i>`,
+        deli: `<i class="ra ra-meat map-pin-glyph" aria-hidden="true"></i>`
     };
 
     function setupLayers() {
@@ -767,7 +772,7 @@
                                     
                                     el.innerHTML = `
                                         <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95">
-                                            <div class="marker-icon ${isMobile ? 'w-9 h-9' : 'w-10 h-10'} ${bgColor} rounded-sm border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
+                                            <div class="marker-icon ${isMobile ? 'w-9 h-9 text-[14px]' : 'w-10 h-10 text-[15px]'} ${bgColor} rounded-sm border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
                                                 ${icon}
                                             </div>
                                             <div class="poi-label label-priority-${poi.priority} bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
@@ -819,11 +824,12 @@
 
     let renderedPageIds = new Set<number>();
     function renderPOIs(pois: WikiPOI[]) {
-        const validPOIs = pois.filter(poi => {
-            if (renderedPageIds.has(poi.pageid)) return false;
-            const pt = turf.point([poi.lon, poi.lat]);
-            const activeCorridor = wikiCorridor || corridor;
-            return turf.booleanPointInPolygon(pt, activeCorridor);
+        const activeCorridor = wikiCorridor || corridor;
+        const validPOIs = selectRenderableWikiPOIs(pois, {
+            renderedPageIds,
+            corridor: activeCorridor,
+            fallbackLine: wikiWindowLine,
+            fallbackMaxDistanceKm: 2.5
         });
 
         for (const poi of validPOIs) {
@@ -836,7 +842,7 @@
             el.innerHTML = `
                 <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-125 hover:z-40 active:scale-90 overflow-visible">
                         <div class="marker-icon bg-white rounded-sm border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 0.95 : size}px; height: ${isMobile ? size * 0.95 : size}px;">
-                        <div class="text-blue-600 ${isMobile ? 'scale-[0.9]' : 'scale-[0.8]'}">
+                        <div class="text-blue-600 flex items-center justify-center leading-none" style="font-size: ${Math.max(8, Math.min(13, size * (isMobile ? 0.58 : 0.54)))}px;">
                             ${icons.discovery}
                         </div>
                     </div>
@@ -906,7 +912,7 @@
 </script>
 
 <div class="w-full h-full bg-slate-50 relative zoom-state-z{Math.floor(zoomLevel)}" bind:this={mapContainer}>
-    <div class="absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none tabular-nums">
+    <div class="ds-panel absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none tabular-nums">
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
     </div>
 
@@ -985,6 +991,14 @@
         border-color: #3b82f6 !important;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 15px rgba(59, 130, 246, 0.2);
         transform: scale(1.1);
+    }
+
+    :global(.map-pin-glyph) {
+        display: block;
+        font-size: inherit;
+        line-height: 1;
+        font-weight: 400;
+        text-rendering: geometricPrecision;
     }
 
     :global(.hiker-floating-poi) {

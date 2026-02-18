@@ -1,8 +1,9 @@
 /// <reference types="@sveltejs/kit" />
 import { build, files, version } from '$service-worker';
 
-const CACHE = `hadrian-atlas-${version}`;
+const CACHE = `hadrian-atlas-v2-${version}`;
 const ASSETS = [...build, ...files];
+const ASSET_SET = new Set(ASSETS);
 const APP_SHELL_URLS = ['/', '/index.html'];
 
 // 1. Install: Cache the Application Shell
@@ -40,6 +41,9 @@ self.addEventListener('fetch', (event) => {
 	if (event.request.method !== 'GET') return;
 
 	const url = new URL(event.request.url);
+	const isLocalhost =
+		self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1';
+	if (isLocalhost) return;
 
 	// Handle Map Tiles (OpenFreeMap & ESRI)
 	const isMapTile = url.host.includes('tiles.openfreemap.org') || 
@@ -47,6 +51,15 @@ self.addEventListener('fetch', (event) => {
                       url.host.includes('demotiles.maplibre.org');
 	const isNavigation = event.request.mode === 'navigate';
 	const isSameOrigin = url.origin === self.location.origin;
+	const isBuildAsset = isSameOrigin && ASSET_SET.has(url.pathname);
+	const isAppAssetRequest =
+		isBuildAsset &&
+		(event.request.destination === 'script' ||
+			event.request.destination === 'style' ||
+			event.request.destination === 'font' ||
+			event.request.destination === 'worker' ||
+			url.pathname.endsWith('.js') ||
+			url.pathname.endsWith('.css'));
 
 	event.respondWith(
 		(async () => {
@@ -76,6 +89,21 @@ self.addEventListener('fetch', (event) => {
 				}
 			}
 
+			// Network-first for app assets prevents stale CSS/JS from overriding fresh UI after deploy.
+			if (isAppAssetRequest) {
+				try {
+					const networkResponse = await fetch(event.request);
+					if (networkResponse.ok) {
+						cache.put(event.request, networkResponse.clone());
+					}
+					return networkResponse;
+				} catch {
+					const cachedAsset = await cache.match(event.request);
+					if (cachedAsset) return cachedAsset;
+					return new Response('Offline', { status: 503 });
+				}
+			}
+
 			const cachedResponse = await cache.match(event.request);
 
 			if (cachedResponse) return cachedResponse;
@@ -83,10 +111,10 @@ self.addEventListener('fetch', (event) => {
 			try {
 				const response = await fetch(event.request);
 				
-                // Cache map tiles and same-origin assets on-the-fly for offline use
+                // Cache map tiles and same-origin build assets on-the-fly for offline use
 				if (
 					(isMapTile && (response.ok || response.type === 'opaque')) ||
-					(isSameOrigin && response.ok)
+					(isBuildAsset && response.ok)
 				) {
 					cache.put(event.request, response.clone());
 				}

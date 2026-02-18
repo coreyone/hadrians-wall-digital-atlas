@@ -13,9 +13,17 @@ export interface WikiPOI {
 }
 
 const WIKIPEDIA_API_URL = 'https://en.wikipedia.org/w/api.php';
+const MAX_FETCH_ATTEMPTS = 3;
+const NEARBY_CACHE_FALLBACK_KM = 20;
 
 // In-memory caches
-const poiCache = new Map<string, WikiPOI[]>();
+interface PoiCacheEntry {
+    lat: number;
+    lon: number;
+    radius: number;
+    pois: WikiPOI[];
+}
+const poiCache = new Map<string, PoiCacheEntry>();
 const summaryCache = new Map<number, string>();
 
 const BOURDAIN_KEYWORDS = [
@@ -45,10 +53,64 @@ function calculateRank(item: any): number {
     return Math.round(score);
 }
 
+function toCacheKey(lat: number, lon: number, radius: number) {
+    return `${lat.toFixed(4)}|${lon.toFixed(4)}|${radius}`;
+}
+
+function toKmDistance(aLat: number, aLon: number, bLat: number, bLon: number) {
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const earthRadiusKm = 6371;
+    const dLat = toRad(bLat - aLat);
+    const dLon = toRad(bLon - aLon);
+    const lat1 = toRad(aLat);
+    const lat2 = toRad(bLat);
+    const hav =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    return 2 * earthRadiusKm * Math.asin(Math.sqrt(hav));
+}
+
+function findNearbyCachedPOIs(lat: number, lon: number, radius: number): WikiPOI[] {
+    let best: { distance: number; pois: WikiPOI[] } | null = null;
+    for (const entry of poiCache.values()) {
+        if (entry.pois.length === 0) continue;
+        const distance = toKmDistance(lat, lon, entry.lat, entry.lon);
+        if (distance > NEARBY_CACHE_FALLBACK_KM) continue;
+        if (!best || distance < best.distance) {
+            best = { distance, pois: entry.pois };
+        }
+    }
+    return best?.pois ?? [];
+}
+
+function cachePOIsIfAny(key: string, lat: number, lon: number, radius: number, pois: WikiPOI[]) {
+    if (pois.length === 0) return;
+    poiCache.set(key, { lat, lon, radius, pois });
+}
+
+async function fetchJsonWithRetry(
+    url: string,
+    fetcher: typeof fetch
+) {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt++) {
+        try {
+            const response = await fetcher(url);
+            if ('ok' in response && response.ok === false) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw lastError;
+}
+
 export async function fetchWikiPOIs(lat: number, lon: number, radius = 1200, customFetch?: typeof fetch): Promise<WikiPOI[]> {
-    const cacheKey = `${lat.toFixed(4)}|${lon.toFixed(4)}|${radius}`;
+    const cacheKey = toCacheKey(lat, lon, radius);
     if (poiCache.has(cacheKey)) {
-        return poiCache.get(cacheKey)!;
+        return poiCache.get(cacheKey)!.pois;
     }
 
     const fetcher = customFetch || fetch;
@@ -65,12 +127,15 @@ export async function fetchWikiPOIs(lat: number, lon: number, radius = 1200, cus
     });
 
     try {
-        const geoRes = await fetcher(`${WIKIPEDIA_API_URL}?${geoParams.toString()}`);
-        const geoData = await geoRes.json();
+        const geoData = await fetchJsonWithRetry(`${WIKIPEDIA_API_URL}?${geoParams.toString()}`, fetcher);
+        const geoSearch = geoData.query?.geosearch;
+        if (!Array.isArray(geoSearch) || geoSearch.length === 0) {
+            const nearby = findNearbyCachedPOIs(lat, lon, radius);
+            cachePOIsIfAny(cacheKey, lat, lon, radius, nearby);
+            return nearby;
+        }
 
-        if (!geoData.query?.geosearch) return [];
-
-        const pageIds = geoData.query.geosearch.map((p: any) => p.pageid).join('|');
+        const pageIds = geoSearch.map((p: any) => p.pageid).join('|');
 
         // Phase 2: Bulk fetch metadata (extracts + pageviews)
         const metaParams = new URLSearchParams({
@@ -86,11 +151,10 @@ export async function fetchWikiPOIs(lat: number, lon: number, radius = 1200, cus
             origin: '*'
         });
 
-        const metaRes = await fetcher(`${WIKIPEDIA_API_URL}?${metaParams.toString()}`);
-        const metaData = await metaRes.json();
-        const pages = metaData.query.pages;
+        const metaData = await fetchJsonWithRetry(`${WIKIPEDIA_API_URL}?${metaParams.toString()}`, fetcher);
+        const pages = metaData.query?.pages ?? {};
 
-        const results = geoData.query.geosearch.map((item: any) => {
+        const results = geoSearch.map((item: any) => {
             const meta = pages[item.pageid];
             const rank = calculateRank({ ...item, ...meta });
             
@@ -114,13 +178,33 @@ export async function fetchWikiPOIs(lat: number, lon: number, radius = 1200, cus
 
         // Sort by rank descending
         results.sort((a: WikiPOI, b: WikiPOI) => b.rank - a.rank);
-        
-        poiCache.set(cacheKey, results);
-        return results;
+
+        const output = results.length > 0 ? results : findNearbyCachedPOIs(lat, lon, radius);
+        cachePOIsIfAny(cacheKey, lat, lon, radius, output);
+        if (output.length === 0) {
+            console.warn('Wikipedia geosearch returned no usable POIs for:', {
+                lat,
+                lon,
+                radius
+            });
+        }
+        return output;
     } catch (error) {
+        const nearby = findNearbyCachedPOIs(lat, lon, radius);
+        cachePOIsIfAny(cacheKey, lat, lon, radius, nearby);
+        if (nearby.length > 0) return nearby;
         console.error('Failed to fetch Wikipedia data:', error);
         return [];
     }
+}
+
+export function __resetWikipediaCachesForTests() {
+    poiCache.clear();
+    summaryCache.clear();
+}
+
+export function __seedWikipediaPoiCacheForTests(lat: number, lon: number, radius: number, pois: WikiPOI[]) {
+    poiCache.set(toCacheKey(lat, lon, radius), { lat, lon, radius, pois });
 }
 
 export async function fetchPageSummary(pageid: number): Promise<string> {

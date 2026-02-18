@@ -18,7 +18,7 @@ export const trailGeoJSON = {
     }
 };
 
-// 15-Minute Corridor (at 2.8 MPH pace = ~1.1km buffer)
+// 15-minute corridor buffer (default ~1.1km)
 export const getCorridor = (bufferKm = 1.1) => {
     // @ts-ignore
     return turf.buffer(trailGeoJSON, bufferKm, { units: 'kilometers' });
@@ -30,8 +30,9 @@ export interface Stage {
     to: string;
     date: string;
     romanDate: string;
+    planCardNote?: string;
     mithraicGrade: string;
-    mithraicSymbol: string;
+    mithraicIconClass: string;
     distanceMi: number;
     timeHours: [number, number];
     elevationGainFt: number;
@@ -51,13 +52,45 @@ export interface Stage {
 
 export const itinerary: Stage[] = [
     {
-        id: 1,
-        from: "Edinburgh (Rail) / Carlisle",
-        to: "Lanercost",
+        id: 0,
+        from: "Edinburgh (Rail)",
+        to: "Carlisle (Overnight)",
         date: "Apr 12",
-        romanDate: "PRID. ID. APR.",
+        romanDate: "",
+        planCardNote: "Overnight in Carlisle",
         mithraicGrade: "Corax (Raven)",
-        mithraicSymbol: "🐦‍⬛",
+        mithraicIconClass: "hn-eye",
+        distanceMi: 0,
+        timeHours: [2.5, 3.5],
+        elevationGainFt: 0,
+        elevationLossFt: 0,
+        difficulty: "Departure",
+        surface: "Rail, Urban",
+        terrain: "Transfer day from Edinburgh to Carlisle with overnight reset before trail start.",
+        lunchStrategy: "Station lunch and hydration before rail transfer.",
+        fuelingLogistics: [
+            "Logistics: Train from Edinburgh Waverley to Carlisle Citadel.",
+            "Settle in Carlisle for overnight and stage gear.",
+            "Buy snacks and breakfast supplies for Day 1 trail start."
+        ],
+        milestones: [
+            { name: "Edinburgh Waverley", mi: 0.0, intel: "Departure rail point for the expedition." },
+            { name: "Carlisle Citadel Station", mi: 0.0, intel: "Arrival and overnight base before hiking begins." }
+        ],
+        dinner: "Carlisle Overnight",
+        supplyStatus: "High",
+        shops: ["Carlisle City Centre", "M&S Foodhall", "Sainsbury's"],
+        weather: { tempHigh: 53, tempLow: 39, condition: "Partly Cloudy", precipProb: 25 },
+        celestial: { moonPhase: "Waning Crescent (36%)", events: [] }
+    },
+    {
+        id: 1,
+        from: "Carlisle",
+        to: "Lanercost",
+        date: "Apr 13",
+        romanDate: "",
+        mithraicGrade: "Corax (Raven)",
+        mithraicIconClass: "hn-eye",
         distanceMi: 13.4,
         timeHours: [5, 6],
         elevationGainFt: 590,
@@ -67,12 +100,11 @@ export const itinerary: Stage[] = [
         terrain: "River Eden valley, farmland, urban transition to rural.",
         lunchStrategy: "Pack lunch from Carlisle supermarket.",
         fuelingLogistics: [
-            "Logistics: Train from Edinburgh Waverley to Carlisle Citadel.",
             "Primary: Buy lunch wrap + 2 days of trail snacks at Carlisle M&S Foodhall",
             "Intel: Cross the 'Memorial Bridge' (suspension bridge) to leave the city."
         ],
         milestones: [
-            { name: "Carlisle Citadel Station", mi: 0.0, intel: "Arrival from Scotland. Start of expedition." },
+            { name: "Carlisle Trailhead", mi: 0.0, intel: "Hiking begins from Carlisle after overnight arrival." },
             { name: "Rickerby Park", mi: 1.5, intel: "Dedicated to the fallen of WWI. Authentic riverside path." },
             { name: "Crosby-on-Eden", mi: 8.5, intel: "Raised foundations and vallum earthworks begin to appear." }
         ],
@@ -86,10 +118,10 @@ export const itinerary: Stage[] = [
         id: 2,
         from: "Lanercost",
         to: "Gilsland",
-        date: "Apr 13",
+        date: "Apr 14",
         romanDate: "ID. APR.",
         mithraicGrade: "Nymphus (Nymph)",
-        mithraicSymbol: "💍",
+        mithraicIconClass: "hn-sparkles",
         distanceMi: 6.2,
         timeHours: [2, 2.5],
         elevationGainFt: 394,
@@ -118,10 +150,10 @@ export const itinerary: Stage[] = [
         id: 3,
         from: "Gilsland",
         to: "Once Brewed",
-        date: "Apr 14",
+        date: "Apr 15",
         romanDate: "A.D. XVIII KAL. MAI.",
         mithraicGrade: "Miles (Soldier)",
-        mithraicSymbol: "⚔️",
+        mithraicIconClass: "hn-flag-checkered",
         distanceMi: 8.0,
         timeHours: [3.5, 4.5],
         elevationGainFt: 1378,
@@ -151,10 +183,10 @@ export const itinerary: Stage[] = [
         id: 4,
         from: "Once Brewed",
         to: "Once Brewed",
-        date: "Apr 15",
+        date: "Apr 16",
         romanDate: "A.D. XVII KAL. MAI.",
         mithraicGrade: "Leo (Lion)",
-        mithraicSymbol: "🦁",
+        mithraicIconClass: "hn-fire",
         distanceMi: 0,
         timeHours: [0, 0],
         elevationGainFt: 0,
@@ -183,10 +215,10 @@ export const itinerary: Stage[] = [
         id: 5,
         from: "Once Brewed",
         to: "Chollerford",
-        date: "Apr 16",
+        date: "Apr 17",
         romanDate: "A.D. XVI KAL. MAI.",
         mithraicGrade: "Perses (Persian)",
-        mithraicSymbol: "🏹",
+        mithraicIconClass: "hn-arrow-right",
         distanceMi: 11.9,
         timeHours: [5, 6],
         elevationGainFt: 1246,
@@ -215,10 +247,10 @@ export const itinerary: Stage[] = [
         id: 6,
         from: "Chollerford",
         to: "Corbridge",
-        date: "Apr 17",
+        date: "Apr 18",
         romanDate: "A.D. XV KAL. MAI.",
         mithraicGrade: "Heliodromus (Sun-Runner)",
-        mithraicSymbol: "☀️",
+        mithraicIconClass: "hn-sun",
         distanceMi: 6.5,
         timeHours: [3.5, 4.5],
         elevationGainFt: 250,
@@ -245,43 +277,13 @@ export const itinerary: Stage[] = [
     },
     {
         id: 7,
-        from: "Corbridge (Peak)",
-        to: "Corbridge",
-        date: "Apr 18",
-        romanDate: "A.D. XIV KAL. MAI.",
-        mithraicGrade: "Pater (Father)",
-        mithraicSymbol: "👑",
-        distanceMi: 0,
-        timeHours: [0, 0],
-        elevationGainFt: 0,
-        elevationLossFt: 0,
-        difficulty: "Rest",
-        surface: "Pavement",
-        terrain: "Roman Town industrial hub.",
-        lunchStrategy: "Corbridge Larder feast.",
-        fuelingLogistics: [
-            "Intel: Corbridge was a major Roman supply and industrial town.",
-            "Ritual: Final Birthday Peak at the Roman Town ruins.",
-            "Grade: You have attained the rank of Pater."
-        ],
-        milestones: [
-            { name: "Corbridge Roman Town", mi: 0.2, intel: "Industrial hub. Granaries still standing. See the Corbridge Lion." },
-            { name: "Corbridge Bridge", mi: 0.5, intel: "Iconic five-arched bridge. Final spiritual boundary." }
-        ],
-        dinner: "Golden Lion (Night 2)",
-        supplyStatus: "High",
-        shops: ["Corbridge High Street"],
-        weather: { tempHigh: 58, tempLow: 43, condition: "Sunny", precipProb: 0 },
-        celestial: { moonPhase: "Waxing Crescent (5%)", events: ["Birthday Peak: Lyrids Meteor Shower"] }
-    },
-    {
-        id: 8,
         from: "Corbridge (Rail)",
-        to: "Edinburgh",
+        to: "Edinburgh (Rail)",
         date: "Apr 19",
         romanDate: "A.D. XIII KAL. MAI.",
+        planCardNote: "Rail return to Edinburgh",
         mithraicGrade: "Emeritus",
-        mithraicSymbol: "🛡️",
+        mithraicIconClass: "hn-badge-check",
         distanceMi: 0,
         timeHours: [2, 3],
         elevationGainFt: 0,
@@ -307,6 +309,15 @@ export const itinerary: Stage[] = [
     }
 ];
 
+export const walkingStages = itinerary.filter((stage) => stage.distanceMi > 0);
+export const planTotalMiles = walkingStages.reduce((sum, stage) => sum + stage.distanceMi, 0);
+export const planMinHours = walkingStages.reduce((sum, stage) => sum + stage.timeHours[0], 0);
+export const planMaxHours = walkingStages.reduce((sum, stage) => sum + stage.timeHours[1], 0);
+export const planMidHours = (planMinHours + planMaxHours) / 2;
+export const planAvgSpeedMidMph = planMidHours > 0 ? planTotalMiles / planMidHours : 0;
+export const planAvgSpeedSlowMph = planMaxHours > 0 ? planTotalMiles / planMaxHours : 0;
+export const planAvgSpeedFastMph = planMinHours > 0 ? planTotalMiles / planMinHours : 0;
+
 export const overnightStops = [
     { name: "Carlisle", coords: [-2.9329, 54.8925], type: "hub" },
     { name: "Lanercost/Brampton", coords: [-2.7333, 54.9433], type: "hub" },
@@ -322,7 +333,7 @@ export const englishHeritageSites = [
         coords: [-2.9419, 54.8973], 
         pageid: 856932, 
         hours: "10:00 - 17:00", 
-        visitDay: "Sun, Apr 12", 
+        visitDay: "Mon, Apr 13", 
         staffed: true, 
         intel: "Built 1092 by William Rufus. Prison for Mary, Queen of Scots.",
         fryeIntel: "An evolution of the frontier: where Roman stone met medieval blood. Frye notes that few civilized people have ever lived without such barriers.",
@@ -333,7 +344,7 @@ export const englishHeritageSites = [
         coords: [-2.9400, 54.8960], 
         pageid: 312242, 
         hours: "10:00 - 17:00", 
-        visitDay: "Sun, Apr 12", 
+        visitDay: "Mon, Apr 13", 
         staffed: true, 
         intel: "Jacobean mansion detailing Roman occupancy and Border Reivers.",
         rickStevesIntel: "A surprisingly good museum with particularly praised Roman exhibits."
@@ -343,7 +354,7 @@ export const englishHeritageSites = [
         coords: [-2.6949, 54.9662], 
         pageid: 967234, 
         hours: "10:00 - 17:00", 
-        visitDay: "Sun, Apr 12", 
+        visitDay: "Mon, Apr 13", 
         staffed: true, 
         intel: "Founded 1165. Built from stone taken from Hadrian's Wall." 
     },
@@ -352,7 +363,7 @@ export const englishHeritageSites = [
         coords: [-2.6023, 54.9894], 
         pageid: 2143239, 
         hours: "10:00 - 17:00", 
-        visitDay: "Mon, Apr 13", 
+        visitDay: "Tue, Apr 14", 
         staffed: true, 
         intel: "Known as Banna ('spur'). Commanding position overlooking meander of River Irthing.",
         fryeIntel: "Frye reminds us that Hadrian was the first to build a wall 'to separate the barbarians and the Romans.' Banna was a vital cog in that machine.",
@@ -364,7 +375,7 @@ export const englishHeritageSites = [
         coords: [-2.5130, 54.9910], 
         pageid: 41263032, 
         hours: "10:00 - 17:00", 
-        visitDay: "Tue, Apr 14", 
+        visitDay: "Wed, Apr 15", 
         staffed: true, 
         intel: "Experience life on the front line. Exclusive 3D Edge of Empire film.",
         rickStevesIntel: "Part of the essential six-mile central stretch that defines the Hadrian's Wall experience."
@@ -374,20 +385,20 @@ export const englishHeritageSites = [
         coords: [-2.5061, 54.9927], 
         pageid: 41263032, 
         hours: "Dawn - Dusk", 
-        visitDay: "Tue, Apr 14", 
+        visitDay: "Wed, Apr 15", 
         staffed: false, 
         intel: "One of the highest standing sections of the Wall.",
         fryeIntel: "The highest drama of the frontier. To Frye, these stones represent the attempt to create a safe space where civilization could flourish.",
         rickStevesIntel: "One of the highest standing and most dramatic sections of the frontier.",
         photoIntel: "TOP 10 SPOT: Dramatic elevation changes. Use a wide-angle lens to capture the Wall snaking across the Whin Sill escarpment. Peak drama at Sunset."
     },
-    { name: "Great Chesters (Aesica)", coords: [-2.4640, 54.9950], pageid: 18177794, hours: "Dawn - Dusk", visitDay: "Tue, Apr 14", staffed: false },
+    { name: "Great Chesters (Aesica)", coords: [-2.4640, 54.9950], pageid: 18177794, hours: "Dawn - Dusk", visitDay: "Wed, Apr 15", staffed: false },
     { 
         name: "Housesteads Roman Fort", 
         coords: [-2.3310, 55.0130], 
         pageid: 1825118, 
         hours: "10:00 - 17:00", 
-        visitDay: "Thu, Apr 16", 
+        visitDay: "Fri, Apr 17", 
         staffed: true, 
         intel: "Vercovicium. Stone AD 124. Best preserved Roman latrines in Britain.",
         fryeIntel: "The definitive 'monument to Roman supremacy.' Frye sees this not just as a border control, but as a statement of total military dominance over the wild north.",
@@ -399,7 +410,7 @@ export const englishHeritageSites = [
         coords: [-2.2230, 55.0360], 
         pageid: 12246314, 
         hours: "Dawn - Dusk", 
-        visitDay: "Wed, Apr 15", 
+        visitDay: "Thu, Apr 16", 
         special: "mithras", 
         staffed: false, 
         intel: "Brocolitia. Built AD 200 by First Cohort of Batavians.",
@@ -411,7 +422,7 @@ export const englishHeritageSites = [
         coords: [-2.1390, 55.0260], 
         pageid: 8768992, 
         hours: "10:00 - 17:00", 
-        visitDay: "Thu, Apr 16", 
+        visitDay: "Fri, Apr 17", 
         staffed: true, 
         intel: "Cilurnum. Most complete Roman cavalry fort in Britain. AD 123.",
         fryeIntel: "The technological peak of the barrier. A cavalry hub designed to project Roman power far beyond the stone itself.",
@@ -423,7 +434,7 @@ export const englishHeritageSites = [
         coords: [-2.0170, 54.9750], 
         pageid: 373397, 
         hours: "10:00 - 17:00", 
-        visitDay: "Sat, Apr 18", 
+        visitDay: "Sun, Apr 19", 
         staffed: true, 
         intel: "Major supply and industrial town. Granaries still standing.",
         fryeIntel: "The reward for the wall: a thriving industrial hub protected by the blood and brick of the northern frontier.",
@@ -435,7 +446,7 @@ export const englishHeritageSites = [
         coords: [-2.3608, 54.9911],
         pageid: 373397, 
         hours: "10:00 - 17:00",
-        visitDay: "Wed, Apr 15",
+        visitDay: "Thu, Apr 16",
         staffed: true,
         intel: "Active excavation. Famous writing tablets detail daily Roman life.",
         url: "https://en.wikipedia.org/wiki/Vindolanda",
