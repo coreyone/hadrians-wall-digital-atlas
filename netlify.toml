@@ -1,6 +1,6 @@
 [build]
   base = "hadrians-wall-smart-map"
-  command = "npm install && npm run build"
+  command = "rm -rf node_modules package-lock.json && npm install && npm run build"
   publish = ".svelte-kit/output"
 
 [build.environment]

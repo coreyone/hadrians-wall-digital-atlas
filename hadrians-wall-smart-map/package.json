@@ -30,7 +30,8 @@
 		"vitest": "^4.0.18"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.9.5"
+		"@rollup/rollup-linux-x64-gnu": "^4.9.5",
+		"lightningcss-linux-x64-gnu": "^1.24.1"
 	},
 	"dependencies": {
 		"@turf/turf": "^7.3.4",

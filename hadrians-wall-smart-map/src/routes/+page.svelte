@@ -345,9 +345,7 @@
             <!-- Route Switcher -->
             <div class="flex p-0.5 bg-white/90 backdrop-blur rounded border border-slate-200 shadow-2xl overflow-hidden">
                 <button onclick={() => selectedRoute = 'osm'} class="px-2 py-1.5 text-[8px] font-black uppercase transition-all {selectedRoute === 'osm' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
-                <button onclick={() => selectedRoute = 'simplified'} class="px-2 py-1.5 text-[8px] font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-x border-slate-100" title="Decimated OSM">Simple</button>
-                <button onclick={() => selectedRoute = 'draft'} class="px-2 py-1.5 text-[8px] font-black uppercase transition-all {selectedRoute === 'draft' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="Atlas Original Draft">Draft</button>
-                <button onclick={() => selectedRoute = 'military'} class="px-2 py-1.5 text-[8px] font-black uppercase transition-all {selectedRoute === 'military' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Military Fort-to-Fort Axis">Wall</button>
+                <button onclick={() => selectedRoute = 'simplified'} class="px-2 py-1.5 text-[8px] font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
             </div>
 
             <!-- Style Switcher -->
