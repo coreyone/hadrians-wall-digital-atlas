@@ -1,0 +1,17 @@
+{
+  "name": "Hadrian's Wall Digital Atlas",
+  "short_name": "Hadrian Atlas",
+  "description": "High-density tactical instrument for the 2026 Hadrian's Wall trek.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
