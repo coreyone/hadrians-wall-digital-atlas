@@ -537,7 +537,11 @@
 
 <style>
     :global(.maplibregl-map) { height: 100%; width: 100%; font-family: inherit; }
-    :global(.poi-marker) { pointer-events: auto !important; }
+    :global(.poi-marker) { 
+        pointer-events: auto !important; 
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent;
+    }
     
     /* Base Label State: Hidden by default */
     :global(.poi-label) {
@@ -583,9 +587,9 @@
     :global(.zoom-state-z17 .label-priority-4),
     :global(.zoom-state-z18 .label-priority-4) { opacity: 1; }
 
-    :global(.poi-marker.active-marker .instrument-shell) {
+    :global(.poi-marker.active-marker .marker-icon) {
         border-color: #3b82f6 !important;
-        border-width: 2px;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 15px rgba(59, 130, 246, 0.2);
+        transform: scale(1.1);
     }
 </style>
