@@ -505,6 +505,7 @@
                             bourdainIntel: poi.allData.find((d: any) => d.bourdainIntel)?.bourdainIntel,
                             fryeIntel: poi.allData.find((d: any) => d.fryeIntel)?.fryeIntel,
                             rickStevesIntel: poi.allData.find((d: any) => d.rickStevesIntel)?.rickStevesIntel,
+                            photoIntel: poi.allData.find((d: any) => d.photoIntel)?.photoIntel,
                             url: poi.allData.find((d: any) => d.url && d.url !== '#')?.url || (poi.pageid ? `https://en.wikipedia.org/?curid=${poi.pageid}` : '#')
                         };
                         if (onPoiSelect) onPoiSelect(mergedPOI);

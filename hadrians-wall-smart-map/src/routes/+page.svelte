@@ -21,6 +21,7 @@
         bourdainIntel?: string;
         fryeIntel?: string;
         rickStevesIntel?: string;
+        photoIntel?: string;
         name?: string;
     }
 
@@ -130,6 +131,7 @@
         sun: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16a8,8,0,0,0-11.32,11.32Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM197.66,186.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM240,120H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16ZM40,120H16a8,8,0,0,0,0,16H40a8,8,0,0,0,0-16Zm157.66-61.66a8,8,0,0,0-11.32-11.32l-16,16a8,8,0,0,0,11.32,11.32Zm-77.66,161.66V240a8,8,0,0,0,16,0V220a8,8,0,0,0-16,0Z"></path></svg>`,
         footprints: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256"><path d="M100,140a36,36,0,0,0-36,36v20a12,12,0,0,0,12,12h48a12,12,0,0,0,12-12V176A36,36,0,0,0,100,140Zm20,56a4,4,0,0,1-4,4H80a4,4,0,0,1-4-4V176a20,20,0,0,1,40,0ZM188,140a36,36,0,0,0-36,36v20a12,12,0,0,0,12,12h48a12,12,0,0,0,12-12V176A36,36,0,0,0,188,140Zm20,56a4,4,0,0,1-4,4H168a4,4,0,0,1-4-4V176a20,20,0,0,1,40,0Z"></path></svg>`,
         arrowRight: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L204.69,128,138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66ZM120,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16h72A8,8,0,0,1,120,128Z"></path></svg>`,
+        camera: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M208,56H168V48a16,16,0,0,0-16-16H104A16,16,0,0,0,88,48v8H48A32,32,0,0,0,16,88V192a32,32,0,0,0,32,32H208a32,32,0,0,0,32-32V88A32,32,0,0,0,208,56Zm-80,128a40,40,0,1,1,40-40A40,40,0,0,1,128,184ZM104,48h48v8H104Zm104,160H48a16,16,0,0,1-16-16V88a16,16,0,0,1,16-16H208a16,16,0,0,1,16,16v88A16,16,0,0,1,208,208Z"></path></svg>`,
         locate: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM128,64a64,64,0,1,0,64,64A64.07,64.1,0,0,0,128,64Zm0,112a48,48,0,1,1,48-48A48.05,48.05,0,0,1,128,176Zm0-64a16,16,0,1,0,16,16A16,16,0,0,0,128,112Z"></path></svg>`,
         close: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg>`
     };
@@ -147,11 +149,12 @@
         <button 
             onclick={() => isSidebarOpen = false} 
             class="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
+            style="-webkit-backdrop-filter: blur(4px);"
             aria-label="Return to Map"
         ></button>
     {/if}
 
-    <aside class="{isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 w-[calc(100%-64px)] md:w-[320px] bg-surface/95 backdrop-blur-2xl border-r border-white/5 transition-transform duration-300 md:relative md:translate-x-0 flex flex-col shadow-2xl">
+    <aside class="{isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 w-[calc(100%-64px)] md:w-[320px] bg-surface/95 backdrop-blur-2xl border-r border-white/5 transition-transform duration-300 md:relative md:translate-x-0 flex flex-col shadow-2xl" style="-webkit-backdrop-filter: blur(40px);">
         <header class="p-4 border-b border-white/5 flex flex-col gap-4">
             <div class="flex items-center justify-between">
                 <div class="flex flex-col">
@@ -313,6 +316,13 @@
                             </div>
                         {/if}
 
+                        {#if selectedPOI.photoIntel}
+                            <div class="bg-indigo-500/5 border border-indigo-500/10 p-4 rounded-lg space-y-2.5">
+                                <span class="text-[10px] font-black uppercase text-indigo-400 tracking-[0.15em] flex items-center gap-2">{@html icons.camera} Photography Tips</span>
+                                <p class="text-[13px] font-medium text-indigo-200/80 leading-relaxed italic">"{selectedPOI.photoIntel}"</p>
+                            </div>
+                        {/if}
+
                         <div class="font-serif italic text-[15px] text-slate-400 leading-relaxed border-t border-white/5 pt-6">"{selectedPOI.summary || "Extracting archaeological data..."}"</div>
                     </div>
                 </div>
@@ -423,7 +433,7 @@
         </div>
         <div class="{isMobile ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30' : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}">
             <!-- Navigation Instruments -->
-            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl rounded-lg border border-slate-200 shadow-2xl overflow-hidden">
+            <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
                 <button onclick={() => mapComponent?.triggerLocateMe()} class="{isMobile ? 'p-2.5' : 'p-1.5'} text-slate-600 hover:text-blue-600 border-r border-slate-100 transition-all" title="Show My Location">{@html icons.locate}</button>
                 <button onclick={() => isHeadingUp = !isHeadingUp} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="Toggle Heading Up Mode">
                     {isHeadingUp ? 'Heading' : 'North'}
@@ -434,19 +444,19 @@
             </div>
 
             <!-- Route Switcher -->
-            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl rounded-lg border border-slate-200 shadow-2xl overflow-hidden">
+            <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
                 <button onclick={() => selectedRoute = 'osm'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'osm' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
                 <button onclick={() => selectedRoute = 'simplified'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
             </div>
 
             <!-- Style Switcher -->
-            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl rounded-lg border border-slate-200 shadow-2xl overflow-hidden">
+            <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
                 <button onclick={() => mapStyle = 'topo'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'topo' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Topo</button>
                 <button onclick={() => mapStyle = 'satellite'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'satellite' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'} border-x border-slate-100">Sat</button>
                 <button onclick={() => mapStyle = 'streets'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'streets' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Roads</button>
             </div>
             
-            <button class="{isMobile ? 'p-4 rounded-lg' : 'p-3 rounded-md'} bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" onclick={toggleSearch} title="Search Registry">{@html icons.search}</button>
+            <button class="{isMobile ? 'p-4 rounded-lg' : 'p-3 rounded-md'} bg-white/95 border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);" onclick={toggleSearch} title="Search Registry">{@html icons.search}</button>
         </div>
     </main>
 </div>
