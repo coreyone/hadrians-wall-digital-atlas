@@ -395,7 +395,7 @@
         </div>
         <div class="{isMobile ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30' : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}">
             <!-- Navigation Instruments -->
-            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl overflow-hidden" style="clip-path: url(#squircle-mask);">
+            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl shadow-2xl overflow-hidden" style="clip-path: url(#squircle-mask); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);">
                 <button onclick={() => isHeadingUp = !isHeadingUp} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="Toggle Heading Up Mode">
                     {isHeadingUp ? 'Heading Up' : 'North Up'}
                 </button>
@@ -405,19 +405,19 @@
             </div>
 
             <!-- Route Switcher -->
-            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl overflow-hidden" style="clip-path: url(#squircle-mask);">
+            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl shadow-2xl overflow-hidden" style="clip-path: url(#squircle-mask); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);">
                 <button onclick={() => selectedRoute = 'osm'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'osm' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="High-Res OSM Footpath">Footpath</button>
                 <button onclick={() => selectedRoute = 'simplified'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute === 'simplified' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Decimated OSM">Simple</button>
             </div>
 
             <!-- Style Switcher -->
-            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl overflow-hidden" style="clip-path: url(#squircle-mask);">
+            <div class="flex p-0.5 bg-white/95 backdrop-blur-xl shadow-2xl overflow-hidden" style="clip-path: url(#squircle-mask); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);">
                 <button onclick={() => mapStyle = 'topo'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'topo' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Topo</button>
                 <button onclick={() => mapStyle = 'satellite'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'satellite' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'} border-x border-slate-100">Sat</button>
                 <button onclick={() => mapStyle = 'streets'} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle === 'streets' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}">Roads</button>
             </div>
             
-            <button class="{isMobile ? 'p-4' : 'p-3'} bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" style="clip-path: url(#squircle-mask);" onclick={() => isSidebarOpen = !isSidebarOpen} title="Toggle Sidebar">{@html icons.search}</button>
+            <button class="{isMobile ? 'p-4' : 'p-3'} bg-white/95 backdrop-blur-xl shadow-2xl active:scale-90 transition-all text-slate-900 hover:text-blue-600 flex items-center justify-center" style="clip-path: url(#squircle-mask); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);" onclick={() => isSidebarOpen = !isSidebarOpen} title="Toggle Sidebar">{@html icons.search}</button>
         </div>
     </main>
 </div>
