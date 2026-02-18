@@ -15,6 +15,7 @@
         selectedRoute?: string;
         isHeadingUp?: boolean;
         isMobile?: boolean;
+        showMilestones?: boolean;
         onPoiSelect?: (poi: any) => void;
     }
 
@@ -26,6 +27,7 @@
         selectedRoute = 'osm',
         isHeadingUp = false,
         isMobile = false,
+        showMilestones = true,
         onPoiSelect 
     }: Props = $props();
 
@@ -152,43 +154,67 @@
 
     function renderPaceMarkers(coords: any[], stage: any) {
         clearPaceMarkers();
-        if (coords.length < 2) return;
+        if (coords.length < 2 || !showMilestones) return;
 
         let totalDist = 0;
         const speedMph = 2.8;
-        const startTime = 9; // 09:00 AM
+        const startTime = 9; 
+        const halfWayMi = stage.distanceMi / 2;
+        let halfWayAdded = false;
         
-        // Naismith-ish calculation: 2.8mph base + penalty for elevation
-        // Every 5 miles (~2 hours)
+        const milestoneIndices: { idx: number, name: string, type: 'pace' | 'milestone' | 'halfway', hours?: number }[] = [];
+
+        // Track cumulative distance to place markers
         for (let i = 1; i < coords.length; i++) {
             const p1 = turf.point(coords[i-1]);
             const p2 = turf.point(coords[i]);
             totalDist += turf.distance(p1, p2, { units: 'miles' });
 
-            if (totalDist >= 4.5 && paceMarkers.length === 0) addMarker(i, 2);
-            if (totalDist >= 9.0 && paceMarkers.length === 1) addMarker(i, 4);
-            if (totalDist >= 13.5 && paceMarkers.length === 2) addMarker(i, 6);
+            // Bi-Hourly Pace (Blue)
+            if (totalDist >= 4.5 && milestoneIndices.filter(m => m.type === 'pace').length === 0) {
+                milestoneIndices.push({ idx: i, name: '+2H', type: 'pace', hours: 2 });
+            }
+            if (totalDist >= 9.0 && milestoneIndices.filter(m => m.type === 'pace').length === 1) {
+                milestoneIndices.push({ idx: i, name: '+4H', type: 'pace', hours: 4 });
+            }
+
+            // Half-Way Checkpoint (Amber)
+            if (totalDist >= halfWayMi && !halfWayAdded && halfWayMi > 1) {
+                milestoneIndices.push({ idx: i, name: 'Half-Way', type: 'halfway' });
+                halfWayAdded = true;
+            }
+
+            // Itinerary Milestones (Amber)
+            stage.milestones?.forEach((ms: any) => {
+                if (totalDist >= ms.mi && !milestoneIndices.find(m => m.name === ms.name)) {
+                    milestoneIndices.push({ idx: i, name: ms.name, type: 'milestone' });
+                }
+            });
         }
 
-        function addMarker(idx: number, hours: number) {
+        milestoneIndices.forEach(m => {
             const el = document.createElement('div');
-            const time = startTime + hours;
-            const timeStr = `${time > 12 ? time - 12 : time}:00 ${time >= 12 ? 'PM' : 'AM'}`;
+            const isPace = m.type === 'pace';
+            const isHalf = m.type === 'halfway';
+            
+            const time = m.hours ? startTime + m.hours : null;
+            const timeStr = time ? `${time > 12 ? time - 12 : time}:00 ${time >= 12 ? 'PM' : 'AM'}` : '';
             
             el.className = 'pace-marker z-20 pointer-events-none';
             el.innerHTML = `
                 <div class="flex flex-col items-center">
-                    <div class="w-2 h-2 bg-blue-500 rounded-full border border-white shadow-sm mb-1"></div>
-                    <div class="bg-white/90 backdrop-blur-md border border-slate-200 px-1.5 py-0.5 rounded-sm shadow-xl">
-                        <span class="text-[8px] font-black text-slate-900 tabular-nums">+${hours}H · ${timeStr}</span>
+                    <div class="w-2.5 h-2.5 ${isPace ? 'bg-blue-500 rounded-full' : 'bg-amber-500 rotate-45'} border border-white shadow-sm mb-1"></div>
+                    <div class="bg-white/95 backdrop-blur-md border border-slate-200 px-1.5 py-0.5 rounded-sm shadow-xl flex flex-col items-center">
+                        <span class="text-[8px] font-black ${isPace ? 'text-blue-700' : 'text-amber-700'} uppercase tracking-tighter tabular-nums">${m.name}</span>
+                        ${timeStr ? `<span class="text-[7px] font-bold text-slate-500">${timeStr}</span>` : ''}
                     </div>
                 </div>
             `;
             if (map) {
-                const marker = new maplibregl.Marker({ element: el }).setLngLat(coords[idx] as [number, number]).addTo(map);
+                const marker = new maplibregl.Marker({ element: el }).setLngLat(coords[m.idx] as [number, number]).addTo(map);
                 paceMarkers.push(marker);
             }
-        }
+        });
     }
 
     // Phosphor Icons (Raw SVGs)

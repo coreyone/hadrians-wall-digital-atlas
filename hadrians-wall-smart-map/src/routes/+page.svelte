@@ -41,6 +41,8 @@
     let selectedStageId = $state<number | null>(null);
     let mapStyle = $state('topo');
     let selectedRoute = $state('osm');
+    let showMilestones = $state(true);
+    let expandedMilestoneStages = $state(new Set<number>());
 
     // Explore IA: Section Management
     let expandedSections = $state({
@@ -73,6 +75,25 @@
 
     function toggleStage(id: number) {
         selectedStageId = selectedStageId === id ? null : id;
+    }
+
+    function toggleMilestones(id: number) {
+        if (expandedMilestoneStages.has(id)) {
+            expandedMilestoneStages.delete(id);
+        } else {
+            expandedMilestoneStages.add(id);
+        }
+        expandedMilestoneStages = new Set(expandedMilestoneStages);
+    }
+
+    function flyToMilestone(stage: any, milestone: any) {
+        // Find approximate coordinates based on mileage along the trail
+        // This is a proxy flight since we don't have exact milestone coords in data yet
+        // We'll fly to Once Brewed or Carlisle as anchors
+        const center = overnightStops.find(h => h.name.includes(stage.from.split(' ')[0]))?.coords;
+        if (center && mapComponent) {
+            mapComponent.flyToPOI({ coords: center });
+        }
     }
 
     function generateSparkline(gain: number, loss: number) {
@@ -162,21 +183,30 @@
                                             </div>
                                             
                                             <div class="bg-slate-900 p-3 rounded-sm text-white space-y-2 shadow-inner">
-                                                <span class="block text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">Trail Milestones (ETAs)</span>
-                                                <div class="space-y-2">
-                                                    {#each stage.milestones as ms}
-                                                        <div class="flex items-start gap-3 border-l border-white/10 pl-3 relative">
-                                                            <div class="absolute -left-[3px] top-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="flex justify-between items-center gap-2 mb-0.5">
-                                                                    <span class="text-[11px] font-black uppercase tracking-tighter truncate">{ms.name}</span>
-                                                                    <span class="text-[10px] font-mono text-blue-400">{new Date(new Date("2026-04-12T09:00:00").getTime() + (ms.mi / 2.8) * 3600000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                <button onclick={() => toggleMilestones(stage.id)} class="w-full flex items-center justify-between group">
+                                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-400 transition-colors">Trail Milestones (ETAs)</span>
+                                                    <div class="text-slate-600 transition-transform {expandedMilestoneStages.has(stage.id) ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                                                </button>
+                                                
+                                                {#if expandedMilestoneStages.has(stage.id)}
+                                                    <div class="space-y-2" transition:slide>
+                                                        {#each stage.milestones as ms}
+                                                            <div class="flex items-start gap-3 border-l border-white/10 pl-3 relative group/ms">
+                                                                <div class="absolute -left-[3px] top-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                                                                <div class="flex-1 min-w-0">
+                                                                    <div class="flex justify-between items-center gap-2 mb-0.5">
+                                                                        <span class="text-[11px] font-black uppercase tracking-tighter truncate">{ms.name}</span>
+                                                                        <div class="flex items-center gap-2">
+                                                                            <span class="text-[10px] font-mono text-blue-400">{new Date(new Date("2026-04-12T09:00:00").getTime() + (ms.mi / 2.8) * 3600000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                                            <button onclick={() => flyToMilestone(stage, ms)} class="p-1 hover:bg-white/10 rounded transition-colors opacity-0 group-hover/ms:opacity-100">{@html icons.arrowRight}</button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p class="text-[10px] text-slate-400 leading-tight italic">{ms.intel}</p>
                                                                 </div>
-                                                                <p class="text-[10px] text-slate-400 leading-tight italic">{ms.intel}</p>
                                                             </div>
-                                                        </div>
-                                                    {/each}
-                                                </div>
+                                                        {/each}
+                                                    </div>
+                                                {/if}
                                             </div>
 
                                             <div class="bg-slate-50 p-3 rounded-sm border border-slate-100">
@@ -340,13 +370,16 @@
 
     <main class="flex-1 relative bg-slate-100 overflow-hidden">
         <div class="absolute inset-0">
-            <Map bind:this={mapComponent} initialPOIs={data.initialPOIs} bind:selectedPOI {selectedStageId} {mapStyle} {selectedRoute} {isHeadingUp} {isMobile} onPoiSelect={handlePOIClick} />
+            <Map bind:this={mapComponent} initialPOIs={data.initialPOIs} bind:selectedPOI {selectedStageId} {mapStyle} {selectedRoute} {isHeadingUp} {isMobile} {showMilestones} onPoiSelect={handlePOIClick} />
         </div>
         <div class="{isMobile ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30' : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}">
             <!-- Navigation Instruments -->
             <div class="flex p-0.5 bg-white/95 backdrop-blur-xl rounded border border-slate-200 shadow-2xl overflow-hidden">
                 <button onclick={() => isHeadingUp = !isHeadingUp} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}" title="Toggle Heading Up Mode">
                     {isHeadingUp ? 'Heading Up' : 'North Up'}
+                </button>
+                <button onclick={() => showMilestones = !showMilestones} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {showMilestones ? 'bg-amber-600 text-white' : 'text-slate-500 hover:bg-slate-50'} border-l border-slate-100" title="Toggle Milestones Layer">
+                    Milestones
                 </button>
             </div>
 
