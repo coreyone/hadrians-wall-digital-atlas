@@ -25,6 +25,8 @@ export interface NavigationMetrics {
         condition: string;
         tempF: number;
     };
+    gpsHeading?: number | null;
+    gpsSpeedMph?: number | null;
 }
 
 class NavigationService {

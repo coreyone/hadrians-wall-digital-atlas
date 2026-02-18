@@ -28,6 +28,7 @@
         freezeMap?: boolean;
         onNavigationUpdate?: (metrics: NavigationMetrics) => void;
         onHikerPoiSelect?: (poi: any) => void;
+        onMapReady?: () => void;
     }
 
     let { 
@@ -46,7 +47,8 @@
         lowPowerMode = false,
         freezeMap = false,
         onNavigationUpdate,
-        onHikerPoiSelect
+        onHikerPoiSelect,
+        onMapReady
     }: Props = $props();
 
     let mapContainer: HTMLDivElement;
@@ -594,9 +596,18 @@
         if (watchId !== null) return;
         watchId = navigator.geolocation.watchPosition(pos => {
             if (!map) return;
-            const { longitude, latitude, accuracy } = pos.coords;
+            const { longitude, latitude, accuracy, heading, speed } = pos.coords;
             const rawCoord: [number, number] = [longitude, latitude];
-            const metrics = navigationService.updatePosition(rawCoord);
+            const baseMetrics = navigationService.updatePosition(rawCoord);
+            const gpsHeading =
+                typeof heading === 'number' && Number.isFinite(heading) && heading >= 0
+                    ? heading
+                    : null;
+            const gpsSpeedMph =
+                typeof speed === 'number' && Number.isFinite(speed) && speed >= 0
+                    ? speed * 2.2369362920544
+                    : null;
+            const metrics: NavigationMetrics = { ...baseMetrics, gpsHeading, gpsSpeedMph };
             const [snappedLng, snappedLat] = metrics.snappedCoord;
             userLocation = { lng: snappedLng, lat: snappedLat, accuracy };
             driftMeters = metrics.driftMeters;
@@ -670,6 +681,7 @@
 
             map.on('load', () => {
                 setupLayers();
+                onMapReady?.();
                 
                 const onceBrewed: [number, number] = [-2.3958, 55.0036];
                 const bounds = new maplibregl.LngLatBounds();

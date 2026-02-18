@@ -56,7 +56,23 @@
     let swipeTracking = $state(false);
     let drawerSwipeStartY = $state(0);
     let drawerSwipeStartX = $state(0);
+    let showMobileSplash = $state(false);
+    let splashMinElapsed = $state(false);
+    let mapReady = $state(false);
+    let compassHeading = $state(0);
+    let compassNeedsCalibration = $state(false);
+    let gpsHeading = $state<number | null>(null);
+    let latestGpsSpeedMph = $state(0);
+    let showCompassFallbackNotice = $state(false);
+    let dismissedCompassFallbackNotice = $state(false);
+    let lastAppliedHeading = $state<number | null>(null);
+    let lastAppliedCalibration = $state<boolean | null>(null);
     let discoveredPOIs = $derived(data.initialPOIs ?? []);
+    const GPS_COURSE_SPEED_THRESHOLD_MPH = 1.5;
+    const GPS_COURSE_RECOVERY_SPEED_THRESHOLD_MPH = 1.1;
+    const MOBILE_SPLASH_SHOW_DELAY_MS = 120;
+    const MOBILE_SPLASH_MIN_VISIBLE_MS = 320;
+    const MOBILE_SPLASH_HARD_TIMEOUT_MS = 1700;
 
     let filteredDiscovery = $derived.by(() => {
         const query = searchQuery.trim().toLowerCase();
@@ -64,6 +80,15 @@
             .filter((poi) => !query || poi.title.toLowerCase().includes(query))
             .sort((a, b) => b.rank - a.rank);
     });
+
+    function normalizeHeading(value: number | null | undefined): number | null {
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
+        return ((value % 360) + 360) % 360;
+    }
+
+    function headingDelta(a: number, b: number) {
+        return Math.abs((((a - b) % 360) + 540) % 360 - 180);
+    }
 
     onMount(() => {
         const handleOnline = () => (isOnline = true);
@@ -77,11 +102,33 @@
         const handleMedia = (e: MediaQueryListEvent) => (isMobile = e.matches);
         mql.addEventListener('change', handleMedia);
 
+        let splashShowTimer: ReturnType<typeof setTimeout> | null = null;
+        let splashMinTimer: ReturnType<typeof setTimeout> | null = null;
+        let splashHardTimer: ReturnType<typeof setTimeout> | null = null;
+        if (isMobile && !mapReady) {
+            showMobileSplash = false;
+            splashMinElapsed = false;
+            splashShowTimer = setTimeout(() => {
+                if (mapReady) return;
+                showMobileSplash = true;
+                splashMinTimer = setTimeout(() => {
+                    splashMinElapsed = true;
+                    if (mapReady) {
+                        showMobileSplash = false;
+                    }
+                }, MOBILE_SPLASH_MIN_VISIBLE_MS);
+            }, MOBILE_SPLASH_SHOW_DELAY_MS);
+            splashHardTimer = setTimeout(() => {
+                splashMinElapsed = true;
+                if (showMobileSplash) {
+                    showMobileSplash = false;
+                }
+            }, MOBILE_SPLASH_HARD_TIMEOUT_MS);
+        }
+
         const unsubscribeCompass = compassService.subscribe((state) => {
-            hikerMode.updateMetrics({
-                heading: state.heading,
-                isCalibrating: state.needsCalibration
-            });
+            compassHeading = state.heading;
+            compassNeedsCalibration = state.needsCalibration;
         });
 
         let batteryRef: any = null;
@@ -108,6 +155,9 @@
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
             mql.removeEventListener('change', handleMedia);
+            if (splashShowTimer) clearTimeout(splashShowTimer);
+            if (splashMinTimer) clearTimeout(splashMinTimer);
+            if (splashHardTimer) clearTimeout(splashHardTimer);
             if (batteryRef && batteryHandler) {
                 batteryRef.removeEventListener('levelchange', batteryHandler);
                 batteryRef.removeEventListener('chargingchange', batteryHandler);
@@ -237,6 +287,12 @@
         swipeTracking = false;
         coinAnimating = false;
         coinMetallic = false;
+        showCompassFallbackNotice = false;
+        dismissedCompassFallbackNotice = false;
+        lastAppliedHeading = null;
+        lastAppliedCalibration = null;
+        gpsHeading = null;
+        latestGpsSpeedMph = 0;
     }
 
     async function handleCoinTap() {
@@ -259,6 +315,12 @@
     }
 
     function handleNavigationUpdate(metrics: NavigationMetrics) {
+        gpsHeading = normalizeHeading(metrics.gpsHeading);
+        latestGpsSpeedMph =
+            typeof metrics.gpsSpeedMph === 'number' && Number.isFinite(metrics.gpsSpeedMph)
+                ? Math.max(0, metrics.gpsSpeedMph)
+                : Math.max(0, metrics.speedMph);
+
         const game = gamificationService.update(
             metrics.snappedCoord,
             metrics.distanceWalkedMiles,
@@ -292,6 +354,13 @@
             setTimeout(() => {
                 latestBadge = null;
             }, 3500);
+        }
+    }
+
+    function handleMapReady() {
+        mapReady = true;
+        if (isMobile && splashMinElapsed) {
+            showMobileSplash = false;
         }
     }
 
@@ -344,10 +413,56 @@
     }
 
     $effect(() => {
-        if (!$hikerMode.isActive) return;
+        if (!$hikerMode.isActive) {
+            showCompassFallbackNotice = false;
+            dismissedCompassFallbackNotice = false;
+            lastAppliedHeading = null;
+            lastAppliedCalibration = null;
+            return;
+        }
+
+        const isMovingFastForGps = latestGpsSpeedMph >= GPS_COURSE_SPEED_THRESHOLD_MPH;
+        const isMovingEnoughForGpsRecovery = latestGpsSpeedMph >= GPS_COURSE_RECOVERY_SPEED_THRESHOLD_MPH;
+        const hasGpsHeading = gpsHeading !== null;
+        const shouldFallbackNorthUp = compassNeedsCalibration && !isMovingEnoughForGpsRecovery;
+
+        const resolvedHeading =
+            (isMovingFastForGps && hasGpsHeading) || (compassNeedsCalibration && isMovingEnoughForGpsRecovery && hasGpsHeading)
+                ? (gpsHeading as number)
+                : compassHeading;
+
+        if (
+            lastAppliedHeading === null ||
+            headingDelta(resolvedHeading, lastAppliedHeading) >= 0.6 ||
+            lastAppliedCalibration !== compassNeedsCalibration
+        ) {
+            hikerMode.updateMetrics({
+                heading: resolvedHeading,
+                isCalibrating: compassNeedsCalibration
+            });
+            lastAppliedHeading = resolvedHeading;
+            lastAppliedCalibration = compassNeedsCalibration;
+        }
+
         if ($hikerMode.simplifiedHUD) {
             isHeadingUp = false;
-        } else if (!isHeadingUp) {
+            showCompassFallbackNotice = false;
+            return;
+        }
+
+        if (shouldFallbackNorthUp) {
+            if (isHeadingUp) {
+                isHeadingUp = false;
+            }
+            if (!dismissedCompassFallbackNotice) {
+                showCompassFallbackNotice = true;
+            }
+            return;
+        }
+
+        showCompassFallbackNotice = false;
+        dismissedCompassFallbackNotice = false;
+        if (!isHeadingUp) {
             isHeadingUp = true;
         }
     });
@@ -364,9 +479,19 @@
     <HikerHUD onToggleSimplified={toggleSimplifiedHUD} onCoinTap={handleCoinTap} />
 {/if}
 
-{#if $hikerMode.isCalibrating && $hikerMode.isActive}
-    <div class="fixed top-24 left-1/2 -translate-x-1/2 z-[70] rounded-xl border border-amber-300/40 bg-amber-500/90 px-4 py-2 text-[11px] font-black uppercase tracking-[0.15em] text-slate-900 shadow-2xl">
-        Calibrate Compass · Move phone in a figure-8
+{#if showCompassFallbackNotice && $hikerMode.isActive}
+    <div class="fixed top-24 left-1/2 z-[70] flex w-[min(92vw,26rem)] -translate-x-1/2 items-center justify-between gap-2 rounded-xl border border-amber-300/35 bg-amber-500/90 px-3 py-2 text-slate-950 shadow-2xl">
+        <p class="text-[10px] font-black uppercase tracking-[0.12em]">Compass unstable; using North-Up for now.</p>
+        <button
+            type="button"
+            class="shrink-0 rounded-md border border-slate-900/25 bg-slate-950/15 px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] hover:bg-slate-950/25"
+            onclick={() => {
+                showCompassFallbackNotice = false;
+                dismissedCompassFallbackNotice = true;
+            }}
+        >
+            Skip
+        </button>
     </div>
 {/if}
 
@@ -375,6 +500,20 @@
         <p class="text-[9px] font-black uppercase tracking-[0.2em]">Badge Unlocked</p>
         <p class="text-sm font-black">{latestBadge.name}</p>
         <p class="text-[11px] font-semibold">{latestBadge.description}</p>
+    </div>
+{/if}
+
+{#if showMobileSplash}
+    <div class="fixed inset-0 z-[120] md:hidden overflow-hidden splash-screen" role="status" aria-live="polite" aria-label="Loading Hadrian Atlas">
+        <img src="/loading-screen-hadrians-wall-path-map.png" alt="" class="absolute inset-0 h-full w-full object-cover splash-image" />
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950/25 via-slate-900/40 to-slate-950/90"></div>
+        <div class="absolute inset-x-0 px-6" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 1.75rem);">
+            <p class="text-[11px] font-black uppercase tracking-[0.22em] text-amber-100/95 drop-shadow-sm splash-headline">Hadrian Atlas</p>
+            <p class="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-200/90 splash-subline">Loading trail intelligence…</p>
+            <div class="mt-3 h-1.5 overflow-hidden rounded-full border border-white/20 bg-slate-950/55">
+                <span class="block h-full rounded-full bg-gradient-to-r from-blue-400 via-cyan-300 to-amber-300 splash-progress"></span>
+            </div>
+        </div>
     </div>
 {/if}
 
@@ -389,11 +528,11 @@
                 <div class="flex items-center gap-2">
                     <button
                         onclick={handleCoinTap}
-                        class="flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.45)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_12px_rgba(59,130,246,0.35)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+                        class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {$hikerMode.isActive ? 'h-[3.375rem] w-[3.375rem]' : 'h-9 w-9'} {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.45)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_12px_rgba(59,130,246,0.35)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
                         aria-label="Triple tap Roman Coin to toggle Hiker Mode"
                         title="Triple Tap Roman Coin"
                     >
-                        <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-6 w-6 object-contain drop-shadow-sm" />
+                        <img src="/logo-coin.png" alt="Roman Coin Toggle" class="object-contain drop-shadow-sm {$hikerMode.isActive ? 'h-9 w-9' : 'h-6 w-6'}" />
                     </button>
                     <div class="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-white/5 border border-white/5">
                         <div class="w-1.5 h-1.5 rounded-full {isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]'} animate-pulse"></div>
@@ -734,6 +873,7 @@
                 onPoiSelect={handlePOIClick}
                 onNavigationUpdate={handleNavigationUpdate}
                 onHikerPoiSelect={handleHikerPoiSelect}
+                onMapReady={handleMapReady}
             />
         </div>
 
@@ -834,4 +974,97 @@
     :global(.custom-scrollbar::-webkit-scrollbar-thumb) { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
     :global(.custom-scrollbar::-webkit-scrollbar-thumb:hover) { background: rgba(255, 255, 255, 0.2); }
     :global(.scrollbar-hide::-webkit-scrollbar) { display: none; }
+
+    :global(:root) {
+        --motion-duration-micro: 120ms;
+        --motion-duration-ui: 180ms;
+        --motion-duration-panel: 240ms;
+        --motion-duration-nav: 460ms;
+        --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+        --motion-ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
+        --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+    }
+
+    .splash-screen {
+        animation: splash-fade-in var(--motion-duration-ui) var(--motion-ease-standard) both;
+    }
+
+    .splash-image {
+        transform-origin: 50% 40%;
+        animation: splash-ken-burns var(--motion-duration-nav) var(--motion-ease-emphasized) both;
+        will-change: transform, opacity;
+    }
+
+    .splash-headline {
+        animation: splash-rise var(--motion-duration-panel) var(--motion-ease-standard) 50ms both;
+    }
+
+    .splash-subline {
+        animation: splash-rise var(--motion-duration-panel) var(--motion-ease-standard) 110ms both;
+    }
+
+    .splash-progress {
+        transform-origin: 0 50%;
+        animation: splash-progress 720ms var(--motion-ease-emphasized) 120ms both;
+        will-change: transform, opacity;
+    }
+
+    @keyframes splash-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes splash-ken-burns {
+        from {
+            opacity: 0.92;
+            transform: scale(1.06) translateY(6px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    @keyframes splash-rise {
+        from {
+            opacity: 0;
+            transform: translateY(9px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes splash-progress {
+        from {
+            transform: scaleX(0.22);
+            opacity: 0.7;
+        }
+        to {
+            transform: scaleX(1);
+            opacity: 1;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .splash-screen,
+        .splash-image,
+        .splash-headline,
+        .splash-subline,
+        .splash-progress {
+            animation-duration: 1ms !important;
+            animation-iteration-count: 1 !important;
+        }
+
+        .splash-image,
+        .splash-headline,
+        .splash-subline {
+            transform: none !important;
+        }
+
+        .splash-progress {
+            transform: scaleX(1);
+        }
+    }
 </style>
