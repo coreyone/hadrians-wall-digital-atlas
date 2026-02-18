@@ -262,6 +262,17 @@
 
         map.on('mousemove', (e) => { mouseCoords = { lng: e.lngLat.lng, lat: e.lngLat.lat }; });
 
+        map.on('idle', () => {
+            // Background Warming: Prefetch other styles into browser cache
+            const otherStyles = Object.keys(styles).filter(s => s !== mapStyle);
+            otherStyles.forEach(s => {
+                const url = styles[s];
+                if (typeof url === 'string') {
+                    fetch(url, { priority: 'low' }).catch(() => {});
+                }
+            });
+        });
+
         map.on('load', () => {
             setupLayers();
             
