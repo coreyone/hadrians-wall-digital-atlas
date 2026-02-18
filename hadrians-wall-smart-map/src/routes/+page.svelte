@@ -126,27 +126,27 @@
     async function runCoinMorph(direction: 'expand' | 'collapse') {
         if (!isMobile || !mobileCoinButton || typeof window === 'undefined') return;
 
+        const liveMobileRect = mobileCoinButton.getBoundingClientRect();
+        const mobileCenterX = liveMobileRect.left + liveMobileRect.width / 2;
+        const mobileCenterY = liveMobileRect.top + liveMobileRect.height / 2;
+        const mobileRestSize = 36;
+        const mobileRestRect = new DOMRect(
+            mobileCenterX - mobileRestSize / 2,
+            mobileCenterY - mobileRestSize / 2,
+            mobileRestSize,
+            mobileRestSize
+        );
+        const hikerRect = hikerTopCoinRect ?? fallbackHikerCoinRect();
+        const fromRect = direction === 'expand' ? mobileRestRect : hikerRect;
+        const toRect = direction === 'expand' ? hikerRect : mobileRestRect;
+
         coinMorphing = true;
         try {
             await tick();
             await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-
-            const hikerRect = hikerTopCoinRect ?? fallbackHikerCoinRect();
-            const mobileRect = mobileCoinButton.getBoundingClientRect();
-            const mobileCenterX = mobileRect.left + mobileRect.width / 2;
-            const mobileCenterY = mobileRect.top + mobileRect.height / 2;
-            const mobileRestSize = 36;
-            const mobileRestRect = new DOMRect(
-                mobileCenterX - mobileRestSize / 2,
-                mobileCenterY - mobileRestSize / 2,
-                mobileRestSize,
-                mobileRestSize
-            );
-            const from = direction === 'expand' ? mobileCoinButton : hikerRect;
-            const to = direction === 'expand' ? hikerRect : mobileRestRect;
             await runBlobMorph({
-                from,
-                to,
+                from: fromRect,
+                to: toRect,
                 direction,
                 durationMs: 620,
                 bounce: 0.42,
@@ -335,7 +335,6 @@
         if (coinMorphBusy) return;
         coinMorphBusy = true;
         try {
-            hikerMode.activate();
             coinMetallic = true;
             coinAnimating = true;
             if (navigator.vibrate) navigator.vibrate(300);
@@ -343,6 +342,8 @@
             if (isMobile) {
                 await runCoinMorph('expand');
             }
+
+            hikerMode.activate();
 
             if (!hasRequestedCompassPermission) {
                 hasRequestedCompassPermission = true;

@@ -7,7 +7,6 @@ export interface BlobMorphOptions {
     durationMs?: number;
     bounce?: number;
     zIndex?: number;
-    cloneSourceContent?: boolean;
     contentSource?: HTMLElement | null;
 }
 
@@ -177,6 +176,14 @@ function buildOverlay(zIndex: number) {
     };
 }
 
+function resolveSpriteSrc(contentSource: HTMLElement | null | undefined) {
+    if (!contentSource) return null;
+    if (contentSource instanceof HTMLImageElement) return contentSource.src || null;
+    const img = contentSource.querySelector('img');
+    if (img && img instanceof HTMLImageElement) return img.src || null;
+    return null;
+}
+
 export async function runBlobMorph(options: BlobMorphOptions) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
@@ -192,24 +199,35 @@ export async function runBlobMorph(options: BlobMorphOptions) {
     const spring = squishSpring(durationMs / 1000, 0.62, options.bounce ?? 0.38);
     const overlay = buildOverlay(options.zIndex ?? 115);
 
-    const cloneSeed =
+    const spriteSrc = resolveSpriteSrc(
         options.contentSource ??
-        (options.from instanceof HTMLElement ? options.from : null);
-
-    const cloneSource =
-        options.cloneSourceContent !== false && cloneSeed
-            ? (cloneSeed.cloneNode(true) as HTMLElement)
+            (options.from instanceof HTMLElement ? options.from : null)
+    );
+    const sprite =
+        spriteSrc !== null
+            ? (() => {
+                    const el = document.createElement('img');
+                    el.src = spriteSrc;
+                    el.alt = '';
+                    el.decoding = 'async';
+                    el.style.position = 'fixed';
+                    el.style.left = '0';
+                    el.style.top = '0';
+                    el.style.margin = '0';
+                    el.style.pointerEvents = 'none';
+                    el.style.transformOrigin = '50% 50%';
+                    el.style.willChange = 'transform, width, height';
+                    el.style.transition = 'none';
+                    el.style.filter = 'drop-shadow(0 1px 2px rgba(15, 23, 42, 0.4))';
+                    overlay.root.append(el);
+                    return el;
+              })()
             : null;
 
-    if (cloneSource) {
-        cloneSource.style.position = 'fixed';
-        cloneSource.style.left = '0';
-        cloneSource.style.top = '0';
-        cloneSource.style.margin = '0';
-        cloneSource.style.pointerEvents = 'none';
-        cloneSource.style.transformOrigin = '50% 50%';
-        cloneSource.style.willChange = 'transform, opacity';
-        overlay.root.append(cloneSource);
+    if (sprite) {
+        const initialSize = Math.max(18, Math.min(fromRect.width, fromRect.height) * 0.68);
+        sprite.style.width = `${roundPx(initialSize)}px`;
+        sprite.style.height = `${roundPx(initialSize)}px`;
     }
 
     const start = 0;
@@ -245,19 +263,16 @@ export async function runBlobMorph(options: BlobMorphOptions) {
             overlay.path.setAttribute('d', shape.d);
             overlay.path.setAttribute('transform', `translate(${roundPx(tx)} ${roundPx(ty)})`);
 
-            if (cloneSource) {
-                const cw = lerp(fromRect.width, toRectResolved.width, s);
-                const ch = lerp(fromRect.height, toRectResolved.height, s);
-                const spin = (direction === 'expand' ? 1 : -1) * 180 * s;
-                const squish = 1 + 0.08 * Math.sin(Math.PI * s);
-                const opacity = s > 0.9 ? 1 - (s - 0.9) / 0.1 : 1;
-
-                cloneSource.style.width = `${roundPx(cw)}px`;
-                cloneSource.style.height = `${roundPx(ch)}px`;
-                cloneSource.style.opacity = `${roundPx(Math.max(0, Math.min(1, opacity)))}`;
-                cloneSource.style.transform =
-                    `translate(${roundPx(cx - cw / 2)}px, ${roundPx(cy - ch / 2)}px) ` +
-                    `rotate(${roundPx(spin)}deg) scale(${roundPx(squish)})`;
+            if (sprite) {
+                const fromIcon = Math.max(18, Math.min(fromRect.width, fromRect.height) * 0.66);
+                const toIcon = Math.max(20, Math.min(toRectResolved.width, toRectResolved.height) * 0.66);
+                const iconSize = lerp(fromIcon, toIcon, s);
+                const spin = (direction === 'expand' ? 1 : -1) * 42 * s;
+                sprite.style.width = `${roundPx(iconSize)}px`;
+                sprite.style.height = `${roundPx(iconSize)}px`;
+                sprite.style.transform =
+                    `translate(${roundPx(cx - iconSize / 2)}px, ${roundPx(cy - iconSize / 2)}px) ` +
+                    `rotate(${roundPx(spin)}deg)`;
             }
         };
 

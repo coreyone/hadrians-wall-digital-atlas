@@ -49,11 +49,6 @@ $effect(() => {
         return '☀';
     }
 
-    function segments(totalMiles: number) {
-        const count = Math.max(1, Math.round(totalMiles));
-        return Array.from({ length: count }, (_, i) => i);
-    }
-
     function progressPercent(progress: number, goal: number) {
         if (goal <= 0) return 0;
         return Math.max(0, Math.min(100, (progress / goal) * 100));
@@ -149,7 +144,12 @@ $effect(() => {
             <div class="rounded-lg border border-blue-300/30 bg-blue-500/10 px-2.5 py-2">
                 <div class="mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.14em] text-blue-100">
                     <span>Full Hike Carlisle to Corbridge</span>
-                    <span class="tabular-nums">{$hikerMode.fullTripProgressMiles.toFixed(1)} / {$hikerMode.fullTripGoalMiles.toFixed(1)} mi</span>
+                    <div class="flex items-center gap-2">
+                        <span class="tabular-nums">{$hikerMode.fullTripProgressMiles.toFixed(1)} / {$hikerMode.fullTripGoalMiles.toFixed(1)} mi</span>
+                        <span class="rounded-full border border-blue-200/35 bg-blue-950/35 px-1.5 py-0.5 text-[8px] font-black tracking-[0.16em]">
+                            {$hikerMode.integrity.toFixed(0)}%
+                        </span>
+                    </div>
                 </div>
                 <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
                     <span
@@ -164,18 +164,6 @@ $effect(() => {
             <span class="flex items-center gap-1 text-emerald-300">▲ {$hikerMode.elevationGain} ft / 500m</span>
             <span class="flex items-center gap-1 text-rose-300">▼ {$hikerMode.elevationLoss} ft / 500m</span>
             <span class="text-slate-300">HDG {$hikerMode.heading.toFixed(0)}°</span>
-        </div>
-
-        <div class="mb-2">
-            <div class="mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
-                <span class="flex items-center gap-1">👣 Trail Integrity</span>
-                <span>{$hikerMode.integrity.toFixed(0)}%</span>
-            </div>
-            <div class="grid gap-0.5" style="grid-template-columns: repeat({Math.max(1, Math.round($hikerMode.totalMiles))}, minmax(0, 1fr));">
-                {#each segments($hikerMode.totalMiles) as mileIndex (mileIndex)}
-                    <span class="h-1 rounded-sm {mileIndex < Math.floor($hikerMode.distanceWalkedMiles) ? 'bg-amber-300 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'bg-white/10'}"></span>
-                {/each}
-            </div>
         </div>
 
         {#if $hikerMode.isOffTrail}
