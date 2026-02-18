@@ -5,7 +5,11 @@
     import * as turf from '@turf/turf';
     import { trailGeoJSON, getCorridor, overnightStops, itinerary, trailCoordinates, englishHeritageSites, hospitalitySites } from '$lib/data/trail';
     import { routeVariants } from '$lib/data/routes';
-    import { fetchWikiPOIs, fetchPageSummary, type WikiPOI } from '$lib/services/wikipedia';
+    import { fetchWikiPOIs, type WikiPOI } from '$lib/services/wikipedia';
+    import {
+        navigationService,
+        type NavigationMetrics
+    } from '$lib/services/navigation';
 
     interface Props {
         initialPOIs?: WikiPOI[];
@@ -17,6 +21,13 @@
         isMobile?: boolean;
         showMilestones?: boolean;
         onPoiSelect?: (poi: any) => void;
+        hikerActive?: boolean;
+        hikerHeading?: number;
+        hikerSimplified?: boolean;
+        lowPowerMode?: boolean;
+        freezeMap?: boolean;
+        onNavigationUpdate?: (metrics: NavigationMetrics) => void;
+        onHikerPoiSelect?: (poi: any) => void;
     }
 
     let { 
@@ -28,7 +39,14 @@
         isHeadingUp = false,
         isMobile = false,
         showMilestones = true,
-        onPoiSelect 
+        onPoiSelect,
+        hikerActive = false,
+        hikerHeading = 0,
+        hikerSimplified = false,
+        lowPowerMode = false,
+        freezeMap = false,
+        onNavigationUpdate,
+        onHikerPoiSelect
     }: Props = $props();
 
     let mapContainer: HTMLDivElement;
@@ -39,6 +57,12 @@
     let userLocation = $state<{lng: number, lat: number, accuracy: number} | null>(null);
     let userMarker: maplibregl.Marker | null = null;
     let watchId: number | null = null;
+    let driftMeters = $state(0);
+    let registryPOIs: any[] = [];
+    let floatingMarkers: maplibregl.Marker[] = [];
+    let glowFrame: number | null = null;
+    let lastGlowTick = 0;
+    let lastFlyTo = 0;
 
     const styles: Record<string, any> = {
         streets: 'https://tiles.openfreemap.org/styles/bright',
@@ -89,6 +113,9 @@
             // Re-add layers once the new style has loaded
             map.once('style.load', () => {
                 setupLayers();
+                const shouldGlow = hikerActive && !hikerSimplified;
+                setGlowVisibility(shouldGlow);
+                if (shouldGlow) startGlowPulse();
                 // Ensure active stage is redrawn if selected
                 if (selectedStageId) {
                     const stage = itinerary.find(s => s.id === selectedStageId);
@@ -208,6 +235,161 @@
         }
     });
 
+    function setMapInteractivity(enabled: boolean) {
+        if (!map) return;
+
+        if (enabled) {
+            map.dragPan.enable();
+            map.scrollZoom.enable();
+            map.boxZoom.enable();
+            map.dragRotate.enable();
+            map.keyboard.enable();
+            map.doubleClickZoom.enable();
+            map.touchZoomRotate.enable();
+            return;
+        }
+
+        map.dragPan.disable();
+        map.scrollZoom.disable();
+        map.boxZoom.disable();
+        map.dragRotate.disable();
+        map.keyboard.disable();
+        map.doubleClickZoom.disable();
+        map.touchZoomRotate.disable();
+    }
+
+    function clearFloatingMarkers() {
+        floatingMarkers.forEach((marker) => marker.remove());
+        floatingMarkers = [];
+    }
+
+    function renderNearbyFloatingPOIs(center: [number, number]) {
+        if (!map || !hikerActive || !userLocation || hikerSimplified) {
+            clearFloatingMarkers();
+            return;
+        }
+
+        clearFloatingMarkers();
+        const centerPoint = turf.point(center);
+        const nearby = registryPOIs
+            .filter((poi) => {
+                const km = turf.distance(centerPoint, turf.point(poi.coords), {
+                    units: 'kilometers'
+                });
+                return km <= 0.5;
+            })
+            .slice(0, 8);
+
+        nearby.forEach((poi) => {
+            const currentMap = map;
+            if (!currentMap) return;
+            const el = document.createElement('button');
+            el.className = 'hiker-floating-poi';
+            el.innerHTML = `
+                <span class="hiker-floating-poi__icon">⛳</span>
+                <span class="hiker-floating-poi__label">${poi.title}</span>
+            `;
+            el.onclick = (event) => {
+                event.stopPropagation();
+                onHikerPoiSelect?.(poi);
+            };
+
+            const marker = new maplibregl.Marker({
+                element: el,
+                anchor: 'bottom'
+            })
+                .setLngLat(poi.coords as [number, number])
+                .addTo(currentMap);
+            floatingMarkers.push(marker);
+        });
+    }
+
+    function setGlowVisibility(visible: boolean) {
+        if (!map) return;
+        const visibility = visible ? 'visible' : 'none';
+        if (map.getLayer('hiker-glow-outer')) map.setLayoutProperty('hiker-glow-outer', 'visibility', visibility);
+        if (map.getLayer('hiker-glow-core')) map.setLayoutProperty('hiker-glow-core', 'visibility', visibility);
+    }
+
+    function animateGlow(ts: number) {
+        if (!map || !map.getLayer('hiker-glow-outer') || !map.getLayer('hiker-glow-core')) {
+            glowFrame = null;
+            return;
+        }
+
+        const frameEveryMs = lowPowerMode ? 120 : 34;
+        if (ts - lastGlowTick >= frameEveryMs) {
+            lastGlowTick = ts;
+            const pulse = 0.5 + 0.5 * Math.sin(ts / 240);
+            map.setPaintProperty('hiker-glow-outer', 'line-width', 8 + pulse * 8);
+            map.setPaintProperty('hiker-glow-outer', 'line-opacity', 0.1 + pulse * 0.26);
+            map.setPaintProperty('hiker-glow-core', 'line-width', 2.5 + pulse * 2.5);
+            map.setPaintProperty('hiker-glow-core', 'line-opacity', 0.35 + pulse * 0.45);
+        }
+
+        glowFrame = requestAnimationFrame(animateGlow);
+    }
+
+    function startGlowPulse() {
+        if (glowFrame !== null) return;
+        glowFrame = requestAnimationFrame(animateGlow);
+    }
+
+    function stopGlowPulse() {
+        if (glowFrame !== null) {
+            cancelAnimationFrame(glowFrame);
+            glowFrame = null;
+        }
+        if (!map) return;
+        if (map.getLayer('hiker-glow-outer')) map.setPaintProperty('hiker-glow-outer', 'line-opacity', 0);
+        if (map.getLayer('hiker-glow-core')) map.setPaintProperty('hiker-glow-core', 'line-opacity', 0);
+    }
+
+    $effect(() => {
+        if (!map) return;
+        setMapInteractivity(!freezeMap);
+    });
+
+    $effect(() => {
+        if (!map) return;
+        const targetPitch = hikerActive && !hikerSimplified ? 60 : 0;
+        if (Math.abs(map.getPitch() - targetPitch) > 1) {
+            map.easeTo({ pitch: targetPitch, duration: 650 });
+        }
+    });
+
+    $effect(() => {
+        if (!map) return;
+        const shouldHeadingUp = isHeadingUp && hikerActive && !hikerSimplified;
+        if (shouldHeadingUp) {
+            map.setBearing(hikerHeading);
+            return;
+        }
+        if (Math.abs(map.getBearing()) > 1) {
+            map.easeTo({ bearing: 0, duration: 500 });
+        }
+    });
+
+    $effect(() => {
+        if (!map) return;
+        const shouldGlow = hikerActive && !hikerSimplified;
+        setGlowVisibility(shouldGlow);
+        if (shouldGlow) {
+            startGlowPulse();
+        } else {
+            stopGlowPulse();
+        }
+    });
+
+    $effect(() => {
+        if (!map) return;
+        if (!userLocation) {
+            clearFloatingMarkers();
+            return;
+        }
+        renderNearbyFloatingPOIs([userLocation.lng, userLocation.lat]);
+    });
+
     let paceMarkers: maplibregl.Marker[] = [];
     function clearPaceMarkers() {
         paceMarkers.forEach(m => m.remove());
@@ -321,6 +503,29 @@
                     }
                 }
             });
+            map.addLayer({
+                id: 'hiker-glow-outer',
+                type: 'line',
+                source: 'trail',
+                layout: { 'line-join': 'round', 'line-cap': 'round', visibility: 'none' },
+                paint: {
+                    'line-color': '#38bdf8',
+                    'line-width': 8,
+                    'line-opacity': 0,
+                    'line-blur': 1.2
+                }
+            });
+            map.addLayer({
+                id: 'hiker-glow-core',
+                type: 'line',
+                source: 'trail',
+                layout: { 'line-join': 'round', 'line-cap': 'round', visibility: 'none' },
+                paint: {
+                    'line-color': '#facc15',
+                    'line-width': 3,
+                    'line-opacity': 0
+                }
+            });
             // Path Hierarchy: Differentiation via texture (Dashed = Footpath)
             // Dynamic Contrast: Use white for Satellite mode, slate for others
             const isSat = mapStyle === 'satellite';
@@ -347,8 +552,13 @@
         if (watchId !== null) return;
         watchId = navigator.geolocation.watchPosition(pos => {
             if (!map) return;
-            const { longitude, latitude, accuracy, heading } = pos.coords;
-            userLocation = { lng: longitude, lat: latitude, accuracy };
+            const { longitude, latitude, accuracy } = pos.coords;
+            const rawCoord: [number, number] = [longitude, latitude];
+            const metrics = navigationService.updatePosition(rawCoord);
+            const [snappedLng, snappedLat] = metrics.snappedCoord;
+            userLocation = { lng: snappedLng, lat: snappedLat, accuracy };
+            driftMeters = metrics.driftMeters;
+            onNavigationUpdate?.(metrics);
             
             // Update Accuracy Circle (Communicate uncertainty)
             const circle = turf.circle([longitude, latitude], accuracy / 1000, { units: 'kilometers' });
@@ -357,17 +567,29 @@
 
             if (!userMarker) {
                 const el = document.createElement('div');
-                el.className = 'w-6 h-6 bg-blue-600 rounded-full border-2 border-white shadow-2xl animate-pulse flex items-center justify-center';
+                el.className = 'w-6 h-6 bg-blue-600 rounded-full border-2 border-white shadow-2xl animate-pulse flex items-center justify-center transition-colors';
                 el.innerHTML = `<div class="w-2 h-2 bg-white rounded-full"></div>`;
-                userMarker = new maplibregl.Marker({ element: el }).setLngLat([longitude, latitude]).addTo(map);
+                userMarker = new maplibregl.Marker({ element: el }).setLngLat([snappedLng, snappedLat]).addTo(map);
             } else {
-                userMarker.setLngLat([longitude, latitude]);
+                userMarker.setLngLat([snappedLng, snappedLat]);
+                if (userMarker.getElement()) {
+                    userMarker.getElement().classList.toggle('bg-rose-600', metrics.driftMeters > 25);
+                    userMarker.getElement().classList.toggle('bg-blue-600', metrics.driftMeters <= 25);
+                }
             }
 
-            if (isHeadingUp && heading !== null) {
-                map.setBearing(heading);
+            renderNearbyFloatingPOIs(metrics.snappedCoord);
+
+            const now = Date.now();
+            const flyInterval = lowPowerMode ? 2400 : 900;
+            if (now - lastFlyTo >= flyInterval) {
+                lastFlyTo = now;
+                map.easeTo({
+                    center: [snappedLng, snappedLat],
+                    zoom: 15,
+                    duration: lowPowerMode ? 1400 : 900
+                });
             }
-            map.flyTo({ center: [longitude, latitude], zoom: 15, duration: 2000 });
         }, err => console.error(err), { enableHighAccuracy: true });
     }
 
@@ -449,6 +671,7 @@
                 overnightStops.forEach(s => addSite(s, 'hub', 1));
                 englishHeritageSites.forEach(s => addSite(s, 'heritage', 2));
                 hospitalitySites.forEach(s => addSite(s, 'hospitality', 3));
+                registryPOIs = Array.from(registry.values());
 
                                 registry.forEach((poi) => {
                                     const el = document.createElement('div');
@@ -520,6 +743,22 @@
 
             map.on('moveend', updatePOIs);
         }
+
+        return () => {
+            stopGlowPulse();
+            clearFloatingMarkers();
+            clearPaceMarkers();
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            if (userMarker) {
+                userMarker.remove();
+                userMarker = null;
+            }
+            map?.remove();
+            map = null;
+        };
     });
 
     let renderedPageIds = new Set<number>();
@@ -564,9 +803,13 @@
 
     async function updatePOIs() {
         if (!map) return;
-        const center = map.getCenter();
-        const pois = await fetchWikiPOIs(center.lat, center.lng, 3000); 
-        renderPOIs(pois);
+        try {
+            const center = map.getCenter();
+            const pois = await fetchWikiPOIs(center.lat, center.lng, 3000);
+            renderPOIs(pois);
+        } catch {
+            // Offline-first behavior: preserve already-rendered POIs and skip network-dependent refresh.
+        }
     }
 
     // Expose API for parent
@@ -592,6 +835,16 @@
     <div class="absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none tabular-nums">
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
     </div>
+
+    {#if hikerActive && driftMeters > 25}
+        <div class="absolute top-4 left-1/2 -translate-x-1/2 z-40 rounded-full border border-rose-300/60 bg-rose-500/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white shadow-xl">
+            ↖ Off Trail {Math.round(driftMeters)}m
+        </div>
+    {/if}
+
+    {#if freezeMap}
+        <div class="absolute inset-0 z-30 bg-black/10 backdrop-blur-[1px] pointer-events-auto"></div>
+    {/if}
     
     <!-- Imperial Logo: Custom Roman Coin with Figma Glow -->
     <div class="absolute {isMobile ? 'bottom-4 left-4' : 'bottom-12 left-4'} z-20 pointer-events-none select-none">
@@ -667,5 +920,44 @@
         border-color: #3b82f6 !important;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 15px rgba(59, 130, 246, 0.2);
         transform: scale(1.1);
+    }
+
+    :global(.hiker-floating-poi) {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        border: 1px solid rgba(250, 204, 21, 0.4);
+        background: rgba(15, 23, 42, 0.88);
+        color: #fef08a;
+        padding: 0.3rem 0.5rem;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        box-shadow: 0 10px 18px rgba(2, 6, 23, 0.35), 0 0 12px rgba(250, 204, 21, 0.22);
+        animation: poi-float 2.8s ease-in-out infinite;
+    }
+
+    :global(.hiker-floating-poi__icon) {
+        font-size: 11px;
+        line-height: 1;
+    }
+
+    :global(.hiker-floating-poi__label) {
+        white-space: nowrap;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    @keyframes poi-float {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-4px);
+        }
     }
 </style>

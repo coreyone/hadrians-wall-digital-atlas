@@ -1,10 +1,16 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import Map from '$lib/components/Map.svelte';
+    import HikerHUD from '$lib/components/HikerHUD.svelte';
+    import { hikerMode } from '$lib/stores/hikerMode';
     import type { PageData } from './$types';
     import { fetchPageSummary } from '$lib/services/wikipedia';
     import { itinerary, englishHeritageSites, hospitalitySites, overnightStops } from '$lib/data/trail';
     import { fade, fly, slide } from 'svelte/transition';
+    import { compassService } from '$lib/services/compass';
+    import { gamificationService } from '$lib/services/gamification';
+    import { audioService } from '$lib/services/audio';
+    import type { NavigationMetrics } from '$lib/services/navigation';
 
     let { data }: { data: PageData } = $props();
 
@@ -40,15 +46,74 @@
     let selectedRoute = $state('osm');
     let showMilestones = $state(true);
     let expandedMilestoneStages = $state(new Set<number>());
+    let hasRequestedCompassPermission = $state(false);
+    let coinAnimating = $state(false);
+    let coinMetallic = $state(false);
+    let hikerIntelCard = $state<any | null>(null);
+    let latestBadge = $state<{ name: string; description: string } | null>(null);
+    let swipeStartY = $state(0);
+    let swipeStartX = $state(0);
+    let swipeTracking = $state(false);
+    let discoveredPOIs = $derived(data.initialPOIs ?? []);
+
+    let filteredDiscovery = $derived.by(() => {
+        const query = searchQuery.trim().toLowerCase();
+        return discoveredPOIs
+            .filter((poi) => !query || poi.title.toLowerCase().includes(query))
+            .sort((a, b) => b.rank - a.rank);
+    });
 
     onMount(() => {
+        const handleOnline = () => (isOnline = true);
+        const handleOffline = () => (isOnline = false);
         isOnline = navigator.onLine;
-        window.addEventListener('online', () => isOnline = true);
-        window.addEventListener('offline', () => isOnline = false);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
 
         const mql = window.matchMedia('(max-width: 768px)');
         isMobile = mql.matches;
-        mql.addEventListener('change', (e) => isMobile = e.matches);
+        const handleMedia = (e: MediaQueryListEvent) => (isMobile = e.matches);
+        mql.addEventListener('change', handleMedia);
+
+        const unsubscribeCompass = compassService.subscribe((state) => {
+            hikerMode.updateMetrics({
+                heading: state.heading,
+                isCalibrating: state.needsCalibration
+            });
+        });
+
+        let batteryRef: any = null;
+        let batteryHandler: (() => void) | null = null;
+        if ('getBattery' in navigator) {
+            (navigator as Navigator & { getBattery: () => Promise<any> })
+                .getBattery()
+                .then((battery) => {
+                    batteryRef = battery;
+                    batteryHandler = () => {
+                        const low = battery.level <= 0.25 && !battery.charging;
+                        hikerMode.setLowBattery(low);
+                    };
+                    batteryHandler();
+                    battery.addEventListener('levelchange', batteryHandler);
+                    battery.addEventListener('chargingchange', batteryHandler);
+                })
+                .catch(() => {
+                    hikerMode.setLowBattery(false);
+                });
+        }
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+            mql.removeEventListener('change', handleMedia);
+            if (batteryRef && batteryHandler) {
+                batteryRef.removeEventListener('levelchange', batteryHandler);
+                batteryRef.removeEventListener('chargingchange', batteryHandler);
+            }
+            unsubscribeCompass();
+            compassService.stop();
+            audioService.stop();
+        };
     });
 
     // Explore IA: Section Management
@@ -139,12 +204,160 @@
         close: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path></svg>`
     };
 
-    let filteredDiscovery = $derived(data.initialPOIs.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase())));
+    let lastTap = 0;
+    let tapCount = 0;
+
+    async function activateHikerMode() {
+        hikerMode.activate();
+        coinMetallic = true;
+        coinAnimating = true;
+        if (navigator.vibrate) navigator.vibrate(300);
+
+        if (!hasRequestedCompassPermission) {
+            hasRequestedCompassPermission = true;
+            await compassService.requestPermission();
+        }
+        await compassService.start();
+        await audioService.resume();
+        audioService.setEnabled(true);
+        mapComponent?.triggerLocateMe();
+        isHeadingUp = !$hikerMode.simplifiedHUD;
+        setTimeout(() => (coinAnimating = false), 720);
+    }
+
+    function deactivateHikerMode() {
+        hikerMode.deactivate();
+        compassService.stop();
+        audioService.setEnabled(false);
+        audioService.stop();
+        isHeadingUp = false;
+        hikerIntelCard = null;
+        swipeTracking = false;
+        coinAnimating = false;
+        coinMetallic = false;
+    }
+
+    async function handleCoinTap() {
+        const now = Date.now();
+        if (now - lastTap < 400) {
+            tapCount++;
+        } else {
+            tapCount = 1;
+        }
+        lastTap = now;
+
+        if (tapCount === 3) {
+            tapCount = 0;
+            if ($hikerMode.isActive) {
+                deactivateHikerMode();
+            } else {
+                await activateHikerMode();
+            }
+        }
+    }
+
+    function handleNavigationUpdate(metrics: NavigationMetrics) {
+        const game = gamificationService.update(
+            metrics.snappedCoord,
+            metrics.distanceWalkedMiles,
+            metrics.totalMiles
+        );
+
+        const hour = new Date().getHours();
+        hikerMode.updateMetrics({
+            distanceToday: metrics.distanceWalkedMiles,
+            distanceWalkedMiles: metrics.distanceWalkedMiles,
+            totalMiles: metrics.totalMiles,
+            totalMilesRemaining: metrics.totalMilesRemaining,
+            speedMph: metrics.speedMph,
+            eta: metrics.eta,
+            elevationGain: metrics.elevationGain,
+            elevationLoss: metrics.elevationLoss,
+            weatherTempF: metrics.weather.tempF,
+            weatherCondition: metrics.weather.condition,
+            driftMeters: metrics.driftMeters,
+            isOffTrail: metrics.driftMeters > 25,
+            integrity: game.integrity,
+            badges: game.badges,
+            isDaytime: hour >= 7 && hour < 18
+        });
+
+        audioService.updateSpeed(metrics.speedMph);
+
+        if (game.newlyUnlocked.length > 0) {
+            const badge = game.newlyUnlocked[game.newlyUnlocked.length - 1];
+            latestBadge = { name: badge.name, description: badge.description };
+            setTimeout(() => {
+                latestBadge = null;
+            }, 3500);
+        }
+    }
+
+    function handleHikerPoiSelect(poi: any) {
+        hikerIntelCard = poi;
+    }
+
+    function closeIntelCard() {
+        hikerIntelCard = null;
+    }
+
+    function handleHikerTouchStart(event: TouchEvent) {
+        if (!$hikerMode.isActive) return;
+        swipeTracking = true;
+        swipeStartY = event.changedTouches[0]?.clientY ?? 0;
+        swipeStartX = event.changedTouches[0]?.clientX ?? 0;
+    }
+
+    function handleHikerTouchEnd(event: TouchEvent) {
+        if (!$hikerMode.isActive || !swipeTracking) return;
+        swipeTracking = false;
+        const endY = event.changedTouches[0]?.clientY ?? 0;
+        const endX = event.changedTouches[0]?.clientX ?? 0;
+        const deltaY = endY - swipeStartY;
+        const deltaX = Math.abs(endX - swipeStartX);
+        if (deltaY > 95 && deltaX < 80) {
+            deactivateHikerMode();
+        }
+    }
+
+    function toggleSimplifiedHUD() {
+        hikerMode.toggleSimplified();
+    }
+
+    $effect(() => {
+        if (!$hikerMode.isActive) return;
+        if ($hikerMode.simplifiedHUD) {
+            isHeadingUp = false;
+        } else if (!isHeadingUp) {
+            isHeadingUp = true;
+        }
+    });
 </script>
 
 <svelte:head>
     <title>Hadrian Atlas</title>
 </svelte:head>
+
+<svelte:window ontouchstart={handleHikerTouchStart} ontouchend={handleHikerTouchEnd} />
+
+<!-- Hiker HUD Overlay -->
+{#if $hikerMode.isActive}
+    <HikerHUD onToggleSimplified={toggleSimplifiedHUD} />
+{/if}
+
+{#if $hikerMode.isCalibrating && $hikerMode.isActive}
+    <div class="fixed top-24 left-1/2 -translate-x-1/2 z-[70] rounded-xl border border-amber-300/40 bg-amber-500/90 px-4 py-2 text-[11px] font-black uppercase tracking-[0.15em] text-slate-900 shadow-2xl">
+        Calibrate Compass · Move phone in a figure-8
+    </div>
+{/if}
+
+{#if latestBadge}
+    <div class="fixed top-36 right-4 z-[70] max-w-[280px] rounded-xl border border-emerald-300/30 bg-emerald-500/90 px-3 py-2 text-slate-950 shadow-2xl">
+        <p class="text-[9px] font-black uppercase tracking-[0.2em]">Badge Unlocked</p>
+        <p class="text-sm font-black">{latestBadge.name}</p>
+        <p class="text-[11px] font-semibold">{latestBadge.description}</p>
+    </div>
+{/if}
 
 <div class="flex h-screen w-full overflow-hidden bg-canvas text-slate-300 font-sans antialiased text-[13px] selection:bg-blue-500/30 relative">
     <!-- Sticky Header (Mobile) -->
@@ -468,14 +681,56 @@
 
     <main class="flex-1 relative bg-slate-100 overflow-hidden">
         <div class="absolute inset-0">
-            <Map bind:this={mapComponent} initialPOIs={data.initialPOIs} bind:selectedPOI {selectedStageId} {mapStyle} {selectedRoute} {isHeadingUp} {isMobile} {showMilestones} onPoiSelect={handlePOIClick} />
+            <Map
+                bind:this={mapComponent}
+                initialPOIs={data.initialPOIs}
+                bind:selectedPOI
+                {selectedStageId}
+                {mapStyle}
+                {selectedRoute}
+                {isHeadingUp}
+                {isMobile}
+                {showMilestones}
+                hikerActive={$hikerMode.isActive}
+                hikerHeading={$hikerMode.heading}
+                hikerSimplified={$hikerMode.simplifiedHUD}
+                lowPowerMode={$hikerMode.isLowBattery}
+                freezeMap={Boolean(hikerIntelCard)}
+                onPoiSelect={handlePOIClick}
+                onNavigationUpdate={handleNavigationUpdate}
+                onHikerPoiSelect={handleHikerPoiSelect}
+            />
         </div>
+
+        <button
+            onclick={handleCoinTap}
+            class="absolute {isMobile ? 'bottom-24 left-4' : 'bottom-6 left-6'} z-40 flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/50 bg-slate-900/85 shadow-[0_0_16px_rgba(59,130,246,0.4)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+            aria-label="Triple tap Roman Coin to toggle Hiker Mode"
+            title="Triple Tap Roman Coin"
+        >
+            <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-10 w-10 object-contain drop-shadow-md" />
+        </button>
+
+        {#if hikerIntelCard}
+            <div class="absolute inset-0 z-[65] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
+                <div class="w-full max-w-md rounded-2xl border border-amber-300/30 bg-slate-900/95 p-5 shadow-2xl">
+                    <div class="mb-3 flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-amber-300">Intel Card</p>
+                            <h3 class="text-xl font-black text-white">{hikerIntelCard.title || hikerIntelCard.name}</h3>
+                        </div>
+                        <button onclick={closeIntelCard} class="rounded-md border border-white/15 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-200 hover:bg-white/10">Close</button>
+                    </div>
+                    <p class="text-sm leading-relaxed text-slate-300">{hikerIntelCard.summary || hikerIntelCard.intel || 'No field notes cached for this waypoint yet.'}</p>
+                </div>
+            </div>
+        {/if}
         <div class="{isMobile ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30' : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}">
             <!-- Navigation Instruments -->
             <div class="flex p-0.5 bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg" style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
                 <button onclick={() => mapComponent?.triggerLocateMe()} class="{isMobile ? 'p-2.5' : 'p-1.5'} text-slate-600 active:text-blue-600 border-r border-slate-100 transition-all" title="Show My Location">{@html icons.locate}</button>
-                <button onclick={() => isHeadingUp = !isHeadingUp} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'}" title="Toggle Heading Up Mode">
-                    {isHeadingUp ? 'Heading' : 'North'}
+                <button onclick={() => isHeadingUp = !isHeadingUp} disabled={$hikerMode.simplifiedHUD} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp ? 'bg-blue-600 text-white' : 'text-slate-500 active:bg-slate-50'} {$hikerMode.simplifiedHUD ? 'opacity-40 cursor-not-allowed' : ''}" title="Toggle Heading Up Mode">
+                    {$hikerMode.simplifiedHUD ? 'North' : isHeadingUp ? 'Heading' : 'North'}
                 </button>
                 <button onclick={() => showMilestones = !showMilestones} class="{isMobile ? 'px-3 py-2 text-[10px]' : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {showMilestones ? 'bg-amber-600 text-white' : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100" title="Toggle Milestones Layer">
                     Logistics
