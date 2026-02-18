@@ -110,18 +110,58 @@
 
     function updateStageLayer(stage: any) {
         if (!map) return;
-        const stageCoords = trailCoordinates.filter(c => {
-            const hubs = overnightStops;
-            const fromIdx = hubs.findIndex(h => h.name.includes(stage.from.split(' ')[0]));
-            const toIdx = hubs.findIndex(h => h.name.includes(stage.to.split(' ')[0]));
-            if (fromIdx === -1 || toIdx === -1) return true;
-            const west = Math.min(hubs[fromIdx].coords[0], hubs[toIdx].coords[0]) - 0.01;
-            const east = Math.max(hubs[fromIdx].coords[0], hubs[toIdx].coords[0]) + 0.01;
-            return c[0] >= west && c[0] <= east;
-        });
+        
+        const hubs = overnightStops;
+        // Robust hub matching: check if hub name is in stage name or vice versa
+        const fromHub = hubs.find(h => stage.from.includes(h.name.split('/')[0]) || h.name.includes(stage.from.split(' ')[0]));
+        const toHub = hubs.find(h => stage.to.includes(h.name.split('/')[0]) || h.name.includes(stage.to.split(' ')[0]));
+
+        let stageCoords: [number, number][] = [];
+        
+        if (fromHub && toHub) {
+            // Find indices of points in the master trail closest to these hubs
+            let startIdx = 0;
+            let endIdx = trailCoordinates.length - 1;
+            let minDistStart = Infinity;
+            let minDistEnd = Infinity;
+
+            trailCoordinates.forEach((c, i) => {
+                const pt = turf.point(c as [number, number]);
+                const dStart = turf.distance(pt, turf.point(fromHub.coords as [number, number]), { units: 'miles' });
+                const dEnd = turf.distance(pt, turf.point(toHub.coords as [number, number]), { units: 'miles' });
+                
+                if (dStart < minDistStart) {
+                    minDistStart = dStart;
+                    startIdx = i;
+                }
+                if (dEnd < minDistEnd) {
+                    minDistEnd = dEnd;
+                    endIdx = i;
+                }
+            });
+
+            // Slice the trail sequence between the two hubs
+            const s = Math.min(startIdx, endIdx);
+            const e = Math.max(startIdx, endIdx);
+            stageCoords = trailCoordinates.slice(s, e + 1) as [number, number][];
+        } else {
+            // Fallback to full trail if hubs aren't found
+            stageCoords = trailCoordinates as [number, number][];
+        }
 
         const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
         if (source) source.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: stageCoords }, properties: {} });
+        
+        // Dynamic Framing for the specific slice
+        if (stageCoords.length > 0) {
+            const bounds = new maplibregl.LngLatBounds();
+            stageCoords.forEach(c => bounds.extend(c));
+            map.fitBounds(bounds, { 
+                padding: isMobile ? 40 : { top: 100, bottom: 100, left: 450, right: 100 }, 
+                duration: 1500 
+            });
+        }
+
         renderPaceMarkers(stageCoords, stage);
     }
 
@@ -160,20 +200,6 @@
             const stage = itinerary.find(s => s.id === selectedStageId);
             if (stage) {
                 updateStageLayer(stage);
-                
-                // Framing
-                const hubs = overnightStops;
-                const fromIdx = hubs.findIndex(h => h.name.includes(stage.from.split(' ')[0]));
-                const toIdx = hubs.findIndex(h => h.name.includes(stage.to.split(' ')[0]));
-                if (fromIdx !== -1 && toIdx !== -1) {
-                    const bounds = new maplibregl.LngLatBounds();
-                    bounds.extend(hubs[fromIdx].coords as [number, number]);
-                    bounds.extend(hubs[toIdx].coords as [number, number]);
-                    map.fitBounds(bounds, { 
-                        padding: isMobile ? 40 : { top: 100, bottom: 100, left: 450, right: 100 }, 
-                        duration: 1500 
-                    });
-                }
             }
         } else if (map && !selectedStageId) {
             const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
