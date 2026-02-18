@@ -208,7 +208,7 @@
                                     <div class="flex gap-3 text-[10px] text-slate-400 uppercase tracking-tighter font-bold tabular-nums">
                                         <span class="flex items-center gap-1">{@html icons.clock} {stage.timeHours[0]}-{stage.timeHours[1]}h</span>
                                         <span class="flex items-center gap-1">{@html icons.mountain} +{stage.elevationGainFt}ft</span>
-                                        <span class="flex items-center gap-1 text-blue-400">Grade: {Math.round(((i + 1) / 7) * 100)}%</span>
+                                        <span class="flex items-center gap-1 text-blue-400">{@html icons.footprints} {stage.distanceMi} mi</span>
                                     </div>
                                     
                                     {#if selectedStageId === stage.id}
