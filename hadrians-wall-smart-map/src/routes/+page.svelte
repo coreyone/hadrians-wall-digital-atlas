@@ -54,6 +54,8 @@
     let swipeStartY = $state(0);
     let swipeStartX = $state(0);
     let swipeTracking = $state(false);
+    let drawerSwipeStartY = $state(0);
+    let drawerSwipeStartX = $state(0);
     let discoveredPOIs = $derived(data.initialPOIs ?? []);
 
     let filteredDiscovery = $derived.by(() => {
@@ -324,6 +326,23 @@
         hikerMode.toggleSimplified();
     }
 
+    function handleDrawerHandleTouchStart(event: TouchEvent) {
+        if (!isMobile || !isSidebarOpen) return;
+        drawerSwipeStartY = event.changedTouches[0]?.clientY ?? 0;
+        drawerSwipeStartX = event.changedTouches[0]?.clientX ?? 0;
+    }
+
+    function handleDrawerHandleTouchEnd(event: TouchEvent) {
+        if (!isMobile || !isSidebarOpen) return;
+        const endY = event.changedTouches[0]?.clientY ?? 0;
+        const endX = event.changedTouches[0]?.clientX ?? 0;
+        const deltaY = endY - drawerSwipeStartY;
+        const deltaX = Math.abs(endX - drawerSwipeStartX);
+        if (deltaY > 40 && deltaX < 90) {
+            isSidebarOpen = false;
+        }
+    }
+
     $effect(() => {
         if (!$hikerMode.isActive) return;
         if ($hikerMode.simplifiedHUD) {
@@ -359,6 +378,20 @@
     </div>
 {/if}
 
+{#if isMobile}
+    <button
+        onclick={handleCoinTap}
+        class="fixed left-4 bottom-[max(5.5rem,env(safe-area-inset-bottom)+4.75rem)] z-[75] flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/50 bg-slate-900/90 shadow-[0_0_16px_rgba(59,130,246,0.45)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+        aria-label="Triple tap Roman Coin to toggle Hiker Mode"
+        title="Triple Tap Roman Coin"
+    >
+        <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-10 w-10 object-contain drop-shadow-md" />
+    </button>
+    <div class="fixed left-20 bottom-[max(6.1rem,env(safe-area-inset-bottom)+5.35rem)] z-[74] rounded-full border border-white/15 bg-slate-900/85 px-2 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-amber-200 shadow-lg">
+        Tap ×3
+    </div>
+{/if}
+
 <div class="flex h-screen w-full overflow-hidden bg-canvas text-slate-300 font-sans antialiased text-[13px] selection:bg-blue-500/30 relative">
     <!-- Sticky Header (Mobile) -->
     {#if isMobile}
@@ -390,9 +423,17 @@
     <aside class="{isSidebarOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:-translate-x-full'} fixed inset-x-0 bottom-0 md:inset-y-0 md:left-0 z-40 h-[85vh] md:h-full md:w-[320px] bg-surface/95 backdrop-blur-2xl border-t md:border-t-0 md:border-r border-white/10 transition-transform duration-500 md:duration-300 md:relative flex flex-col shadow-2xl rounded-t-2xl md:rounded-none overflow-hidden" style="-webkit-backdrop-filter: blur(40px);">
         <!-- Drawer Handle for Mobile -->
         {#if isMobile}
-            <div class="w-full flex justify-center py-2 shrink-0">
+            <button
+                type="button"
+                class="w-full flex justify-center py-2 shrink-0"
+                onclick={() => isSidebarOpen = false}
+                ontouchstart={handleDrawerHandleTouchStart}
+                ontouchend={handleDrawerHandleTouchEnd}
+                aria-label="Close panel"
+                title="Swipe down or tap to close"
+            >
                 <div class="w-12 h-1 bg-white/20 rounded-full"></div>
-            </div>
+            </button>
         {/if}
         
         <header class="p-4 border-b border-white/5 flex flex-col gap-4">
@@ -702,14 +743,16 @@
             />
         </div>
 
-        <button
-            onclick={handleCoinTap}
-            class="absolute {isMobile ? 'bottom-24 left-4' : 'bottom-6 left-6'} z-40 flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/50 bg-slate-900/85 shadow-[0_0_16px_rgba(59,130,246,0.4)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
-            aria-label="Triple tap Roman Coin to toggle Hiker Mode"
-            title="Triple Tap Roman Coin"
-        >
-            <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-10 w-10 object-contain drop-shadow-md" />
-        </button>
+        {#if !isMobile}
+            <button
+                onclick={handleCoinTap}
+                class="absolute bottom-6 left-6 z-40 flex h-14 w-14 items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_24px_rgba(251,191,36,0.55)]' : 'border-blue-300/50 bg-slate-900/85 shadow-[0_0_16px_rgba(59,130,246,0.4)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+                aria-label="Triple tap Roman Coin to toggle Hiker Mode"
+                title="Triple Tap Roman Coin"
+            >
+                <img src="/logo-coin.png" alt="Roman Coin Toggle" class="h-10 w-10 object-contain drop-shadow-md" />
+            </button>
+        {/if}
 
         {#if hikerIntelCard}
             <div class="absolute inset-0 z-[65] flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">

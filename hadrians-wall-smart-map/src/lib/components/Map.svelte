@@ -712,7 +712,7 @@
                                     
                                     el.innerHTML = `
                                         <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95">
-                                            <div class="marker-icon ${isMobile ? 'w-12 h-12' : 'w-10 h-10'} ${bgColor} rounded-sm border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
+                                            <div class="marker-icon ${isMobile ? 'w-9 h-9' : 'w-10 h-10'} ${bgColor} rounded-sm border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
                                                 ${icon}
                                             </div>
                                             <div class="poi-label label-priority-${poi.priority} bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
@@ -778,7 +778,7 @@
             
             el.innerHTML = `
                 <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-125 hover:z-40 active:scale-90 overflow-visible">
-                    <div class="marker-icon bg-white rounded-sm border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 1.2 : size}px; height: ${isMobile ? size * 1.2 : size}px;">
+                        <div class="marker-icon bg-white rounded-sm border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 0.95 : size}px; height: ${isMobile ? size * 0.95 : size}px;">
                         <div class="text-blue-600 ${isMobile ? 'scale-[0.9]' : 'scale-[0.8]'}">
                             ${icons.discovery}
                         </div>
