@@ -204,13 +204,20 @@
 
         map.on('load', () => {
             setupLayers();
+            
+            const onceBrewed: [number, number] = [-2.3958, 55.0036];
             const bounds = new maplibregl.LngLatBounds();
             trailCoordinates.forEach(c => bounds.extend(c as [number, number]));
-            // Instant fit with sidebar-aware padding
-            map.fitBounds(bounds, { 
-                padding: { top: 50, bottom: 50, left: 450, right: 50 }, 
-                duration: 2000, 
-                essential: true 
+
+            // Flight to Once Brewed as the strategic center of the full route
+            map.flyTo({
+                center: onceBrewed,
+                zoom: 9.8,
+                padding: { top: 50, bottom: 50, left: 450, right: 50 },
+                duration: 2500,
+                essential: true,
+                curve: 1.2,
+                speed: 0.5
             });
 
             // Consolidate Official Sites by Coordinates
