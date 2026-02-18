@@ -72,6 +72,16 @@
         }
     });
 
+    // React to Milestone Toggle
+    $effect(() => {
+        if (map && selectedStageId) {
+            const stage = itinerary.find(s => s.id === selectedStageId);
+            if (stage) updateStageLayer(stage);
+        } else {
+            clearPaceMarkers();
+        }
+    });
+
     function updateStageLayer(stage: any) {
         if (!map) return;
         const stageCoords = trailCoordinates.filter(c => {
