@@ -1,13 +1,45 @@
 <script lang="ts">
+    import { onMount, tick } from 'svelte';
     import { hikerMode } from '$lib/stores/hikerMode';
     import { fly } from 'svelte/transition';
 
 interface Props {
     onToggleSimplified?: () => void;
     onCoinTap?: () => void;
+    hideTopCoin?: boolean;
+    onTopCoinLayout?: (rect: DOMRect) => void;
 }
 
-let { onToggleSimplified, onCoinTap }: Props = $props();
+let {
+    onToggleSimplified,
+    onCoinTap,
+    hideTopCoin = false,
+    onTopCoinLayout
+}: Props = $props();
+
+let topCoinButton = $state<HTMLButtonElement | null>(null);
+
+function publishTopCoinLayout() {
+    if (!topCoinButton || !onTopCoinLayout) return;
+    onTopCoinLayout(topCoinButton.getBoundingClientRect());
+}
+
+onMount(() => {
+    const handleResize = () => publishTopCoinLayout();
+    void tick().then(() => publishTopCoinLayout());
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('orientationchange', handleResize);
+    };
+});
+
+$effect(() => {
+    hideTopCoin;
+    onTopCoinLayout;
+    void tick().then(() => publishTopCoinLayout());
+});
 
     function weatherGlyph(condition: string) {
         const normalized = condition.toLowerCase();
@@ -22,16 +54,22 @@ let { onToggleSimplified, onCoinTap }: Props = $props();
         return Array.from({ length: count }, (_, i) => i);
     }
 
+    function progressPercent(progress: number, goal: number) {
+        if (goal <= 0) return 0;
+        return Math.max(0, Math.min(100, (progress / goal) * 100));
+    }
+
 </script>
 
 <div class="fixed left-1/2 -translate-x-1/2 z-[60]" style="top: calc(env(safe-area-inset-top, 0px) + 0.75rem);" in:fly={{ y: -40, duration: 500 }}>
     <div class="relative flex h-18 w-18 items-center justify-center">
-        <div class="absolute inset-0 rounded-full border border-amber-300/40 animate-[spin_12s_linear_infinite]"></div>
-        <div class="absolute inset-2 rounded-full border border-amber-100/40 border-dashed animate-[spin_18s_linear_infinite_reverse]"></div>
+        <div class="absolute inset-0 rounded-full border border-amber-300/40 animate-[spin_12s_linear_infinite] transition-opacity duration-300 {hideTopCoin ? 'opacity-0' : 'opacity-100'}"></div>
+        <div class="absolute inset-2 rounded-full border border-amber-100/40 border-dashed animate-[spin_18s_linear_infinite_reverse] transition-opacity duration-300 {hideTopCoin ? 'opacity-0' : 'opacity-100'}"></div>
         <button
             type="button"
             onclick={onCoinTap}
-            class="relative flex h-12 w-12 items-center justify-center rounded-full border border-amber-200/80 bg-slate-900/85 shadow-[0_0_20px_rgba(245,158,11,0.45)]"
+            bind:this={topCoinButton}
+            class="relative flex h-12 w-12 items-center justify-center rounded-full border border-amber-200/80 bg-slate-900/85 shadow-[0_0_20px_rgba(245,158,11,0.45)] transition-all duration-300 {hideTopCoin ? 'pointer-events-none scale-75 opacity-0' : 'scale-100 opacity-100'}"
             aria-label="Triple tap Roman Coin to exit Hiker Mode"
             title="Triple tap to exit Hiker Mode"
         >
@@ -73,6 +111,34 @@ let { onToggleSimplified, onCoinTap }: Props = $props();
             <div>
                 <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Speed</p>
                 <p class="font-black tabular-nums">{$hikerMode.speedMph.toFixed(1)} mph</p>
+            </div>
+        </div>
+
+        <div class="mb-3 space-y-2">
+            <div class="rounded-lg border border-amber-300/30 bg-amber-500/10 px-2.5 py-2">
+                <div class="mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.16em] text-amber-100">
+                    <span>Daily Plan</span>
+                    <span class="tabular-nums">{$hikerMode.distanceToday.toFixed(1)} / {$hikerMode.dailyGoalMiles.toFixed(1)} mi</span>
+                </div>
+                <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <span
+                        class="block h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-500"
+                        style="width: {progressPercent($hikerMode.distanceToday, $hikerMode.dailyGoalMiles)}%;"
+                    ></span>
+                </div>
+            </div>
+
+            <div class="rounded-lg border border-blue-300/30 bg-blue-500/10 px-2.5 py-2">
+                <div class="mb-1 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.14em] text-blue-100">
+                    <span>Full Hike Carlisle to Corbridge</span>
+                    <span class="tabular-nums">{$hikerMode.fullTripProgressMiles.toFixed(1)} / {$hikerMode.fullTripGoalMiles.toFixed(1)} mi</span>
+                </div>
+                <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <span
+                        class="block h-full rounded-full bg-gradient-to-r from-blue-300 to-blue-500"
+                        style="width: {progressPercent($hikerMode.fullTripProgressMiles, $hikerMode.fullTripGoalMiles)}%;"
+                    ></span>
+                </div>
             </div>
         </div>
 

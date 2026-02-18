@@ -3,6 +3,7 @@ import type { Feature, LineString } from 'geojson';
 import { itinerary, trailGeoJSON } from '$lib/data/trail';
 
 const WALKING_STAGES = itinerary.filter((stage) => stage.distanceMi > 0);
+const PLAN_TOTAL_MILES = WALKING_STAGES.reduce((sum, stage) => sum + stage.distanceMi, 0);
 const NEXT_WINDOW_MILES = 0.310686; // ~500m
 
 interface PositionSample {
@@ -25,6 +26,12 @@ export interface NavigationMetrics {
         condition: string;
         tempF: number;
     };
+    dailyGoalMiles: number;
+    dailyProgressMiles: number;
+    dailyRemainingMiles: number;
+    planTotalMiles: number;
+    planProgressMiles: number;
+    planRemainingMiles: number;
     gpsHeading?: number | null;
     gpsSpeedMph?: number | null;
 }
@@ -41,17 +48,27 @@ class NavigationService {
         const driftMeters = ((snapped.properties.dist as number | undefined) ?? 0) * 1609.34;
         const distanceWalkedMiles = (snapped.properties.location as number | undefined) ?? 0;
 
-        const totalMiles = turf.length(line, { units: 'miles' });
-        const totalMilesRemaining = Math.max(0, totalMiles - distanceWalkedMiles);
+        const totalMiles = PLAN_TOTAL_MILES;
+        const planProgressMiles = Math.max(0, Math.min(distanceWalkedMiles, PLAN_TOTAL_MILES));
+        const totalMilesRemaining = Math.max(0, totalMiles - planProgressMiles);
 
         this.samples.push({ ts, coord: snappedCoord });
         this.samples = this.samples.filter((sample) => ts - sample.ts <= 60000);
 
         const speedMph = this.computeRollingSpeed();
         const eta = this.computeEta(totalMilesRemaining, speedMph, ts);
-        const stage = this.resolveStage(distanceWalkedMiles);
+        const stage = this.resolveStage(planProgressMiles);
+        const dailyGoalMiles = stage.stage.distanceMi;
+        const dailyProgressMiles = Math.max(
+            0,
+            Math.min(dailyGoalMiles, planProgressMiles - stage.startMile)
+        );
+        const dailyRemainingMiles = Math.max(0, dailyGoalMiles - dailyProgressMiles);
 
-        const upcomingMiles = Math.min(NEXT_WINDOW_MILES, Math.max(0, stage.endMile - distanceWalkedMiles));
+        const upcomingMiles = Math.min(
+            NEXT_WINDOW_MILES,
+            Math.max(0, stage.endMile - planProgressMiles)
+        );
         const stageMiles = Math.max(stage.stage.distanceMi, 0.01);
         const elevationGain = Math.round((stage.stage.elevationGainFt / stageMiles) * upcomingMiles);
         const elevationLoss = Math.round((stage.stage.elevationLossFt / stageMiles) * upcomingMiles);
@@ -67,6 +84,12 @@ class NavigationService {
             eta,
             elevationGain,
             elevationLoss,
+            dailyGoalMiles,
+            dailyProgressMiles,
+            dailyRemainingMiles,
+            planTotalMiles: totalMiles,
+            planProgressMiles,
+            planRemainingMiles: totalMilesRemaining,
             weather: {
                 condition: stage.stage.weather.condition,
                 tempF: stage.stage.weather.tempHigh

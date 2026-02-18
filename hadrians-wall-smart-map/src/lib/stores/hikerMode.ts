@@ -13,9 +13,14 @@ interface HikerState {
     heading: number;
     pitch: number;
     distanceToday: number;
+    dailyGoalMiles: number;
+    dailyRemainingMiles: number;
     distanceWalkedMiles: number;
     totalMiles: number;
     totalMilesRemaining: number;
+    fullTripGoalMiles: number;
+    fullTripProgressMiles: number;
+    fullTripRemainingMiles: number;
     speedMph: number;
     eta: string;
     elevationGain: number;
@@ -38,9 +43,14 @@ const initialState: HikerState = {
     heading: 0,
     pitch: 60,
     distanceToday: 0,
+    dailyGoalMiles: 0,
+    dailyRemainingMiles: 0,
     distanceWalkedMiles: 0,
     totalMiles: 46,
     totalMilesRemaining: 46,
+    fullTripGoalMiles: 46,
+    fullTripProgressMiles: 0,
+    fullTripRemainingMiles: 46,
     speedMph: 0,
     eta: '--:--',
     elevationGain: 0,

@@ -56,6 +56,10 @@
     let swipeTracking = $state(false);
     let drawerSwipeStartY = $state(0);
     let drawerSwipeStartX = $state(0);
+    let mobileCoinButton = $state<HTMLButtonElement | null>(null);
+    let hikerTopCoinCenter = $state<{ x: number; y: number } | null>(null);
+    let coinMorphing = $state(false);
+    let coinMorphStyle = $state('');
     let showMobileSplash = $state(false);
     let splashMinElapsed = $state(false);
     let mapReady = $state(false);
@@ -73,6 +77,9 @@
     const MOBILE_SPLASH_SHOW_DELAY_MS = 120;
     const MOBILE_SPLASH_MIN_VISIBLE_MS = 320;
     const MOBILE_SPLASH_HARD_TIMEOUT_MS = 1700;
+    const COIN_MORPH_DURATION_MS = 640;
+    const COIN_MORPH_POST_ROLL_MS = 70;
+    let coinMorphTimer: ReturnType<typeof setTimeout> | null = null;
 
     let filteredDiscovery = $derived.by(() => {
         const query = searchQuery.trim().toLowerCase();
@@ -88,6 +95,53 @@
 
     function headingDelta(a: number, b: number) {
         return Math.abs((((a - b) % 360) + 540) % 360 - 180);
+    }
+
+    function readSafeAreaTopInsetPx() {
+        if (typeof document === 'undefined') return 0;
+        const probe = document.createElement('div');
+        probe.style.cssText =
+            'position:fixed;top:0;left:0;padding-top:env(safe-area-inset-top);visibility:hidden;pointer-events:none;';
+        document.body.appendChild(probe);
+        const inset = Number.parseFloat(getComputedStyle(probe).paddingTop) || 0;
+        probe.remove();
+        return inset;
+    }
+
+    function computeCoinMorphTargetCenter() {
+        if (hikerTopCoinCenter) return hikerTopCoinCenter;
+        const safeTop = readSafeAreaTopInsetPx();
+        return {
+            x: window.innerWidth / 2,
+            y: safeTop + 12 + 36
+        };
+    }
+
+    function beginCoinMorph() {
+        if (!isMobile || !mobileCoinButton || typeof window === 'undefined') return;
+        const sourceRect = mobileCoinButton.getBoundingClientRect();
+        const fromX = sourceRect.left + sourceRect.width / 2;
+        const fromY = sourceRect.top + sourceRect.height / 2;
+        const target = computeCoinMorphTargetCenter();
+        const toX = target.x;
+        const toY = target.y;
+
+        coinMorphStyle =
+            `--coin-from-x:${fromX}px;` +
+            `--coin-from-y:${fromY}px;` +
+            `--coin-to-x:${toX}px;` +
+            `--coin-to-y:${toY}px;` +
+            `--coin-dx:${toX - fromX}px;` +
+            `--coin-dy:${toY - fromY}px;` +
+            `--coin-morph-duration:${COIN_MORPH_DURATION_MS}ms;`;
+        coinMorphing = true;
+
+        if (coinMorphTimer) clearTimeout(coinMorphTimer);
+        coinMorphTimer = setTimeout(() => {
+            coinMorphing = false;
+            coinMorphStyle = '';
+            coinMorphTimer = null;
+        }, COIN_MORPH_DURATION_MS + COIN_MORPH_POST_ROLL_MS);
     }
 
     onMount(() => {
@@ -155,6 +209,7 @@
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
             mql.removeEventListener('change', handleMedia);
+            if (coinMorphTimer) clearTimeout(coinMorphTimer);
             if (splashShowTimer) clearTimeout(splashShowTimer);
             if (splashMinTimer) clearTimeout(splashMinTimer);
             if (splashHardTimer) clearTimeout(splashHardTimer);
@@ -260,6 +315,7 @@
     let tapCount = 0;
 
     async function activateHikerMode() {
+        beginCoinMorph();
         hikerMode.activate();
         coinMetallic = true;
         coinAnimating = true;
@@ -287,6 +343,12 @@
         swipeTracking = false;
         coinAnimating = false;
         coinMetallic = false;
+        coinMorphing = false;
+        coinMorphStyle = '';
+        if (coinMorphTimer) {
+            clearTimeout(coinMorphTimer);
+            coinMorphTimer = null;
+        }
         showCompassFallbackNotice = false;
         dismissedCompassFallbackNotice = false;
         lastAppliedHeading = null;
@@ -329,10 +391,15 @@
 
         const hour = new Date().getHours();
         hikerMode.updateMetrics({
-            distanceToday: metrics.distanceWalkedMiles,
+            distanceToday: metrics.dailyProgressMiles,
             distanceWalkedMiles: metrics.distanceWalkedMiles,
             totalMiles: metrics.totalMiles,
             totalMilesRemaining: metrics.totalMilesRemaining,
+            dailyGoalMiles: metrics.dailyGoalMiles,
+            dailyRemainingMiles: metrics.dailyRemainingMiles,
+            fullTripGoalMiles: metrics.planTotalMiles,
+            fullTripProgressMiles: metrics.planProgressMiles,
+            fullTripRemainingMiles: metrics.planRemainingMiles,
             speedMph: metrics.speedMph,
             eta: metrics.eta,
             elevationGain: metrics.elevationGain,
@@ -362,6 +429,13 @@
         if (isMobile && splashMinElapsed) {
             showMobileSplash = false;
         }
+    }
+
+    function handleHikerTopCoinLayout(rect: DOMRect) {
+        hikerTopCoinCenter = {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2
+        };
     }
 
     function handleHikerPoiSelect(poi: any) {
@@ -476,7 +550,12 @@
 
 <!-- Hiker HUD Overlay -->
 {#if $hikerMode.isActive}
-    <HikerHUD onToggleSimplified={toggleSimplifiedHUD} onCoinTap={handleCoinTap} />
+    <HikerHUD
+        onToggleSimplified={toggleSimplifiedHUD}
+        onCoinTap={handleCoinTap}
+        hideTopCoin={coinMorphing}
+        onTopCoinLayout={handleHikerTopCoinLayout}
+    />
 {/if}
 
 {#if showCompassFallbackNotice && $hikerMode.isActive}
@@ -517,6 +596,32 @@
     </div>
 {/if}
 
+{#if coinMorphing}
+    <div class="coin-morph-layer md:hidden" aria-hidden="true">
+        <svg width="0" height="0" class="absolute">
+            <defs>
+                <filter id="coin-goo-filter">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+                    <feColorMatrix
+                        in="blur"
+                        mode="matrix"
+                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"
+                        result="goo"
+                    />
+                    <feBlend in="SourceGraphic" in2="goo" />
+                </filter>
+            </defs>
+        </svg>
+        <div class="coin-morph-goo" style={coinMorphStyle}>
+            <div class="coin-blob coin-blob-trail"></div>
+            <div class="coin-blob coin-blob-target"></div>
+            <div class="coin-blob coin-blob-main">
+                <img src="/logo-coin.png" alt="" class="coin-morph-icon" />
+            </div>
+        </div>
+    </div>
+{/if}
+
 <div class="flex h-screen w-full overflow-hidden bg-canvas text-slate-300 font-sans antialiased text-[13px] selection:bg-blue-500/30 relative">
     <!-- Sticky Header (Mobile) -->
     {#if isMobile}
@@ -527,8 +632,9 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button
+                        bind:this={mobileCoinButton}
                         onclick={handleCoinTap}
-                        class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {$hikerMode.isActive ? 'h-[3.375rem] w-[3.375rem]' : 'h-9 w-9'} {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.45)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_12px_rgba(59,130,246,0.35)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''}"
+                        class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {$hikerMode.isActive ? 'h-[3.375rem] w-[3.375rem]' : 'h-9 w-9'} {coinMetallic || $hikerMode.isActive ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.45)]' : 'border-blue-300/55 bg-transparent shadow-[0_0_12px_rgba(59,130,246,0.35)]'} {coinAnimating ? 'scale-110 rotate-[360deg]' : ''} {coinMorphing || $hikerMode.isActive ? 'pointer-events-none opacity-0 scale-75' : 'opacity-100 scale-100'}"
                         aria-label="Triple tap Roman Coin to toggle Hiker Mode"
                         title="Triple Tap Roman Coin"
                     >
@@ -1009,6 +1115,66 @@
         will-change: transform, opacity;
     }
 
+    .coin-morph-layer {
+        position: fixed;
+        inset: 0;
+        z-index: 115;
+        pointer-events: none;
+    }
+
+    .coin-morph-goo {
+        position: absolute;
+        inset: 0;
+        filter: url(#coin-goo-filter);
+    }
+
+    .coin-blob {
+        position: absolute;
+        border-radius: 999px;
+        will-change: transform, opacity;
+    }
+
+    .coin-blob-main {
+        left: calc(var(--coin-from-x) - 1.35rem);
+        top: calc(var(--coin-from-y) - 1.35rem);
+        width: 2.7rem;
+        height: 2.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 30% 30%, #fef3c7, #f59e0b 68%);
+        box-shadow: 0 0 22px rgba(251, 191, 36, 0.52);
+        animation: coin-blob-main var(--coin-morph-duration, 640ms) var(--motion-ease-emphasized) forwards;
+    }
+
+    .coin-morph-icon {
+        width: 1.85rem;
+        height: 1.85rem;
+        object-fit: contain;
+        filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.42));
+        animation: coin-icon-roll var(--coin-morph-duration, 640ms) var(--motion-ease-emphasized) forwards;
+    }
+
+    .coin-blob-trail {
+        left: calc(var(--coin-from-x) - 1rem);
+        top: calc(var(--coin-from-y) - 1rem);
+        width: 2rem;
+        height: 2rem;
+        background: radial-gradient(circle at 40% 35%, #fef9c3, rgba(251, 191, 36, 0.9) 72%);
+        animation: coin-blob-trail var(--coin-morph-duration, 640ms) var(--motion-ease-standard) forwards;
+    }
+
+    .coin-blob-target {
+        left: calc(var(--coin-to-x) - 2.1rem);
+        top: calc(var(--coin-to-y) - 2.1rem);
+        width: 4.2rem;
+        height: 4.2rem;
+        background: radial-gradient(circle at 45% 35%, rgba(254, 243, 199, 0.95), rgba(245, 158, 11, 0.78) 70%);
+        transform: scale(0.34);
+        opacity: 0.24;
+        animation: coin-blob-target var(--coin-morph-duration, 640ms) var(--motion-ease-emphasized) forwards;
+    }
+
     @keyframes splash-fade-in {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -1047,12 +1213,70 @@
         }
     }
 
+    @keyframes coin-blob-main {
+        0% {
+            transform: translate3d(0, 0, 0) scale(1);
+            opacity: 1;
+        }
+        70% {
+            transform: translate3d(var(--coin-dx), var(--coin-dy), 0) scale(1.4);
+            opacity: 1;
+        }
+        100% {
+            transform: translate3d(var(--coin-dx), var(--coin-dy), 0) scale(1.2);
+            opacity: 0;
+        }
+    }
+
+    @keyframes coin-icon-roll {
+        0% {
+            transform: rotate(0deg) scale(1);
+        }
+        100% {
+            transform: rotate(300deg) scale(1.15);
+        }
+    }
+
+    @keyframes coin-blob-trail {
+        0% {
+            transform: translate3d(0, 0, 0) scale(0.9);
+            opacity: 0.92;
+        }
+        60% {
+            transform: translate3d(calc(var(--coin-dx) * 0.72), calc(var(--coin-dy) * 0.72), 0) scale(1.28);
+            opacity: 0.88;
+        }
+        100% {
+            transform: translate3d(var(--coin-dx), var(--coin-dy), 0) scale(1.52);
+            opacity: 0;
+        }
+    }
+
+    @keyframes coin-blob-target {
+        0% {
+            transform: scale(0.34);
+            opacity: 0.24;
+        }
+        72% {
+            transform: scale(1.1);
+            opacity: 0.96;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 0.72;
+        }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .splash-screen,
         .splash-image,
         .splash-headline,
         .splash-subline,
-        .splash-progress {
+        .splash-progress,
+        .coin-blob-main,
+        .coin-morph-icon,
+        .coin-blob-trail,
+        .coin-blob-target {
             animation-duration: 1ms !important;
             animation-iteration-count: 1 !important;
         }
