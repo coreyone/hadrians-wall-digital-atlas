@@ -3,7 +3,7 @@
     import Map from '$lib/components/Map.svelte';
     import type { PageData } from './$types';
     import { fetchPageSummary } from '$lib/services/wikipedia';
-    import { itinerary, englishHeritageSites, hospitalitySites } from '$lib/data/trail';
+    import { itinerary, englishHeritageSites, hospitalitySites, overnightStops } from '$lib/data/trail';
     import { fade, fly, slide } from 'svelte/transition';
 
     let { data }: { data: PageData } = $props();
@@ -30,12 +30,6 @@
     let mapComponent: any = $state();
     let isMobile = $state(false);
     
-    onMount(() => {
-        const mql = window.matchMedia('(max-width: 768px)');
-        isMobile = mql.matches;
-        mql.addEventListener('change', (e) => isMobile = e.matches);
-    });
-
     type AppMode = 'plan' | 'explore';
     let mode = $state<AppMode>('plan');
     let selectedStageId = $state<number | null>(null);
@@ -43,6 +37,12 @@
     let selectedRoute = $state('osm');
     let showMilestones = $state(true);
     let expandedMilestoneStages = $state(new Set<number>());
+
+    onMount(() => {
+        const mql = window.matchMedia('(max-width: 768px)');
+        isMobile = mql.matches;
+        mql.addEventListener('change', (e) => isMobile = e.matches);
+    });
 
     // Explore IA: Section Management
     let expandedSections = $state({
@@ -59,7 +59,6 @@
     });
 
     async function handlePOIClick(poi: any) {
-        console.log("POI Clicked:", poi.title);
         mode = 'explore';
         isSidebarOpen = true;
         selectedPOI = { ...poi };
@@ -87,9 +86,6 @@
     }
 
     function flyToMilestone(stage: any, milestone: any) {
-        // Find approximate coordinates based on mileage along the trail
-        // This is a proxy flight since we don't have exact milestone coords in data yet
-        // We'll fly to Once Brewed or Carlisle as anchors
         const center = overnightStops.find(h => h.name.includes(stage.from.split(' ')[0]))?.coords;
         if (center && mapComponent) {
             mapComponent.flyToPOI({ coords: center });
@@ -124,84 +120,89 @@
 </script>
 
 <svelte:head>
-    <title>Hadrian's Wall Atlas</title>
+    <title>Hadrian Atlas</title>
 </svelte:head>
 
-<div class="flex h-screen w-full overflow-hidden bg-white text-slate-900 font-sans antialiased text-[13px]">
-    <aside class="{isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 w-full md:w-[300px] bg-white/95 backdrop-blur-xl border-r border-slate-200 transition-transform duration-300 md:relative md:translate-x-0 flex flex-col shadow-2xl">
-        <header class="p-4 border-b border-slate-100 flex flex-col gap-3">
+<div class="flex h-screen w-full overflow-hidden bg-canvas text-slate-300 font-sans antialiased text-[13px] selection:bg-blue-500/30">
+    <aside class="{isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-40 w-full md:w-[320px] bg-surface/95 backdrop-blur-2xl border-r border-white/5 transition-transform duration-300 md:relative md:translate-x-0 flex flex-col shadow-2xl">
+        <header class="p-4 border-b border-white/5 flex flex-col gap-4">
             <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-900 tracking-tight flex items-center gap-2 uppercase text-[11px]"><div class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>Hadrian's Wall Path</span>
-                <span class="text-[10px] text-slate-400 font-medium px-1.5 py-0.5 bg-slate-50 rounded border border-slate-100 uppercase tracking-tighter">Atlas v4.2</span>
+                <div class="flex flex-col">
+                    <h1 class="text-white font-black uppercase text-[11px] tracking-[0.2em]">Hadrian Atlas</h1>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">v4.2 Tactical Instrument</span>
+                </div>
+                <div class="flex gap-1">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div>
+                </div>
             </div>
-            <div class="flex p-0.5 bg-slate-100 rounded-md">
-                <button onclick={() => { mode = 'plan'; selectedPOI = null; }} class="flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded transition-all active:scale-95 {mode === 'plan' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}">Plan</button>
-                <button onclick={() => mode = 'explore'} class="flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded transition-all active:scale-95 {mode === 'explore' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}">Explore</button>
+
+            <div class="flex p-0.5 bg-inset rounded-lg border border-white/5">
+                <button onclick={() => { mode = 'plan'; selectedPOI = null; }} class="flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all active:scale-95 {mode === 'plan' ? 'bg-white/10 shadow-sm text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}">Plan</button>
+                <button onclick={() => mode = 'explore'} class="flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all active:scale-95 {mode === 'explore' ? 'bg-white/10 shadow-sm text-white' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}">Explore</button>
             </div>
         </header>
-        
-        <div class="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth bg-white custom-scrollbar">
+
+        <div class="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar">
             {#if mode === 'plan'}
                 <div class="p-4 space-y-4" in:fade>
-                    <div class="space-y-2">
-                        <div class="grid grid-cols-3 gap-1 bg-slate-900 p-3 rounded-sm text-white shadow-lg">
-                            <div class="text-center"><span class="block text-[8px] font-black text-slate-500 uppercase">Distance</span><span class="font-bold text-xs tracking-tighter">46.0 MI</span></div>
-                            <div class="text-center border-x border-white/10"><span class="block text-[8px] font-black text-slate-500 uppercase">Gain</span><span class="font-bold text-xs tracking-tighter">+3,508 FT</span></div>
-                            <div class="text-center"><span class="block text-[8px] font-black text-slate-500 uppercase">Avg Pace</span><span class="font-bold text-xs tracking-tighter">2.8 MPH</span></div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between px-3 bg-inset py-2.5 rounded-lg border border-white/5 text-[10px] font-bold tabular-nums">
+                            <span class="flex items-center gap-2 text-slate-500 uppercase tracking-tighter">{@html icons.sun} 06:14 / 20:08</span>
+                            <span class="text-blue-400 uppercase tracking-widest">54°F · Mostly Clear</span>
                         </div>
-                        <div class="flex items-center justify-between px-1 bg-slate-50 p-2 rounded-sm border border-slate-100 text-[10px] font-bold">
-                            <span class="flex items-center gap-1 text-slate-500">{@html icons.sun} 06:14 / 20:08</span>
-                            <span class="text-blue-600 uppercase tracking-tighter">54°F · Mostly Clear</span>
+
+                        <div class="grid grid-cols-3 gap-1 bg-inset p-3 rounded-lg border border-white/5 text-white shadow-inner">
+                            <div class="text-center"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Distance</span><span class="font-bold text-xs tracking-tighter tabular-nums">46.0 MI</span></div>
+                            <div class="text-center border-x border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Gain</span><span class="font-bold text-xs tracking-tighter tabular-nums">+3,508 FT</span></div>
+                            <div class="text-center"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Avg Pace</span><span class="font-bold text-xs tracking-tighter tabular-nums">2.8 MPH</span></div>
                         </div>
                     </div>
 
-                    <div class="space-y-1">
+                    <div class="space-y-1.5">
                         {#each itinerary as stage, i}
                             <div in:fade={{ delay: i * 50 }}>
-                                <button onclick={() => toggleStage(stage.id)} class="w-full text-left p-3 rounded-sm border active:scale-[0.98] {selectedStageId === stage.id ? 'bg-slate-50 border-blue-200 shadow-inner' : 'bg-white border-transparent hover:bg-slate-50'}">
-                                    <div class="flex justify-between items-start mb-1">
-                                        <div class="flex flex-col gap-0.5">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-[10px] font-black uppercase text-blue-600 tracking-tighter">{stage.date} · {stage.romanDate}</span>
-                                                <div class="flex gap-0.5">{#each Array(stage.difficulty === 'Strenuous' ? 3 : stage.difficulty === 'Challenging' ? 2 : 1) as _}<div class="w-1 h-1 rounded-full {stage.difficulty === 'Strenuous' ? 'bg-red-500' : stage.difficulty === 'Challenging' ? 'bg-orange-400' : 'bg-green-400'}"></div>{/each}</div>
-                                            </div>
-                                            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest italic">{stage.mithraicSymbol} {stage.mithraicGrade}</span>
+                                <button onclick={() => toggleStage(stage.id)} class="w-full text-left p-3 rounded-lg border transition-all active:scale-[0.98] {selectedStageId === stage.id ? 'bg-white/5 border-blue-500/30 shadow-glow' : 'bg-transparent border-transparent hover:bg-white/5'}">
+                                    <div class="flex justify-between items-start mb-1.5">
+                                        <div class="flex flex-col">
+                                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">{stage.romanDate}</span>
+                                            <h3 class="text-[13px] font-bold text-white tracking-tight leading-tight">{stage.from} → {stage.to}</h3>
                                         </div>
-                                        <svg width="40" height="12" viewBox="0 0 60 20" class="text-slate-300" fill="none" stroke="currentColor" stroke-width="4"><path d={generateSparkline(stage.elevationGainFt, stage.elevationLossFt)} stroke-linejoin="round" /></svg>
+                                        <div class="text-lg filter grayscale opacity-50">{stage.mithraicSymbol}</div>
                                     </div>
-                                    <h4 class="font-bold text-slate-800 leading-tight mb-1">{stage.from} → {stage.to}</h4>
-                                    <div class="flex items-center gap-3 text-[10px] font-bold text-slate-400 tracking-tight">
-                                        <span class="flex items-center gap-1 font-bold tracking-tighter">{@html icons.clock} {stage.timeHours[0]}-{stage.timeHours[1]}h</span>
-                                        <span class="flex items-center gap-1 font-bold tracking-tighter">{@html icons.mountain} +{stage.elevationGainFt}ft</span>
-                                        <span class="flex items-center gap-1 font-bold tracking-tighter text-blue-500 uppercase">Grade: {Math.round(((i + 1) / 7) * 100)}%</span>
+                                    <div class="flex gap-3 text-[10px] text-slate-400 uppercase tracking-tighter font-bold tabular-nums">
+                                        <span class="flex items-center gap-1">{@html icons.clock} {stage.timeHours[0]}-{stage.timeHours[1]}h</span>
+                                        <span class="flex items-center gap-1">{@html icons.mountain} +{stage.elevationGainFt}ft</span>
+                                        <span class="flex items-center gap-1 text-blue-400">Grade: {Math.round(((i + 1) / 7) * 100)}%</span>
                                     </div>
+                                    
                                     {#if selectedStageId === stage.id}
-                                        <div class="mt-4 pt-4 border-t border-slate-100 space-y-4" transition:slide>
+                                        <div class="mt-4 pt-4 border-t border-white/5 space-y-4" transition:slide>
                                             <div class="grid grid-cols-2 gap-2">
-                                                <div class="bg-white p-2 rounded-sm border border-slate-100 shadow-xs"><span class="block text-[8px] font-black text-slate-400 uppercase">Surface</span><span class="text-[11px] font-bold text-slate-700 truncate block">{stage.surface}</span></div>
-                                                <div class="bg-white p-2 rounded-sm border border-slate-100 shadow-xs"><span class="block text-[8px] font-black text-slate-400 uppercase">Logistics</span><span class="text-[11px] font-bold {stage.supplyStatus === 'Critical' ? 'text-orange-600' : 'text-slate-700'}">{stage.supplyStatus}</span></div>
+                                                <div class="bg-inset p-2.5 rounded-md border border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Surface</span><span class="text-[11px] font-bold text-slate-300 truncate block">{stage.surface}</span></div>
+                                                <div class="bg-inset p-2.5 rounded-md border border-white/5"><span class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Logistics</span><span class="text-[11px] font-bold {stage.supplyStatus === 'Critical' ? 'text-orange-400' : 'text-slate-300'}">{stage.supplyStatus}</span></div>
                                             </div>
                                             
-                                            <div class="bg-slate-900 p-3 rounded-sm text-white space-y-2 shadow-inner">
-                                                <button onclick={() => toggleMilestones(stage.id)} class="w-full flex items-center justify-between group">
-                                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-400 transition-colors">Trail Milestones (ETAs)</span>
+                                            <div class="bg-inset p-3 rounded-md border border-white/5 space-y-3">
+                                                <button onclick={(e) => { e.stopPropagation(); toggleMilestones(stage.id); }} class="w-full flex items-center justify-between group">
+                                                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-400 transition-colors">Trail Milestones</span>
                                                     <div class="text-slate-600 transition-transform {expandedMilestoneStages.has(stage.id) ? '' : '-rotate-90'}">{@html icons.caret}</div>
                                                 </button>
                                                 
                                                 {#if expandedMilestoneStages.has(stage.id)}
-                                                    <div class="space-y-2" transition:slide>
+                                                    <div class="space-y-3" transition:slide>
                                                         {#each stage.milestones as ms}
                                                             <div class="flex items-start gap-3 border-l border-white/10 pl-3 relative group/ms">
                                                                 <div class="absolute -left-[3px] top-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                                                                 <div class="flex-1 min-w-0">
-                                                                    <div class="flex justify-between items-center gap-2 mb-0.5">
-                                                                        <span class="text-[11px] font-black uppercase tracking-tighter truncate">{ms.name}</span>
+                                                                    <div class="flex justify-between items-center gap-2 mb-1">
+                                                                        <span class="text-[11px] font-black uppercase tracking-tighter truncate text-slate-200">{ms.name}</span>
                                                                         <div class="flex items-center gap-2">
-                                                                            <span class="text-[10px] font-mono text-blue-400">{new Date(new Date("2026-04-12T09:00:00").getTime() + (ms.mi / 2.8) * 3600000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                                                            <button onclick={() => flyToMilestone(stage, ms)} class="p-1 hover:bg-white/10 rounded transition-colors opacity-0 group-hover/ms:opacity-100">{@html icons.arrowRight}</button>
+                                                                            <span class="text-[10px] font-mono text-blue-400 tabular-nums">{new Date(new Date("2026-04-12T09:00:00").getTime() + (ms.mi / 2.8) * 3600000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                                            <button onclick={(e) => { e.stopPropagation(); flyToMilestone(stage, ms); }} class="p-1 hover:bg-white/10 rounded transition-colors opacity-0 group-hover/ms:opacity-100">{@html icons.arrowRight}</button>
                                                                         </div>
                                                                     </div>
-                                                                    <p class="text-[10px] text-slate-400 leading-tight italic">{ms.intel}</p>
+                                                                    <p class="text-[11px] text-slate-500 leading-snug italic">"{ms.intel}"</p>
                                                                 </div>
                                                             </div>
                                                         {/each}
@@ -209,18 +210,17 @@
                                                 {/if}
                                             </div>
 
-                                            <div class="bg-slate-50 p-3 rounded-sm border border-slate-100">
-                                                <span class="block text-[9px] font-black text-slate-400 uppercase mb-1">Fueling & Logistics</span>
-                                                <ul class="space-y-1">
+                                            <div class="bg-white/5 p-3 rounded-md border border-white/5">
+                                                <span class="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Fueling Strategy</span>
+                                                <ul class="space-y-1.5">
                                                     {#each stage.fuelingLogistics as item}
-                                                        <li class="text-[11px] font-medium text-slate-700 flex items-start gap-2 italic">
-                                                            <div class="w-1 h-1 bg-blue-500 rounded-full mt-1.5 shrink-0"></div>
-                                                            {item}
+                                                        <li class="flex items-start gap-2 text-[11px] text-slate-400 leading-snug">
+                                                            <div class="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0"></div>
+                                                            <span>{item}</span>
                                                         </li>
                                                     {/each}
                                                 </ul>
                                             </div>
-                                            <div class="flex items-center gap-2 pt-1 border-t border-slate-50"><div class="text-blue-600">{@html icons.shopping}</div><span class="text-[11px] font-bold text-slate-500 truncate">{stage.shops.join(', ')}</span></div>
                                         </div>
                                     {/if}
                                 </button>
@@ -230,85 +230,85 @@
                 </div>
             {:else if selectedPOI}
                 <div class="p-6 space-y-6 flex flex-col h-full overflow-hidden" in:fly={{ x: 20, duration: 300 }}>
-                    <button onclick={() => selectedPOI = null} class="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors tracking-[0.2em] active:scale-95">{@html icons.arrowLeft} Back</button>
+                    <button onclick={() => selectedPOI = null} class="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-500 hover:text-blue-400 transition-colors tracking-[0.2em] active:scale-95">{@html icons.arrowLeft} Back to Registry</button>
+                    
                     <div class="space-y-4">
                         <div class="flex items-start justify-between gap-4">
-                            <div class="flex flex-col gap-1">
-                                <h2 class="text-2xl font-bold text-slate-900 leading-tight tracking-tight">{selectedPOI.title || selectedPOI.name}</h2>
+                            <div class="flex flex-col gap-1.5">
+                                <h2 class="text-xl font-bold text-white leading-tight tracking-tight">{selectedPOI.title || selectedPOI.name}</h2>
                                 {#if (selectedPOI as any).types}
-                                    <div class="flex gap-1">
+                                    <div class="flex gap-1.5">
                                         {#each (selectedPOI as any).types as type}
-                                            <span class="text-[8px] font-black uppercase px-1 rounded-sm {type === 'hub' ? 'bg-blue-100 text-blue-700' : type === 'heritage' ? 'bg-slate-100 text-slate-700' : 'bg-amber-100 text-amber-700'}">{type}</span>
+                                            <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-sm {type === 'hub' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' : type === 'heritage' ? 'bg-slate-500/20 text-slate-400 border border-slate-500/20' : 'bg-amber-500/20 text-amber-400 border border-amber-500/20'}">{type}</span>
                                         {/each}
                                     </div>
                                 {/if}
                             </div>
-                            {#if selectedPOI.special === 'mithras'}<div class="text-amber-500 animate-bounce">{@html icons.star}</div>{/if}
+                            {#if selectedPOI.special === 'mithras'}<div class="text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)]">{@html icons.star}</div>{/if}
                         </div>
-                        <div class="flex flex-wrap gap-2">
+
+                        <div class="flex flex-wrap gap-2 pt-2">
                             {#if selectedPOI.url && selectedPOI.url !== '#'}
-                                <a href={selectedPOI.url} target="_blank" class="px-3 py-1.5 bg-blue-600 text-white rounded-sm font-bold text-[10px] uppercase tracking-wider hover:bg-blue-700 transition-all shadow-sm">Wikipedia</a>
+                                <a href={selectedPOI.url} target="_blank" class="px-3 py-2 bg-white/10 hover:bg-white/15 text-white border border-white/5 rounded-md font-black text-[10px] uppercase tracking-widest transition-all shadow-sm">Wikipedia</a>
                             {/if}
-                            {#if selectedPOI.lat && selectedPOI.lon}
-                                <a href="https://geohack.toolforge.org/geohack.php?params={selectedPOI.lat}_N_{Math.abs(selectedPOI.lon)}_{selectedPOI.lon >= 0 ? 'E' : 'W'}_title:{encodeURIComponent(selectedPOI.title || selectedPOI.name || '')}" target="_blank" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-sm font-bold text-[10px] uppercase tracking-wider hover:bg-slate-50 transition-all shadow-xs">Map Services</a>
-                            {/if}
-                            <button onclick={() => mapComponent?.flyToPOI(selectedPOI)} class="px-3 py-1.5 bg-slate-900 text-white rounded-sm font-bold text-[10px] uppercase tracking-wider hover:bg-black transition-all shadow-sm flex items-center gap-1.5">Take me there {@html icons.arrowRight}</button>
+                            <button onclick={() => mapComponent?.flyToPOI(selectedPOI)} class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-black text-[10px] uppercase tracking-widest transition-all shadow-glow flex items-center gap-2">Take me there {@html icons.arrowRight}</button>
                         </div>
                     </div>
 
-                    {#if selectedPOI.bourdainIntel}
-                        <div class="bg-amber-50/50 border border-amber-100 p-4 rounded-sm space-y-2 shadow-sm">
-                            <span class="text-[10px] font-black uppercase text-amber-700 tracking-widest flex items-center gap-2">Bourdain's Intel</span>
-                            <p class="text-[13px] font-medium text-amber-900 leading-relaxed italic">"{selectedPOI.bourdainIntel}"</p>
-                        </div>
-                    {/if}
+                    <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
+                        {#if selectedPOI.bourdainIntel}
+                            <div class="bg-amber-500/5 border border-amber-500/10 p-4 rounded-lg space-y-2.5">
+                                <span class="text-[10px] font-black uppercase text-amber-500 tracking-[0.15em] flex items-center gap-2">Bourdain's Intel</span>
+                                <p class="text-[13px] font-medium text-amber-200/80 leading-relaxed italic">"{selectedPOI.bourdainIntel}"</p>
+                            </div>
+                        {/if}
 
-                    {#if selectedPOI.fryeIntel}
-                        <div class="bg-slate-50 border border-slate-200 p-4 rounded-sm space-y-2 shadow-sm">
-                            <span class="text-[10px] font-black uppercase text-slate-600 tracking-widest flex items-center gap-2">Frye's Perspective</span>
-                            <p class="text-[13px] font-medium text-slate-800 leading-relaxed italic">"{selectedPOI.fryeIntel}"</p>
-                        </div>
-                    {/if}
+                        {#if selectedPOI.fryeIntel}
+                            <div class="bg-white/5 border border-white/5 p-4 rounded-lg space-y-2.5">
+                                <span class="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] flex items-center gap-2">Frye's Perspective</span>
+                                <p class="text-[13px] font-medium text-slate-300 leading-relaxed italic">"{selectedPOI.fryeIntel}"</p>
+                            </div>
+                        {/if}
 
-                    <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar font-serif italic text-[15px] text-slate-600 leading-relaxed">"{selectedPOI.summary || "Extracting data..."}"</div>
+                        <div class="font-serif italic text-[15px] text-slate-400 leading-relaxed border-t border-white/5 pt-6">"{selectedPOI.summary || "Extracting archaeological data..."}"</div>
+                    </div>
                 </div>
             {:else}
                 <div class="p-4 space-y-6" in:fade>
-                    <div class="flex flex-col gap-3">
+                    <div class="flex flex-col gap-4">
                         <div class="relative group">
-                            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">{@html icons.search}</div>
-                            <input type="text" bind:value={searchQuery} placeholder="Filter Registry..." class="w-full bg-slate-50 border border-slate-100 rounded-sm py-2 pl-9 pr-4 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white focus:border-blue-500 transition-all shadow-inner" />
+                            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors">{@html icons.search}</div>
+                            <input type="text" bind:value={searchQuery} placeholder="Search Registry..." class="w-full bg-inset border border-white/5 rounded-lg py-2.5 pl-9 pr-4 text-[12px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:bg-white/5 transition-all shadow-inner placeholder:text-slate-600" />
                         </div>
                         
                         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                            <button onclick={() => activeCategories.heritage = !activeCategories.heritage} class="px-2 py-1 rounded-sm border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.heritage ? 'bg-slate-800 border-slate-800 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-400'} flex items-center gap-1.5 text-nowrap">Heritage {#if activeCategories.heritage} {@html icons.check} {/if}</button>
-                            <button onclick={() => activeCategories.pubs = !activeCategories.pubs} class="px-2 py-1 rounded-sm border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.pubs ? 'bg-amber-600 border-amber-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-400'} flex items-center gap-1.5 text-nowrap">Pubs {#if activeCategories.pubs} {@html icons.check} {/if}</button>
-                            <button onclick={() => activeCategories.discovery = !activeCategories.discovery} class="px-2 py-1 rounded-sm border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.discovery ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-400'} flex items-center gap-1.5 text-nowrap">Discovery {#if activeCategories.discovery} {@html icons.check} {/if}</button>
+                            <button onclick={() => activeCategories.heritage = !activeCategories.heritage} class="px-2.5 py-1.5 rounded-md border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.heritage ? 'bg-slate-700 border-slate-600 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center gap-1.5 text-nowrap">Heritage {#if activeCategories.heritage} {@html icons.check} {/if}</button>
+                            <button onclick={() => activeCategories.pubs = !activeCategories.pubs} class="px-2.5 py-1.5 rounded-md border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.pubs ? 'bg-amber-600 border-amber-500 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center gap-1.5 text-nowrap">Pubs {#if activeCategories.pubs} {@html icons.check} {/if}</button>
+                            <button onclick={() => activeCategories.discovery = !activeCategories.discovery} class="px-2.5 py-1.5 rounded-md border text-[10px] font-black uppercase tracking-tighter transition-all {activeCategories.discovery ? 'bg-blue-600 border-blue-500 text-white shadow-sm' : 'bg-inset border-white/5 text-slate-500'} flex items-center gap-1.5 text-nowrap">Discovery {#if activeCategories.discovery} {@html icons.check} {/if}</button>
                         </div>
                     </div>
 
-                    <div class="space-y-4">
+                    <div class="space-y-6">
                         {#if activeCategories.heritage}
-                            <section class="space-y-2">
-                                <button onclick={() => expandedSections.heritage = !expandedSections.heritage} class="w-full flex items-center justify-between px-1 py-1 group">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">English Heritage</span>
-                                    <div class="text-slate-300 transition-transform {expandedSections.heritage ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                            <section class="space-y-3">
+                                <button onclick={() => expandedSections.heritage = !expandedSections.heritage} class="w-full flex items-center justify-between px-1 group">
+                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300 transition-colors">English Heritage</span>
+                                    <div class="text-slate-600 transition-transform {expandedSections.heritage ? '' : '-rotate-90'}">{@html icons.caret}</div>
                                 </button>
                                 {#if expandedSections.heritage}
-                                    <div class="grid grid-cols-1 border border-slate-100 rounded-sm divide-y divide-slate-50 shadow-sm overflow-hidden" transition:slide>
+                                    <div class="grid grid-cols-1 bg-inset border border-white/5 rounded-lg divide-y divide-white/5 shadow-sm overflow-hidden" transition:slide>
                                         {#each englishHeritageSites.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) as site}
-                                            <button class="w-full text-left p-2.5 hover:bg-slate-50 transition-colors group flex flex-col gap-1" onclick={() => handlePOIClick(site)}>
+                                            <button class="w-full text-left p-3 hover:bg-white/5 transition-colors group flex flex-col gap-1 relative" onclick={() => handlePOIClick(site)}>
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-6 h-6 rounded-sm bg-slate-800 flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">{@html icons.landmark}</div>
+                                                    <div class="w-7 h-7 rounded-md bg-slate-800 border border-white/5 flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">{@html icons.landmark}</div>
                                                     <div class="flex-1 min-w-0 flex items-center gap-2">
-                                                        <span class="font-bold text-slate-700 group-hover:text-blue-600 truncate">{site.name}</span>
-                                                        {#if site.special === 'mithras'}<div class="text-amber-500 animate-pulse">{@html icons.star}</div>{/if}
+                                                        <span class="font-bold text-slate-300 group-hover:text-blue-400 truncate tracking-tight">{site.name}</span>
+                                                        {#if site.special === 'mithras'}<div class="text-amber-400 animate-pulse">{@html icons.star}</div>{/if}
                                                     </div>
                                                 </div>
-                                                <div class="flex items-center gap-2 pl-9 text-[9px] font-black uppercase tracking-tighter">
-                                                    <span class="text-blue-600 bg-blue-50 px-1 rounded-sm">{site.visitDay}</span>
-                                                    <span class="text-slate-400">{site.hours}</span>
-                                                </div>
+                                                {#if selectedPOI && (selectedPOI as any).name === site.name}
+                                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 shadow-glow"></div>
+                                                {/if}
                                             </button>
                                         {/each}
                                     </div>
@@ -317,17 +317,20 @@
                         {/if}
 
                         {#if activeCategories.pubs}
-                            <section class="space-y-2">
-                                <button onclick={() => expandedSections.hospitality = !expandedSections.hospitality} class="w-full flex items-center justify-between px-1 py-1 group">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">Hospitality</span>
-                                    <div class="text-slate-300 transition-transform {expandedSections.hospitality ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                            <section class="space-y-3">
+                                <button onclick={() => expandedSections.hospitality = !expandedSections.hospitality} class="w-full flex items-center justify-between px-1 group">
+                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300 transition-colors">Hospitality</span>
+                                    <div class="text-slate-600 transition-transform {expandedSections.hospitality ? '' : '-rotate-90'}">{@html icons.caret}</div>
                                 </button>
                                 {#if expandedSections.hospitality}
-                                    <div class="grid grid-cols-1 border border-slate-100 rounded-sm divide-y divide-slate-50 shadow-sm overflow-hidden" transition:slide>
+                                    <div class="grid grid-cols-1 bg-inset border border-white/5 rounded-lg divide-y divide-white/5 shadow-sm overflow-hidden" transition:slide>
                                         {#each hospitalitySites.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) as site}
-                                            <button class="w-full text-left p-2.5 hover:bg-slate-50 transition-colors group flex items-center gap-3" onclick={() => handlePOIClick(site)}>
-                                                <div class="w-6 h-6 rounded-sm {site.category === 'brewery' ? 'bg-amber-600' : 'bg-orange-700'} flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">{@html icons.beer}</div>
-                                                <span class="font-bold text-slate-700 group-hover:text-blue-600 truncate">{site.name}</span>
+                                            <button class="w-full text-left p-3 hover:bg-white/5 transition-colors group flex items-center gap-3 relative" onclick={() => handlePOIClick(site)}>
+                                                <div class="w-7 h-7 rounded-md {site.category === 'brewery' ? 'bg-amber-600' : 'bg-orange-700'} border border-white/5 flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">{@html icons.beer}</div>
+                                                <span class="font-bold text-slate-300 group-hover:text-blue-400 truncate tracking-tight">{site.name}</span>
+                                                {#if selectedPOI && (selectedPOI as any).name === site.name}
+                                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 shadow-glow"></div>
+                                                {/if}
                                             </button>
                                         {/each}
                                     </div>
@@ -336,24 +339,27 @@
                         {/if}
 
                         {#if activeCategories.discovery}
-                            <section class="space-y-2">
-                                <button onclick={() => expandedSections.discovery = !expandedSections.discovery} class="w-full flex items-center justify-between px-1 py-1 group">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">Nearby Discovery</span>
-                                    <div class="text-slate-300 transition-transform {expandedSections.discovery ? '' : '-rotate-90'}">{@html icons.caret}</div>
+                            <section class="space-y-3">
+                                <button onclick={() => expandedSections.discovery = !expandedSections.discovery} class="w-full flex items-center justify-between px-1 group">
+                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300 transition-colors">Nearby Discovery</span>
+                                    <div class="text-slate-600 transition-transform {expandedSections.discovery ? '' : '-rotate-90'}">{@html icons.caret}</div>
                                 </button>
                                 {#if expandedSections.discovery}
-                                    <div class="space-y-1" transition:slide>
+                                    <div class="space-y-1.5" transition:slide>
                                         {#each filteredDiscovery.slice(0, 20) as poi, i}
-                                            <button class="w-full text-left p-2.5 bg-white hover:bg-blue-50/50 rounded-sm border border-slate-100 hover:border-blue-100 transition-all group flex items-center gap-3 relative active:scale-[0.98]" onclick={() => handlePOIClick(poi)}>
-                                                <div class="text-slate-300 group-hover:text-blue-500 shrink-0 transition-colors">{@html icons.discovery}</div>
+                                            <button class="w-full text-left p-3 bg-inset hover:bg-white/5 rounded-lg border border-white/5 hover:border-blue-500/30 transition-all group flex items-center gap-3 relative active:scale-[0.98]" onclick={() => handlePOIClick(poi)}>
+                                                <div class="text-slate-500 group-hover:text-blue-400 shrink-0 transition-colors">{@html icons.discovery}</div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="flex justify-between items-center gap-2">
-                                                        <span class="font-bold text-slate-700 group-hover:text-slate-900 truncate">{poi.title}</span>
-                                                        <span class="text-[9px] font-bold text-slate-300 uppercase shrink-0">{Math.round(poi.dist)}m</span>
+                                                    <div class="flex justify-between items-center mb-0.5">
+                                                        <span class="font-bold text-slate-300 group-hover:text-blue-400 truncate tracking-tight">{poi.title}</span>
+                                                        <span class="text-[9px] font-mono text-slate-600 tabular-nums">RANK {Math.round(poi.rank)}</span>
+                                                    </div>
+                                                    <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                                                        <div class="bg-blue-500/50 h-full transition-all duration-500" style="width: {Math.min(100, poi.rank * 2)}%"></div>
                                                     </div>
                                                 </div>
                                                 {#if selectedPOI && (selectedPOI as any).pageid === poi.pageid}
-                                                    <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-500"></div>
+                                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 shadow-glow"></div>
                                                 {/if}
                                             </button>
                                         {/each}
@@ -365,7 +371,7 @@
                 </div>
             {/if}
         </div>
-        <footer class="p-3 bg-slate-50 border-t border-slate-100 text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] text-center">System Atlas · Hadrian v4.2</footer>
+        <footer class="p-4 bg-inset border-t border-white/5 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] text-center">System Atlas · Hadrian Workstation v4.2</footer>
     </aside>
 
     <main class="flex-1 relative bg-slate-100 overflow-hidden">
@@ -404,7 +410,7 @@
 <style>
     :global(.custom-scrollbar::-webkit-scrollbar) { width: 4px; }
     :global(.custom-scrollbar::-webkit-scrollbar-track) { background: transparent; }
-    :global(.custom-scrollbar::-webkit-scrollbar-thumb) { background: #e2e8f0; border-radius: 10px; }
-    :global(.custom-scrollbar::-webkit-scrollbar-thumb:hover) { background: #cbd5e1; }
+    :global(.custom-scrollbar::-webkit-scrollbar-thumb) { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    :global(.custom-scrollbar::-webkit-scrollbar-thumb:hover) { background: rgba(255, 255, 255, 0.2); }
     :global(.scrollbar-hide::-webkit-scrollbar) { display: none; }
 </style>
