@@ -50,9 +50,34 @@
                     tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
                     tileSize: 256,
                     attribution: 'Esri, Maxar'
+                },
+                'openfreemap': {
+                    type: 'vector',
+                    url: 'https://tiles.openfreemap.org/tiles/v1/openfreemap.json'
                 }
             },
-            layers: [{ id: 'simple-tiles', type: 'raster', source: 'raster-tiles', minzoom: 0, maxzoom: 22 }]
+            layers: [
+                { id: 'simple-tiles', type: 'raster', source: 'raster-tiles', minzoom: 0, maxzoom: 22 },
+                // Place Name Overlay for Orientation
+                {
+                    id: 'place-labels',
+                    type: 'symbol',
+                    source: 'openfreemap',
+                    'source-layer': 'place',
+                    layout: {
+                        'text-field': '{name}',
+                        'text-font': ['Noto Sans Regular'],
+                        'text-size': 12,
+                        'text-transform': 'uppercase',
+                        'text-letter-spacing': 0.1
+                    },
+                    paint: {
+                        'text-color': '#ffffff',
+                        'text-halo-color': 'rgba(0,0,0,0.8)',
+                        'text-halo-width': 2
+                    }
+                }
+            ]
         }
     };
 
