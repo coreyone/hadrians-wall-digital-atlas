@@ -1069,6 +1069,7 @@
                             .setLngLat(poi.coords as [number, number])
                             .addTo(map);
                 });
+            });
 
             map.on("style.load", () => {
                 const source = map.getSource("trail") as maplibregl.GeoJSONSource;
