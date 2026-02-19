@@ -1,17 +1,25 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import maplibregl from 'maplibre-gl';
-    import 'maplibre-gl/dist/maplibre-gl.css';
-    import * as turf from '@turf/turf';
-    import type { Feature, LineString } from 'geojson';
-    import { trailGeoJSON, getCorridor, overnightStops, itinerary, trailCoordinates, englishHeritageSites, hospitalitySites } from '$lib/data/trail';
-    import { routeVariants } from '$lib/data/routes';
-    import { fetchWikiPOIs, type WikiPOI } from '$lib/services/wikipedia';
-    import { selectRenderableWikiPOIs } from '$lib/utils/wikiPins';
+    import { onMount } from "svelte";
+    import maplibregl from "maplibre-gl";
+    import "maplibre-gl/dist/maplibre-gl.css";
+    import * as turf from "@turf/turf";
+    import type { Feature, LineString } from "geojson";
+    import {
+        trailGeoJSON,
+        getCorridor,
+        overnightStops,
+        itinerary,
+        trailCoordinates,
+        englishHeritageSites,
+        hospitalitySites,
+    } from "$lib/data/trail";
+    import { routeVariants } from "$lib/data/routes";
+    import { fetchWikiPOIs, type WikiPOI } from "$lib/services/wikipedia";
+    import { selectRenderableWikiPOIs } from "$lib/utils/wikiPins";
     import {
         navigationService,
-        type NavigationMetrics
-    } from '$lib/services/navigation';
+        type NavigationMetrics,
+    } from "$lib/services/navigation";
 
     interface Props {
         initialPOIs?: WikiPOI[];
@@ -33,12 +41,12 @@
         onMapReady?: () => void;
     }
 
-    let { 
-        initialPOIs = [], 
-        selectedPOI = $bindable(null), 
-        selectedStageId = null, 
-        mapStyle = 'topo', 
-        selectedRoute = 'osm',
+    let {
+        initialPOIs = [],
+        selectedPOI = $bindable(null),
+        selectedStageId = null,
+        mapStyle = "topo",
+        selectedRoute = "osm",
         isHeadingUp = false,
         isMobile = false,
         showMilestones = true,
@@ -50,7 +58,7 @@
         freezeMap = false,
         onNavigationUpdate,
         onHikerPoiSelect,
-        onMapReady
+        onMapReady,
     }: Props = $props();
 
     let mapContainer: HTMLDivElement;
@@ -60,7 +68,11 @@
     let wikiWindowLine: Feature<LineString> | null = null;
     let mouseCoords = $state({ lng: -2.3958, lat: 55.0036 });
     let zoomLevel = $state(12);
-    let userLocation = $state<{lng: number, lat: number, accuracy: number} | null>(null);
+    let userLocation = $state<{
+        lng: number;
+        lat: number;
+        accuracy: number;
+    } | null>(null);
     let userMarker: maplibregl.Marker | null = null;
     let watchId: number | null = null;
     let driftMeters = $state(0);
@@ -69,48 +81,63 @@
     let glowFrame: number | null = null;
     let lastGlowTick = 0;
     let lastFlyTo = 0;
-    const wikiWindowHubs = ['Carlisle', 'Lanercost/Brampton', 'Gilsland', 'Once Brewed', 'Chollerford', 'Corbridge'];
+    const wikiWindowHubs = [
+        "Carlisle",
+        "Lanercost/Brampton",
+        "Gilsland",
+        "Once Brewed",
+        "Chollerford",
+        "Corbridge",
+    ];
 
     const styles: Record<string, any> = {
-        streets: 'https://tiles.openfreemap.org/styles/bright',
-        topo: 'https://tiles.openfreemap.org/styles/liberty', 
+        streets: "https://tiles.openfreemap.org/styles/bright",
+        topo: "https://tiles.openfreemap.org/styles/liberty",
         satellite: {
             version: 8,
             sources: {
-                'raster-tiles': {
-                    type: 'raster',
-                    tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+                "raster-tiles": {
+                    type: "raster",
+                    tiles: [
+                        "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                    ],
                     tileSize: 256,
-                    attribution: 'Esri, Maxar'
+                    attribution: "Esri, Maxar",
                 },
-                'openfreemap': {
-                    type: 'vector',
-                    url: 'https://tiles.openfreemap.org/tiles/v1/openfreemap.json'
-                }
+                openfreemap: {
+                    type: "vector",
+                    url: "https://tiles.openfreemap.org/tiles/v1/openfreemap.json",
+                },
             },
             layers: [
-                { id: 'simple-tiles', type: 'raster', source: 'raster-tiles', minzoom: 0, maxzoom: 22 },
+                {
+                    id: "simple-tiles",
+                    type: "raster",
+                    source: "raster-tiles",
+                    minzoom: 0,
+                    maxzoom: 22,
+                },
                 // Place Name Overlay for Orientation
                 {
-                    id: 'place-labels',
-                    type: 'symbol',
-                    source: 'openfreemap',
-                    'source-layer': 'place',
+                    id: "place-labels",
+                    type: "symbol",
+                    source: "openfreemap",
+                    "source-layer": "place",
                     layout: {
-                        'text-field': '{name}',
-                        'text-font': ['Noto Sans Regular'],
-                        'text-size': 12,
-                        'text-transform': 'uppercase',
-                        'text-letter-spacing': 0.1
+                        "text-field": "{name}",
+                        "text-font": ["Noto Sans Regular"],
+                        "text-size": 12,
+                        "text-transform": "uppercase",
+                        "text-letter-spacing": 0.1,
                     },
                     paint: {
-                        'text-color': '#ffffff',
-                        'text-halo-color': 'rgba(0,0,0,0.8)',
-                        'text-halo-width': 2
-                    }
-                }
-            ]
-        }
+                        "text-color": "#ffffff",
+                        "text-halo-color": "rgba(0,0,0,0.8)",
+                        "text-halo-width": 2,
+                    },
+                },
+            ],
+        },
     };
 
     // React to style change
@@ -118,14 +145,16 @@
         if (map && mapStyle && styles[mapStyle]) {
             map.setStyle(styles[mapStyle]);
             // Re-add layers once the new style has loaded
-            map.once('style.load', () => {
+            map.once("style.load", () => {
                 setupLayers();
                 const shouldGlow = hikerActive && !hikerSimplified;
                 setGlowVisibility(shouldGlow);
                 if (shouldGlow) startGlowPulse();
                 // Ensure active stage is redrawn if selected
                 if (selectedStageId !== null) {
-                    const stage = itinerary.find(s => s.id === selectedStageId);
+                    const stage = itinerary.find(
+                        (s) => s.id === selectedStageId,
+                    );
                     if (stage) updateStageLayer(stage);
                 }
             });
@@ -135,7 +164,7 @@
     // React to Milestone Toggle
     $effect(() => {
         if (map && selectedStageId !== null) {
-            const stage = itinerary.find(s => s.id === selectedStageId);
+            const stage = itinerary.find((s) => s.id === selectedStageId);
             if (stage) updateStageLayer(stage);
         } else {
             clearPaceMarkers();
@@ -144,14 +173,22 @@
 
     function updateStageLayer(stage: any) {
         if (!map) return;
-        
+
         const hubs = overnightStops;
         // Robust hub matching: check if hub name is in stage name or vice versa
-        const fromHub = hubs.find(h => stage.from.includes(h.name.split('/')[0]) || h.name.includes(stage.from.split(' ')[0]));
-        const toHub = hubs.find(h => stage.to.includes(h.name.split('/')[0]) || h.name.includes(stage.to.split(' ')[0]));
+        const fromHub = hubs.find(
+            (h) =>
+                stage.from.includes(h.name.split("/")[0]) ||
+                h.name.includes(stage.from.split(" ")[0]),
+        );
+        const toHub = hubs.find(
+            (h) =>
+                stage.to.includes(h.name.split("/")[0]) ||
+                h.name.includes(stage.to.split(" ")[0]),
+        );
 
         let stageCoords: [number, number][] = [];
-        
+
         if (fromHub && toHub) {
             // Find indices of points in the master trail closest to these hubs
             let startIdx = 0;
@@ -161,9 +198,17 @@
 
             trailCoordinates.forEach((c, i) => {
                 const pt = turf.point(c as [number, number]);
-                const dStart = turf.distance(pt, turf.point(fromHub.coords as [number, number]), { units: 'miles' });
-                const dEnd = turf.distance(pt, turf.point(toHub.coords as [number, number]), { units: 'miles' });
-                
+                const dStart = turf.distance(
+                    pt,
+                    turf.point(fromHub.coords as [number, number]),
+                    { units: "miles" },
+                );
+                const dEnd = turf.distance(
+                    pt,
+                    turf.point(toHub.coords as [number, number]),
+                    { units: "miles" },
+                );
+
                 if (dStart < minDistStart) {
                     minDistStart = dStart;
                     startIdx = i;
@@ -177,22 +222,34 @@
             // Slice the trail sequence between the two hubs
             const s = Math.min(startIdx, endIdx);
             const e = Math.max(startIdx, endIdx);
-            stageCoords = trailCoordinates.slice(s, e + 1) as [number, number][];
+            stageCoords = trailCoordinates.slice(s, e + 1) as [
+                number,
+                number,
+            ][];
         } else {
             // Fallback to full trail if hubs aren't found
             stageCoords = trailCoordinates as [number, number][];
         }
 
-        const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
-        if (source) source.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: stageCoords }, properties: {} });
-        
+        const source = map.getSource(
+            "selected-stage",
+        ) as maplibregl.GeoJSONSource;
+        if (source)
+            source.setData({
+                type: "Feature",
+                geometry: { type: "LineString", coordinates: stageCoords },
+                properties: {},
+            });
+
         // Dynamic Framing for the specific slice
         if (stageCoords.length > 0) {
             const bounds = new maplibregl.LngLatBounds();
-            stageCoords.forEach(c => bounds.extend(c));
-            map.fitBounds(bounds, { 
-                padding: isMobile ? 40 : { top: 100, bottom: 100, left: 450, right: 100 }, 
-                duration: 1500 
+            stageCoords.forEach((c) => bounds.extend(c));
+            map.fitBounds(bounds, {
+                padding: isMobile
+                    ? 40
+                    : { top: 100, bottom: 100, left: 450, right: 100 },
+                duration: 1500,
             });
         }
 
@@ -203,15 +260,15 @@
     $effect(() => {
         const variants = routeVariants as Record<string, any>;
         if (map && selectedRoute && variants[selectedRoute]) {
-            const source = map.getSource('trail') as maplibregl.GeoJSONSource;
+            const source = map.getSource("trail") as maplibregl.GeoJSONSource;
             if (source) {
                 source.setData({
-                    type: 'Feature',
+                    type: "Feature",
                     properties: {},
                     geometry: {
-                        type: 'LineString',
-                        coordinates: variants[selectedRoute]
-                    }
+                        type: "LineString",
+                        coordinates: variants[selectedRoute],
+                    },
                 });
             }
         }
@@ -220,10 +277,13 @@
     // React to POI selection (Visual highlighting)
     $effect(() => {
         if (map && selectedPOI) {
-            document.querySelectorAll('.poi-marker').forEach(m => {
+            document.querySelectorAll(".poi-marker").forEach((m) => {
                 const markerEl = m as HTMLElement;
-                const isSelected = markerEl.dataset.pageid === selectedPOI.pageid?.toString() || markerEl.dataset.name === selectedPOI.name;
-                markerEl.classList.toggle('active-marker', isSelected);
+                const isSelected =
+                    markerEl.dataset.pageid ===
+                        selectedPOI.pageid?.toString() ||
+                    markerEl.dataset.name === selectedPOI.name;
+                markerEl.classList.toggle("active-marker", isSelected);
             });
         }
     });
@@ -231,13 +291,16 @@
     // React to Stage selection (Fly to and highlight)
     $effect(() => {
         if (map && selectedStageId !== null) {
-            const stage = itinerary.find(s => s.id === selectedStageId);
+            const stage = itinerary.find((s) => s.id === selectedStageId);
             if (stage) {
                 updateStageLayer(stage);
             }
         } else if (map && selectedStageId === null) {
-            const source = map.getSource('selected-stage') as maplibregl.GeoJSONSource;
-            if (source) source.setData({ type: 'FeatureCollection', features: [] });
+            const source = map.getSource(
+                "selected-stage",
+            ) as maplibregl.GeoJSONSource;
+            if (source)
+                source.setData({ type: "FeatureCollection", features: [] });
             clearPaceMarkers();
         }
     });
@@ -281,7 +344,7 @@
         const nearby = registryPOIs
             .filter((poi) => {
                 const km = turf.distance(centerPoint, turf.point(poi.coords), {
-                    units: 'kilometers'
+                    units: "kilometers",
                 });
                 return km <= 0.5;
             })
@@ -290,8 +353,8 @@
         nearby.forEach((poi) => {
             const currentMap = map;
             if (!currentMap) return;
-            const el = document.createElement('button');
-            el.className = 'hiker-floating-poi';
+            const el = document.createElement("button");
+            el.className = "hiker-floating-poi";
             el.innerHTML = `
                 <i class="hn hn-location-pin hiker-floating-poi__icon" aria-hidden="true"></i>
                 <span class="hiker-floating-poi__label">${poi.title}</span>
@@ -303,7 +366,7 @@
 
             const marker = new maplibregl.Marker({
                 element: el,
-                anchor: 'bottom'
+                anchor: "bottom",
             })
                 .setLngLat(poi.coords as [number, number])
                 .addTo(currentMap);
@@ -313,13 +376,19 @@
 
     function setGlowVisibility(visible: boolean) {
         if (!map) return;
-        const visibility = visible ? 'visible' : 'none';
-        if (map.getLayer('hiker-glow-outer')) map.setLayoutProperty('hiker-glow-outer', 'visibility', visibility);
-        if (map.getLayer('hiker-glow-core')) map.setLayoutProperty('hiker-glow-core', 'visibility', visibility);
+        const visibility = visible ? "visible" : "none";
+        if (map.getLayer("hiker-glow-outer"))
+            map.setLayoutProperty("hiker-glow-outer", "visibility", visibility);
+        if (map.getLayer("hiker-glow-core"))
+            map.setLayoutProperty("hiker-glow-core", "visibility", visibility);
     }
 
     function animateGlow(ts: number) {
-        if (!map || !map.getLayer('hiker-glow-outer') || !map.getLayer('hiker-glow-core')) {
+        if (
+            !map ||
+            !map.getLayer("hiker-glow-outer") ||
+            !map.getLayer("hiker-glow-core")
+        ) {
             glowFrame = null;
             return;
         }
@@ -328,10 +397,26 @@
         if (ts - lastGlowTick >= frameEveryMs) {
             lastGlowTick = ts;
             const pulse = 0.5 + 0.5 * Math.sin(ts / 240);
-            map.setPaintProperty('hiker-glow-outer', 'line-width', 8 + pulse * 8);
-            map.setPaintProperty('hiker-glow-outer', 'line-opacity', 0.1 + pulse * 0.26);
-            map.setPaintProperty('hiker-glow-core', 'line-width', 2.5 + pulse * 2.5);
-            map.setPaintProperty('hiker-glow-core', 'line-opacity', 0.35 + pulse * 0.45);
+            map.setPaintProperty(
+                "hiker-glow-outer",
+                "line-width",
+                8 + pulse * 8,
+            );
+            map.setPaintProperty(
+                "hiker-glow-outer",
+                "line-opacity",
+                0.1 + pulse * 0.26,
+            );
+            map.setPaintProperty(
+                "hiker-glow-core",
+                "line-width",
+                2.5 + pulse * 2.5,
+            );
+            map.setPaintProperty(
+                "hiker-glow-core",
+                "line-opacity",
+                0.35 + pulse * 0.45,
+            );
         }
 
         glowFrame = requestAnimationFrame(animateGlow);
@@ -348,8 +433,10 @@
             glowFrame = null;
         }
         if (!map) return;
-        if (map.getLayer('hiker-glow-outer')) map.setPaintProperty('hiker-glow-outer', 'line-opacity', 0);
-        if (map.getLayer('hiker-glow-core')) map.setPaintProperty('hiker-glow-core', 'line-opacity', 0);
+        if (map.getLayer("hiker-glow-outer"))
+            map.setPaintProperty("hiker-glow-outer", "line-opacity", 0);
+        if (map.getLayer("hiker-glow-core"))
+            map.setPaintProperty("hiker-glow-core", "line-opacity", 0);
     }
 
     $effect(() => {
@@ -399,7 +486,7 @@
 
     let paceMarkers: maplibregl.Marker[] = [];
     function clearPaceMarkers() {
-        paceMarkers.forEach(m => m.remove());
+        paceMarkers.forEach((m) => m.remove());
         paceMarkers = [];
     }
 
@@ -410,7 +497,7 @@
             const d = turf.distance(
                 turf.point(coord as [number, number]),
                 turf.point(target),
-                { units: 'kilometers' }
+                { units: "kilometers" },
             );
             if (d < best) {
                 best = d;
@@ -421,11 +508,15 @@
     }
 
     function buildWikiWindowCorridor() {
-        const carlisle = overnightStops.find((hub) => hub.name === 'Carlisle');
-        const corbridge = overnightStops.find((hub) => hub.name === 'Corbridge');
+        const carlisle = overnightStops.find((hub) => hub.name === "Carlisle");
+        const corbridge = overnightStops.find(
+            (hub) => hub.name === "Corbridge",
+        );
         if (!carlisle || !corbridge) {
             wikiCorridor = corridor;
-            wikiWindowLine = turf.lineString(trailCoordinates as [number, number][]);
+            wikiWindowLine = turf.lineString(
+                trailCoordinates as [number, number][],
+            );
             return;
         }
 
@@ -433,17 +524,22 @@
         const endIdx = nearestTrailIndex(corbridge.coords as [number, number]);
         const from = Math.min(startIdx, endIdx);
         const to = Math.max(startIdx, endIdx);
-        const segmentCoords = trailCoordinates.slice(from, to + 1) as [number, number][];
+        const segmentCoords = trailCoordinates.slice(from, to + 1) as [
+            number,
+            number,
+        ][];
 
         if (segmentCoords.length < 2) {
             wikiCorridor = corridor;
-            wikiWindowLine = turf.lineString(trailCoordinates as [number, number][]);
+            wikiWindowLine = turf.lineString(
+                trailCoordinates as [number, number][],
+            );
             return;
         }
 
         const segmentLine = turf.lineString(segmentCoords);
         wikiWindowLine = segmentLine;
-        wikiCorridor = turf.buffer(segmentLine, 1.1, { units: 'kilometers' });
+        wikiCorridor = turf.buffer(segmentLine, 1.1, { units: "kilometers" });
     }
 
     function renderPaceMarkers(coords: any[], stage: any) {
@@ -452,60 +548,96 @@
 
         let totalDist = 0;
         const speedMph = 2.8;
-        const startTime = 9; 
+        const startTime = 9;
         const halfWayMi = stage.distanceMi / 2;
         let halfWayAdded = false;
-        
-        const milestoneIndices: { idx: number, name: string, type: 'pace' | 'milestone' | 'halfway', hours?: number }[] = [];
+
+        const milestoneIndices: {
+            idx: number;
+            name: string;
+            type: "pace" | "milestone" | "halfway";
+            hours?: number;
+        }[] = [];
 
         // Track cumulative distance to place markers
         for (let i = 1; i < coords.length; i++) {
-            const p1 = turf.point(coords[i-1]);
+            const p1 = turf.point(coords[i - 1]);
             const p2 = turf.point(coords[i]);
-            totalDist += turf.distance(p1, p2, { units: 'miles' });
+            totalDist += turf.distance(p1, p2, { units: "miles" });
 
             // Bi-Hourly Pace (Blue)
-            if (totalDist >= 4.5 && milestoneIndices.filter(m => m.type === 'pace').length === 0) {
-                milestoneIndices.push({ idx: i, name: '+2H', type: 'pace', hours: 2 });
+            if (
+                totalDist >= 4.5 &&
+                milestoneIndices.filter((m) => m.type === "pace").length === 0
+            ) {
+                milestoneIndices.push({
+                    idx: i,
+                    name: "+2H",
+                    type: "pace",
+                    hours: 2,
+                });
             }
-            if (totalDist >= 9.0 && milestoneIndices.filter(m => m.type === 'pace').length === 1) {
-                milestoneIndices.push({ idx: i, name: '+4H', type: 'pace', hours: 4 });
+            if (
+                totalDist >= 9.0 &&
+                milestoneIndices.filter((m) => m.type === "pace").length === 1
+            ) {
+                milestoneIndices.push({
+                    idx: i,
+                    name: "+4H",
+                    type: "pace",
+                    hours: 4,
+                });
             }
 
             // Half-Way Checkpoint (Amber)
             if (totalDist >= halfWayMi && !halfWayAdded && halfWayMi > 1) {
-                milestoneIndices.push({ idx: i, name: 'Half-Way', type: 'halfway' });
+                milestoneIndices.push({
+                    idx: i,
+                    name: "Half-Way",
+                    type: "halfway",
+                });
                 halfWayAdded = true;
             }
 
             // Itinerary Milestones (Amber)
             stage.milestones?.forEach((ms: any) => {
-                if (totalDist >= ms.mi && !milestoneIndices.find(m => m.name === ms.name)) {
-                    milestoneIndices.push({ idx: i, name: ms.name, type: 'milestone' });
+                if (
+                    totalDist >= ms.mi &&
+                    !milestoneIndices.find((m) => m.name === ms.name)
+                ) {
+                    milestoneIndices.push({
+                        idx: i,
+                        name: ms.name,
+                        type: "milestone",
+                    });
                 }
             });
         }
 
-        milestoneIndices.forEach(m => {
-            const el = document.createElement('div');
-            const isPace = m.type === 'pace';
-            const isHalf = m.type === 'halfway';
-            
+        milestoneIndices.forEach((m) => {
+            const el = document.createElement("div");
+            const isPace = m.type === "pace";
+            const isHalf = m.type === "halfway";
+
             const time = m.hours ? startTime + m.hours : null;
-            const timeStr = time ? `${time > 12 ? time - 12 : time}:00 ${time >= 12 ? 'PM' : 'AM'}` : '';
-            
-            el.className = 'pace-marker z-20 pointer-events-none';
+            const timeStr = time
+                ? `${time > 12 ? time - 12 : time}:00 ${time >= 12 ? "PM" : "AM"}`
+                : "";
+
+            el.className = "pace-marker z-20 pointer-events-none";
             el.innerHTML = `
                 <div class="flex flex-col items-center">
-                    <div class="w-2.5 h-2.5 ${isPace ? 'bg-blue-500 rounded-full' : 'bg-amber-500 rotate-45'} border border-white shadow-sm mb-1"></div>
+                    <div class="w-2.5 h-2.5 ${isPace ? "bg-blue-500 rounded-full" : "bg-amber-500 rotate-45"} border border-white shadow-sm mb-1"></div>
                     <div class="bg-white/95 backdrop-blur-md border border-slate-200 px-1.5 py-0.5 rounded-sm shadow-xl flex flex-col items-center">
-                        <span class="text-[8px] font-black ${isPace ? 'text-blue-700' : 'text-amber-700'} uppercase tracking-tighter tabular-nums">${m.name}</span>
-                        ${timeStr ? `<span class="text-[7px] font-bold text-slate-500">${timeStr}</span>` : ''}
+                        <span class="text-[8px] font-black ${isPace ? "text-blue-700" : "text-amber-700"} uppercase tracking-tighter tabular-nums">${m.name}</span>
+                        ${timeStr ? `<span class="text-[7px] font-bold text-slate-500">${timeStr}</span>` : ""}
                     </div>
                 </div>
             `;
             if (map) {
-                const marker = new maplibregl.Marker({ element: el }).setLngLat(coords[m.idx] as [number, number]).addTo(map);
+                const marker = new maplibregl.Marker({ element: el })
+                    .setLngLat(coords[m.idx] as [number, number])
+                    .addTo(map);
                 paceMarkers.push(marker);
             }
         });
@@ -520,139 +652,221 @@
         discovery: `<i class="ra ra-gem map-pin-glyph" aria-hidden="true"></i>`,
         cafe: `<i class="ra ra-coffee-mug map-pin-glyph" aria-hidden="true"></i>`,
         restaurant: `<i class="ra ra-knife-fork map-pin-glyph" aria-hidden="true"></i>`,
-        deli: `<i class="ra ra-meat map-pin-glyph" aria-hidden="true"></i>`
+        deli: `<i class="ra ra-meat map-pin-glyph" aria-hidden="true"></i>`,
     };
 
     function setupLayers() {
         if (!map) return;
         const variants = routeVariants as Record<string, any>;
-        
+
         // User Accuracy Circle (Communicate uncertainty)
-        if (!map.getSource('user-accuracy')) {
-            map.addSource('user-accuracy', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-            map.addLayer({ id: 'user-accuracy-fill', type: 'fill', source: 'user-accuracy', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.1 } });
-            map.addLayer({ id: 'user-accuracy-outline', type: 'line', source: 'user-accuracy', paint: { 'line-color': '#3b82f6', 'line-width': 1, 'line-dasharray': [2, 2] } });
+        if (!map.getSource("user-accuracy")) {
+            map.addSource("user-accuracy", {
+                type: "geojson",
+                data: { type: "FeatureCollection", features: [] },
+            });
+            map.addLayer({
+                id: "user-accuracy-fill",
+                type: "fill",
+                source: "user-accuracy",
+                paint: { "fill-color": "#3b82f6", "fill-opacity": 0.1 },
+            });
+            map.addLayer({
+                id: "user-accuracy-outline",
+                type: "line",
+                source: "user-accuracy",
+                paint: {
+                    "line-color": "#3b82f6",
+                    "line-width": 1,
+                    "line-dasharray": [2, 2],
+                },
+            });
         }
 
-        if (!map.getSource('selected-stage')) {
-            map.addSource('selected-stage', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+        if (!map.getSource("selected-stage")) {
+            map.addSource("selected-stage", {
+                type: "geojson",
+                data: { type: "FeatureCollection", features: [] },
+            });
             // Route Prominence: High-contrast glow
-            map.addLayer({ id: 'selected-stage-line', type: 'line', source: 'selected-stage', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#3b82f6', 'line-width': 12, 'line-opacity': 0.4 } });
-            map.addLayer({ id: 'selected-stage-line-core', type: 'line', source: 'selected-stage', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 2 } });
+            map.addLayer({
+                id: "selected-stage-line",
+                type: "line",
+                source: "selected-stage",
+                layout: { "line-join": "round", "line-cap": "round" },
+                paint: {
+                    "line-color": "#3b82f6",
+                    "line-width": 12,
+                    "line-opacity": 0.4,
+                },
+            });
+            map.addLayer({
+                id: "selected-stage-line-core",
+                type: "line",
+                source: "selected-stage",
+                layout: { "line-join": "round", "line-cap": "round" },
+                paint: { "line-color": "#ffffff", "line-width": 2 },
+            });
         }
-        if (!map.getSource('trail')) {
-            map.addSource('trail', { 
-                type: 'geojson', 
+        if (!map.getSource("trail")) {
+            map.addSource("trail", {
+                type: "geojson",
                 data: {
-                    type: 'Feature',
+                    type: "Feature",
                     properties: {},
                     geometry: {
-                        type: 'LineString',
-                        coordinates: variants[selectedRoute] || trailCoordinates
-                    }
-                }
+                        type: "LineString",
+                        coordinates:
+                            variants[selectedRoute] || trailCoordinates,
+                    },
+                },
             });
             map.addLayer({
-                id: 'hiker-glow-outer',
-                type: 'line',
-                source: 'trail',
-                layout: { 'line-join': 'round', 'line-cap': 'round', visibility: 'none' },
+                id: "hiker-glow-outer",
+                type: "line",
+                source: "trail",
+                layout: {
+                    "line-join": "round",
+                    "line-cap": "round",
+                    visibility: "none",
+                },
                 paint: {
-                    'line-color': '#38bdf8',
-                    'line-width': 8,
-                    'line-opacity': 0,
-                    'line-blur': 1.2
-                }
+                    "line-color": "#38bdf8",
+                    "line-width": 8,
+                    "line-opacity": 0,
+                    "line-blur": 1.2,
+                },
             });
             map.addLayer({
-                id: 'hiker-glow-core',
-                type: 'line',
-                source: 'trail',
-                layout: { 'line-join': 'round', 'line-cap': 'round', visibility: 'none' },
+                id: "hiker-glow-core",
+                type: "line",
+                source: "trail",
+                layout: {
+                    "line-join": "round",
+                    "line-cap": "round",
+                    visibility: "none",
+                },
                 paint: {
-                    'line-color': '#facc15',
-                    'line-width': 3,
-                    'line-opacity': 0
-                }
+                    "line-color": "#facc15",
+                    "line-width": 3,
+                    "line-opacity": 0,
+                },
             });
             // Path Hierarchy: Differentiation via texture (Dashed = Footpath)
             // Dynamic Contrast: Use white for Satellite mode, slate for others
-            const isSat = mapStyle === 'satellite';
-            map.addLayer({ 
-                id: 'trail-line', 
-                type: 'line', 
-                source: 'trail', 
-                layout: { 'line-join': 'round', 'line-cap': 'round' }, 
-                paint: { 
-                    'line-color': isSat ? '#ffffff' : '#1e293b', 
-                    'line-width': isSat ? 5 : 4, 
-                    'line-opacity': isSat ? 0.8 : 0.6, 
-                    'line-dasharray': [2, 1] 
-                } 
+            const isSat = mapStyle === "satellite";
+            map.addLayer({
+                id: "trail-line",
+                type: "line",
+                source: "trail",
+                layout: { "line-join": "round", "line-cap": "round" },
+                paint: {
+                    "line-color": isSat ? "#ffffff" : "#1e293b",
+                    "line-width": isSat ? 5 : 4,
+                    "line-opacity": isSat ? 0.8 : 0.6,
+                    "line-dasharray": [2, 1],
+                },
             });
         }
-        if (!map.getSource('corridor')) {
-            map.addSource('corridor', { type: 'geojson', data: corridor });
-            map.addLayer({ id: 'corridor-fill', type: 'fill', source: 'corridor', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.02 } });
+        if (!map.getSource("corridor")) {
+            map.addSource("corridor", { type: "geojson", data: corridor });
+            map.addLayer({
+                id: "corridor-fill",
+                type: "fill",
+                source: "corridor",
+                paint: { "fill-color": "#3b82f6", "fill-opacity": 0.02 },
+            });
         }
     }
 
     function locateMe() {
         if (watchId !== null) return;
-        watchId = navigator.geolocation.watchPosition(pos => {
-            if (!map) return;
-            const { longitude, latitude, accuracy, heading, speed } = pos.coords;
-            const rawCoord: [number, number] = [longitude, latitude];
-            const baseMetrics = navigationService.updatePosition(rawCoord);
-            const gpsHeading =
-                typeof heading === 'number' && Number.isFinite(heading) && heading >= 0
-                    ? heading
-                    : null;
-            const gpsSpeedMph =
-                typeof speed === 'number' && Number.isFinite(speed) && speed >= 0
-                    ? speed * 2.2369362920544
-                    : null;
-            const metrics: NavigationMetrics = { ...baseMetrics, gpsHeading, gpsSpeedMph };
-            const [snappedLng, snappedLat] = metrics.snappedCoord;
-            userLocation = { lng: snappedLng, lat: snappedLat, accuracy };
-            driftMeters = metrics.driftMeters;
-            onNavigationUpdate?.(metrics);
-            
-            // Update Accuracy Circle (Communicate uncertainty)
-            const circle = turf.circle([longitude, latitude], accuracy / 1000, { units: 'kilometers' });
-            const source = map.getSource('user-accuracy') as maplibregl.GeoJSONSource;
-            if (source) source.setData(circle);
+        watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                if (!map) return;
+                const { longitude, latitude, accuracy, heading, speed } =
+                    pos.coords;
+                const rawCoord: [number, number] = [longitude, latitude];
+                const baseMetrics = navigationService.updatePosition(rawCoord);
+                const gpsHeading =
+                    typeof heading === "number" &&
+                    Number.isFinite(heading) &&
+                    heading >= 0
+                        ? heading
+                        : null;
+                const gpsSpeedMph =
+                    typeof speed === "number" &&
+                    Number.isFinite(speed) &&
+                    speed >= 0
+                        ? speed * 2.2369362920544
+                        : null;
+                const metrics: NavigationMetrics = {
+                    ...baseMetrics,
+                    gpsHeading,
+                    gpsSpeedMph,
+                };
+                const [snappedLng, snappedLat] = metrics.snappedCoord;
+                userLocation = { lng: snappedLng, lat: snappedLat, accuracy };
+                driftMeters = metrics.driftMeters;
+                onNavigationUpdate?.(metrics);
 
-            if (!userMarker) {
-                const el = document.createElement('div');
-                el.className = 'w-6 h-6 bg-blue-600 rounded-full border-2 border-white shadow-2xl animate-pulse flex items-center justify-center transition-colors';
-                el.innerHTML = `<div class="w-2 h-2 bg-white rounded-full"></div>`;
-                userMarker = new maplibregl.Marker({ element: el }).setLngLat([snappedLng, snappedLat]).addTo(map);
-            } else {
-                userMarker.setLngLat([snappedLng, snappedLat]);
-                if (userMarker.getElement()) {
-                    userMarker.getElement().classList.toggle('bg-rose-600', metrics.driftMeters > 25);
-                    userMarker.getElement().classList.toggle('bg-blue-600', metrics.driftMeters <= 25);
+                // Update Accuracy Circle (Communicate uncertainty)
+                const circle = turf.circle(
+                    [longitude, latitude],
+                    accuracy / 1000,
+                    { units: "kilometers" },
+                );
+                const source = map.getSource(
+                    "user-accuracy",
+                ) as maplibregl.GeoJSONSource;
+                if (source) source.setData(circle);
+
+                if (!userMarker) {
+                    const el = document.createElement("div");
+                    el.className =
+                        "w-6 h-6 bg-blue-600 rounded-full border-2 border-white shadow-2xl animate-pulse flex items-center justify-center transition-colors";
+                    el.innerHTML = `<div class="w-2 h-2 bg-white rounded-full"></div>`;
+                    userMarker = new maplibregl.Marker({ element: el })
+                        .setLngLat([snappedLng, snappedLat])
+                        .addTo(map);
+                } else {
+                    userMarker.setLngLat([snappedLng, snappedLat]);
+                    if (userMarker.getElement()) {
+                        userMarker
+                            .getElement()
+                            .classList.toggle(
+                                "bg-rose-600",
+                                metrics.driftMeters > 25,
+                            );
+                        userMarker
+                            .getElement()
+                            .classList.toggle(
+                                "bg-blue-600",
+                                metrics.driftMeters <= 25,
+                            );
+                    }
                 }
-            }
 
-            renderNearbyFloatingPOIs(metrics.snappedCoord);
+                renderNearbyFloatingPOIs(metrics.snappedCoord);
 
-            const now = Date.now();
-            const flyInterval = lowPowerMode ? 2400 : 900;
-            if (now - lastFlyTo >= flyInterval) {
-                lastFlyTo = now;
-                map.easeTo({
-                    center: [snappedLng, snappedLat],
-                    zoom: 15,
-                    duration: lowPowerMode ? 1400 : 900
-                });
-            }
-        }, err => console.error(err), { enableHighAccuracy: true });
+                const now = Date.now();
+                const flyInterval = lowPowerMode ? 2400 : 900;
+                if (now - lastFlyTo >= flyInterval) {
+                    lastFlyTo = now;
+                    map.easeTo({
+                        center: [snappedLng, snappedLat],
+                        zoom: 15,
+                        duration: lowPowerMode ? 1400 : 900,
+                    });
+                }
+            },
+            (err) => console.error(err),
+            { enableHighAccuracy: true },
+        );
     }
 
     onMount(() => {
-        corridor = getCorridor(1.1); 
+        corridor = getCorridor(1.1);
         buildWikiWindowCorridor();
         map = new maplibregl.Map({
             container: mapContainer,
@@ -662,58 +876,84 @@
             zoom: 8,
             maxZoom: 18,
             minZoom: 6,
-            attributionControl: false
+            attributionControl: false,
         });
 
         if (map) {
-            map.on('zoom', () => { zoomLevel = map?.getZoom() || 12; });
+            map.on("zoom", () => {
+                zoomLevel = map?.getZoom() || 12;
+            });
 
-            map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
-            map.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
+            map.addControl(
+                new maplibregl.NavigationControl({ showCompass: true }),
+                "bottom-right",
+            );
+            map.addControl(
+                new maplibregl.ScaleControl({ unit: "imperial" }),
+                "bottom-left",
+            );
 
-            map.on('mousemove', (e) => { mouseCoords = { lng: e.lngLat.lng, lat: e.lngLat.lat }; });
+            map.on("mousemove", (e) => {
+                mouseCoords = { lng: e.lngLat.lng, lat: e.lngLat.lat };
+            });
 
-            map.on('idle', () => {
+            map.on("idle", () => {
                 // Background Warming: Prefetch other styles into browser cache
-                const otherStyles = Object.keys(styles).filter(s => s !== mapStyle);
-                otherStyles.forEach(s => {
+                const otherStyles = Object.keys(styles).filter(
+                    (s) => s !== mapStyle,
+                );
+                otherStyles.forEach((s) => {
                     const url = styles[s];
-                    if (typeof url === 'string') {
-                        fetch(url, { priority: 'low' }).catch(() => {});
+                    if (typeof url === "string") {
+                        fetch(url, { priority: "low" }).catch(() => {});
                     }
                 });
             });
 
-            map.on('load', () => {
+            map.on("error", (e) => {
+                console.error("MapLibre error:", e);
+                // Fire ready anyway to clear splash
+                onMapReady?.();
+            });
+
+            map.on("load", () => {
                 setupLayers();
                 onMapReady?.();
-                
+
                 const onceBrewed: [number, number] = [-2.3958, 55.0036];
                 const bounds = new maplibregl.LngLatBounds();
-                trailCoordinates.forEach(c => bounds.extend(c as [number, number]));
+                trailCoordinates.forEach((c) =>
+                    bounds.extend(c as [number, number]),
+                );
 
                 // Flight to Once Brewed as the strategic center of the full route
                 map?.flyTo({
                     center: onceBrewed,
                     zoom: isMobile ? 9.0 : 9.8,
-                    padding: isMobile ? { top: 20, bottom: 20, left: 20, right: 20 } : { top: 50, bottom: 50, left: 450, right: 50 },
+                    padding: isMobile
+                        ? { top: 20, bottom: 20, left: 20, right: 20 }
+                        : { top: 50, bottom: 50, left: 450, right: 50 },
                     duration: 2500,
                     essential: true,
                     curve: 1.2,
-                    speed: 0.5
+                    speed: 0.5,
                 });
 
                 // Consolidate Official Sites by Coordinates
                 const registry = new Map<string, any>();
-                
+
                 const addSite = (site: any, type: string, priority: number) => {
                     const key = `${site.coords[0].toFixed(5)},${site.coords[1].toFixed(5)}`;
                     if (registry.has(key)) {
                         const existing = registry.get(key);
                         existing.types.push(type);
-                        existing.priority = Math.min(existing.priority, priority); // Keep highest priority
+                        existing.priority = Math.min(
+                            existing.priority,
+                            priority,
+                        ); // Keep highest priority
                         existing.allData.push({ ...site, type });
-                        if (type === 'heritage' || type === 'hospitality') existing.title = site.name;
+                        if (type === "heritage" || type === "hospitality")
+                            existing.title = site.name;
                     } else {
                         registry.set(key, {
                             title: site.name || site.title,
@@ -723,78 +963,102 @@
                             allData: [{ ...site, type }],
                             pageid: site.pageid,
                             lat: site.coords[1],
-                            lon: site.coords[0]
+                            lon: site.coords[0],
                         });
                     }
                 };
 
-                overnightStops.forEach(s => addSite(s, 'hub', 1));
-                englishHeritageSites.forEach(s => addSite(s, 'heritage', 2));
-                hospitalitySites.forEach(s => addSite(s, 'hospitality', 3));
+                overnightStops.forEach((s) => addSite(s, "hub", 1));
+                englishHeritageSites.forEach((s) => addSite(s, "heritage", 2));
+                hospitalitySites.forEach((s) => addSite(s, "hospitality", 3));
                 registryPOIs = Array.from(registry.values());
 
-                                registry.forEach((poi) => {
-                                    const el = document.createElement('div');
-                                    const isMulti = poi.types.length > 1;
-                                    
-                                    let bgColor = 'bg-blue-600';
-                                    let icon = icons.bed;
-                                    
-                                    if (poi.types.includes('heritage')) {
-                                        bgColor = 'bg-slate-800';
-                                        icon = icons.heritage;
-                                    } else if (poi.types.includes('hospitality')) {
-                                        const hSite = poi.allData.find((d: any) => d.type === 'hospitality');
-                                        if (hSite?.category === 'brewery') {
-                                            bgColor = 'bg-amber-600';
-                                            icon = icons.brewery;
-                                        } else if (hSite?.category === 'cafe') {
-                                            bgColor = 'bg-emerald-600';
-                                            icon = icons.cafe;
-                                        } else if (hSite?.category === 'restaurant') {
-                                            bgColor = 'bg-rose-700';
-                                            icon = icons.restaurant;
-                                        } else if (hSite?.category === 'deli') {
-                                            bgColor = 'bg-lime-700';
-                                            icon = icons.deli;
-                                        } else if (hSite?.category === 'hotel') {
-                                            bgColor = 'bg-blue-600';
-                                            icon = icons.bed;
-                                        } else {
-                                            bgColor = 'bg-orange-700';
-                                            icon = icons.pub;
-                                        }
-                                    }
-                
-                                    el.className = `poi-marker z-30`;
-                                    el.dataset.name = poi.title;
-                                    if (poi.pageid) el.dataset.pageid = poi.pageid.toString();
-                                    
-                                    el.innerHTML = `
+                registry.forEach((poi) => {
+                    const el = document.createElement("div");
+                    const isMulti = poi.types.length > 1;
+
+                    let bgColor = "bg-blue-600";
+                    let icon = icons.bed;
+
+                    if (poi.types.includes("heritage")) {
+                        bgColor = "bg-slate-800";
+                        icon = icons.heritage;
+                    } else if (poi.types.includes("hospitality")) {
+                        const hSite = poi.allData.find(
+                            (d: any) => d.type === "hospitality",
+                        );
+                        if (hSite?.category === "brewery") {
+                            bgColor = "bg-amber-600";
+                            icon = icons.brewery;
+                        } else if (hSite?.category === "cafe") {
+                            bgColor = "bg-emerald-600";
+                            icon = icons.cafe;
+                        } else if (hSite?.category === "restaurant") {
+                            bgColor = "bg-rose-700";
+                            icon = icons.restaurant;
+                        } else if (hSite?.category === "deli") {
+                            bgColor = "bg-lime-700";
+                            icon = icons.deli;
+                        } else if (hSite?.category === "hotel") {
+                            bgColor = "bg-blue-600";
+                            icon = icons.bed;
+                        } else {
+                            bgColor = "bg-orange-700";
+                            icon = icons.pub;
+                        }
+                    }
+
+                    el.className = `poi-marker z-30`;
+                    el.dataset.name = poi.title;
+                    if (poi.pageid) el.dataset.pageid = poi.pageid.toString();
+
+                    el.innerHTML = `
                                         <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95">
-                                            <div class="marker-icon ${isMobile ? 'w-9 h-9 text-[14px]' : 'w-10 h-10 text-[15px]'} ${bgColor} rounded-sm border-2 ${isMulti ? 'border-white ring-2 ring-blue-400/50' : 'border-white'} shadow-xl flex items-center justify-center text-white">
+                                            <div class="marker-icon ${isMobile ? "w-9 h-9 text-[14px]" : "w-10 h-10 text-[15px]"} ${bgColor} rounded-sm border-2 ${isMulti ? "border-white ring-2 ring-blue-400/50" : "border-white"} shadow-xl flex items-center justify-center text-white">
                                                 ${icon}
                                             </div>
                                             <div class="poi-label label-priority-${poi.priority} bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
-                                                <span class="${isMobile ? 'text-[11px]' : 'text-[9px]'} font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
+                                                <span class="${isMobile ? "text-[11px]" : "text-[9px]"} font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
                                             </div>
                                         </div>
                                     `;
-                                                        el.onclick = (e) => {
+                    el.onclick = (e) => {
                         e.stopPropagation();
                         const mergedPOI = {
                             ...poi,
-                            summary: poi.allData.map((d: any) => d.summary || d.intel || "").filter(Boolean).join("\n\n"),
-                            bourdainIntel: poi.allData.find((d: any) => d.bourdainIntel)?.bourdainIntel,
-                            fryeIntel: poi.allData.find((d: any) => d.fryeIntel)?.fryeIntel,
-                            rickStevesIntel: poi.allData.find((d: any) => d.rickStevesIntel)?.rickStevesIntel,
-                            photoIntel: poi.allData.find((d: any) => d.photoIntel)?.photoIntel,
-                            url: poi.allData.find((d: any) => d.url && d.url !== '#')?.url || (poi.pageid ? `https://en.wikipedia.org/?curid=${poi.pageid}` : '#')
+                            summary: poi.allData
+                                .map((d: any) => d.summary || d.intel || "")
+                                .filter(Boolean)
+                                .join("\n\n"),
+                            bourdainIntel: poi.allData.find(
+                                (d: any) => d.bourdainIntel,
+                            )?.bourdainIntel,
+                            fryeIntel: poi.allData.find((d: any) => d.fryeIntel)
+                                ?.fryeIntel,
+                            rickStevesIntel: poi.allData.find(
+                                (d: any) => d.rickStevesIntel,
+                            )?.rickStevesIntel,
+                            photoIntel: poi.allData.find(
+                                (d: any) => d.photoIntel,
+                            )?.photoIntel,
+                            url:
+                                poi.allData.find(
+                                    (d: any) => d.url && d.url !== "#",
+                                )?.url ||
+                                (poi.pageid
+                                    ? `https://en.wikipedia.org/?curid=${poi.pageid}`
+                                    : "#"),
                         };
                         if (onPoiSelect) onPoiSelect(mergedPOI);
-                        map?.flyTo({ center: poi.coords as [number, number], zoom: 14 });
+                        map?.flyTo({
+                            center: poi.coords as [number, number],
+                            zoom: 14,
+                        });
                     };
-                    if (map) new maplibregl.Marker({ element: el }).setLngLat(poi.coords as [number, number]).addTo(map);
+                    if (map)
+                        new maplibregl.Marker({ element: el })
+                            .setLngLat(poi.coords as [number, number])
+                            .addTo(map);
                 });
 
                 if (initialPOIs.length > 0) renderPOIs(initialPOIs);
@@ -802,7 +1066,7 @@
                 updatePOIs();
             });
 
-            map.on('moveend', updatePOIs);
+            map.on("moveend", updatePOIs);
         }
 
         return () => {
@@ -829,16 +1093,16 @@
             renderedPageIds,
             corridor: activeCorridor,
             fallbackLine: wikiWindowLine,
-            fallbackMaxDistanceKm: 2.5
+            fallbackMaxDistanceKm: 2.5,
         });
 
         for (const poi of validPOIs) {
-            const el = document.createElement('div');
-            const size = Math.min(18, Math.max(10, 10 + (poi.rank / 10)));
-            
-            el.className = 'poi-marker z-10';
+            const el = document.createElement("div");
+            const size = Math.min(18, Math.max(10, 10 + poi.rank / 10));
+
+            el.className = "poi-marker z-10";
             el.dataset.pageid = poi.pageid.toString();
-            
+
             el.innerHTML = `
                 <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-125 hover:z-40 active:scale-90 overflow-visible">
                         <div class="marker-icon bg-white rounded-sm border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 0.95 : size}px; height: ${isMobile ? size * 0.95 : size}px;">
@@ -847,32 +1111,38 @@
                         </div>
                     </div>
                     <div class="poi-label label-priority-4 bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
-                        <span class="${isMobile ? 'text-[11px]' : 'text-[9px]'} font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
+                        <span class="${isMobile ? "text-[11px]" : "text-[9px]"} font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
                     </div>
                 </div>
             `;
 
-            el.addEventListener('click', (e) => {
+            el.addEventListener("click", (e) => {
                 e.stopPropagation();
                 if (onPoiSelect) onPoiSelect({ ...poi });
                 map?.flyTo({ center: [poi.lon, poi.lat], zoom: 14 });
             });
             if (map) {
-                new maplibregl.Marker({ element: el }).setLngLat([poi.lon, poi.lat]).addTo(map);
+                new maplibregl.Marker({ element: el })
+                    .setLngLat([poi.lon, poi.lat])
+                    .addTo(map);
                 renderedPageIds.add(poi.pageid);
             }
         }
     }
 
     async function preloadWikiPOIsForHikerSection() {
-        const seeds = overnightStops.filter((hub) => wikiWindowHubs.includes(hub.name));
+        const seeds = overnightStops.filter((hub) =>
+            wikiWindowHubs.includes(hub.name),
+        );
         const batches = await Promise.allSettled(
-            seeds.map((hub) => fetchWikiPOIs(hub.coords[1], hub.coords[0], 8000))
+            seeds.map((hub) =>
+                fetchWikiPOIs(hub.coords[1], hub.coords[0], 8000),
+            ),
         );
 
         const deduped = new Map<number, WikiPOI>();
         batches.forEach((batch) => {
-            if (batch.status !== 'fulfilled') return;
+            if (batch.status !== "fulfilled") return;
             batch.value.forEach((poi) => {
                 if (!deduped.has(poi.pageid)) deduped.set(poi.pageid, poi);
             });
@@ -897,11 +1167,13 @@
         if (!map) return;
         const coords = poi.coords || [poi.lon, poi.lat];
         if (coords && coords[0] && coords[1]) {
-            map.flyTo({ 
-                center: coords as [number, number], 
-                zoom: 15, 
-                padding: isMobile ? 40 : { top: 50, bottom: 50, left: 450, right: 50 },
-                duration: 2000 
+            map.flyTo({
+                center: coords as [number, number],
+                zoom: 15,
+                padding: isMobile
+                    ? 40
+                    : { top: 50, bottom: 50, left: 450, right: 50 },
+                duration: 2000,
             });
         }
     }
@@ -911,31 +1183,45 @@
     }
 </script>
 
-<div class="w-full h-full bg-slate-50 relative zoom-state-z{Math.floor(zoomLevel)}" bind:this={mapContainer}>
-    <div class="ds-panel absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none tabular-nums">
+<div
+    class="w-full h-full bg-slate-50 relative zoom-state-z{Math.floor(
+        zoomLevel,
+    )}"
+    bind:this={mapContainer}
+>
+    <div
+        class="ds-panel absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none tabular-nums"
+    >
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
     </div>
 
     {#if hikerActive && driftMeters > 25}
-        <div class="absolute top-4 left-1/2 -translate-x-1/2 z-40 rounded-full border border-rose-300/60 bg-rose-500/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white shadow-xl">
+        <div
+            class="absolute top-4 left-1/2 -translate-x-1/2 z-40 rounded-full border border-rose-300/60 bg-rose-500/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white shadow-xl"
+        >
             ↖ Off Trail {Math.round(driftMeters)}m
         </div>
     {/if}
 
     {#if freezeMap}
-        <div class="absolute inset-0 z-30 bg-black/10 backdrop-blur-[1px] pointer-events-auto"></div>
+        <div
+            class="absolute inset-0 z-30 bg-black/10 backdrop-blur-[1px] pointer-events-auto"
+        ></div>
     {/if}
-    
 </div>
 
 <style>
-    :global(.maplibregl-map) { height: 100%; width: 100%; font-family: inherit; }
-    :global(.poi-marker) { 
-        pointer-events: auto !important; 
+    :global(.maplibregl-map) {
+        height: 100%;
+        width: 100%;
+        font-family: inherit;
+    }
+    :global(.poi-marker) {
+        pointer-events: auto !important;
         outline: none !important;
         -webkit-tap-highlight-color: transparent;
     }
-    
+
     /* Base Label State: Hidden by default */
     :global(.poi-label) {
         opacity: 0;
@@ -966,7 +1252,9 @@
     :global(.zoom-state-z15 .label-priority-1),
     :global(.zoom-state-z16 .label-priority-1),
     :global(.zoom-state-z17 .label-priority-1),
-    :global(.zoom-state-z18 .label-priority-1) { opacity: 1; }
+    :global(.zoom-state-z18 .label-priority-1) {
+        opacity: 1;
+    }
 
     /* Density Logic: Level 2 (Heritage) - Show at Z13+ */
     :global(.zoom-state-z13 .label-priority-2),
@@ -974,22 +1262,30 @@
     :global(.zoom-state-z15 .label-priority-2),
     :global(.zoom-state-z16 .label-priority-2),
     :global(.zoom-state-z17 .label-priority-2),
-    :global(.zoom-state-z18 .label-priority-2) { opacity: 1; }
+    :global(.zoom-state-z18 .label-priority-2) {
+        opacity: 1;
+    }
 
     /* Density Logic: Level 3 (Pubs) - Show at Z15+ */
     :global(.zoom-state-z15 .label-priority-3),
     :global(.zoom-state-z16 .label-priority-3),
     :global(.zoom-state-z17 .label-priority-3),
-    :global(.zoom-state-z18 .label-priority-3) { opacity: 1; }
+    :global(.zoom-state-z18 .label-priority-3) {
+        opacity: 1;
+    }
 
     /* Density Logic: Level 4 (Discovery) - Show at Z16+ */
     :global(.zoom-state-z16 .label-priority-4),
     :global(.zoom-state-z17 .label-priority-4),
-    :global(.zoom-state-z18 .label-priority-4) { opacity: 1; }
+    :global(.zoom-state-z18 .label-priority-4) {
+        opacity: 1;
+    }
 
     :global(.poi-marker.active-marker .marker-icon) {
         border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 15px rgba(59, 130, 246, 0.2);
+        box-shadow:
+            0 0 0 3px rgba(59, 130, 246, 0.4),
+            0 0 15px rgba(59, 130, 246, 0.2);
         transform: scale(1.1);
     }
 
@@ -1014,7 +1310,9 @@
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        box-shadow: 0 10px 18px rgba(2, 6, 23, 0.35), 0 0 12px rgba(250, 204, 21, 0.22);
+        box-shadow:
+            0 10px 18px rgba(2, 6, 23, 0.35),
+            0 0 12px rgba(250, 204, 21, 0.22);
         animation: poi-float 2.8s ease-in-out infinite;
     }
 

@@ -10,10 +10,10 @@
   --color-surface: oklch(0.970 0.014 230);
   --color-overlay: oklch(0.945 0.016 230);
   --color-inset: oklch(0.970 0.014 230);
-  
+
   --radius-tool-sm: 4px;
   --radius-tool-md: 8px;
-  
+
   --shadow-glow: 0 0 0 1px oklch(0.880 0.110 255 / 0.65), 0 4px 12px oklch(0.200 0.030 250 / 0.10);
   --shadow-selected: 0 0 0 1px oklch(0.640 0.220 255 / 0.75), 0 12px 32px oklch(0.200 0.030 250 / 0.12);
 }
@@ -180,7 +180,7 @@
   font-family: var(--font-ui);
   background-color: var(--screen-bg);
   color: var(--text-primary);
-  
+
   /* WebKit Optimization: Crisp Text Rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -190,19 +190,20 @@
 body {
   margin: 0;
   overflow: hidden;
-  font-size: 13px; /* High-density base */
+  font-size: 13px;
+  /* High-density base */
   background: linear-gradient(180deg, var(--bg), var(--n50));
   color: var(--text-primary);
-  
+
   /* iOS Safe Areas Integration */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
-  
+
   /* Disable generic tap highlight for tool-like feel */
   -webkit-tap-highlight-color: transparent;
-  
+
   /* Prevent overscroll bounce on mobile */
   position: fixed;
   width: 100%;
@@ -224,9 +225,17 @@ body {
 
 /* Eliminate Hover on Mobile */
 @media (hover: none) {
-  .hover\:scale-110:hover { transform: none; }
-  .hover\:bg-white\/10:hover { background-color: transparent; }
-  .hover\:text-white:hover { color: inherit; }
+  .hover\:scale-110:hover {
+    transform: none;
+  }
+
+  .hover\:bg-white\/10:hover {
+    background-color: transparent;
+  }
+
+  .hover\:text-white:hover {
+    color: inherit;
+  }
 }
 
 /* WebKit Optimization: Smooth Scrolling */
@@ -259,7 +268,10 @@ body {
 }
 
 /* Tooling Typography */
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
@@ -338,12 +350,12 @@ button {
   border: var(--stroke-hairline) solid var(--stroke-default);
   border-radius: var(--radius-4);
   background: var(--surface);
-  padding: 2px;
-  gap: 2px;
+  padding: 0;
+  gap: 0;
 }
 
 .ds-segmented-btn {
-  border-radius: var(--radius-3);
+  border-radius: 0;
   color: var(--text-secondary);
   transition:
     background-color var(--motion-duration-ui) var(--motion-ease-standard),
@@ -431,10 +443,9 @@ button {
 .plan-light-strip__cell {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 0.18rem;
+  justify-content: flex-start;
+  gap: 0.05rem;
   min-width: 0;
-  min-height: 2.6rem;
   padding: 0.3rem 0.42rem;
   border: var(--stroke-hairline) solid var(--stroke-subtle);
   border-radius: var(--radius-2);
@@ -574,6 +585,7 @@ button {
   background: color-mix(in oklab, var(--surface-raised) 88%, var(--action-primary-tint) 12%);
   box-shadow: var(--shadow-md);
   overflow: hidden;
+  padding: 0;
 }
 
 .ds-control-btn {
@@ -624,6 +636,7 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .ds-segmented-btn,
   .ds-chip,
   .ds-input,
