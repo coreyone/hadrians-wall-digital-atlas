@@ -1,105 +1,284 @@
-# Hadrian's Wall Digital Atlas
+# Hadrian Atlas v4.2
 
-A high-density tactical instrument and context-aware intelligence map for the Hadrian's Wall Path (2026 Trek). Designed as a Progressive Web App (PWA) for offline reliability and mobile-first utility.
+Hadrian Atlas is a mobile-first tactical PWA for the Hadrian's Wall Path. It combines route navigation, stage planning, historical/cultural POI discovery, and a hiker-focused HUD with anti-fragile heading behavior.
 
-## 📱 Features
+## What It Does
 
-### Tactical Navigation & Planning
--   **Interactive Map**: Vector-based mapping (MapLibre GL JS) with Topographic, Satellite, and Street views.
--   **Smart Corridor Logic**: Filters Points of Interest (POIs) to a 1.2km (15-minute walk) corridor along the trail, reducing noise.
--   **Route Variants**: Toggle between high-resolution OSM footpaths and simplified routing.
--   **Real-time Positioning**: GPS tracking with accuracy visualization and heading-up mode.
+- Tracks the route with map snapping and off-trail drift detection.
+- Shows plan stages (Day 0 to Day 7) with daily logistics, distance, elevation, and milestones.
+- Surfaces curated POIs (Heritage, Hospitality) plus Wikipedia discovery pins.
+- Runs a dedicated Hiker Mode on mobile with heading-aware map orientation, pace-to-deadline guidance, and progress HUD.
+- Works offline with service worker caching of app shell, static assets, and map tiles.
 
-### Itinerary Management
--   **7-Day Stage Breakdown**: detailed logistics for each day including distance, elevation gain, and estimated time.
--   **Supply Status**: Indicators for critical resupply points (Food/Water).
--   **Milestones**: "Pace" markers and key landmarks with estimated arrival times based on a 2.8mph pace.
--   **Elevation Profiles**: Integrated gain/loss metrics for every stage.
+## Runtime Modes
 
-### Intelligence Registry
--   **Curated Intel**: Consolidated wisdom from Anthony Bourdain, Rick Steves, and historical context from Frye.
--   **Categorized POIs**:
-    -   🏛️ **Heritage**: English Heritage sites and Roman forts.
-    -   🍺 **Hospitality**: Pubs, breweries, and cafes.
-    -   🔭 **Discovery**: Hidden gems and ranked Wikipedia entities.
--   **Offline Wikipedia**: Fetches and caches summaries for historical sites.
+- `Plan`: stage-by-stage itinerary and logistics.
+- `Explore`: searchable registry + category filters.
+- `Map`: full MapLibre view with style/route toggles and live location.
+- `Hiker Mode` (mobile-only): activated by triple-tapping the Roman coin.
 
-### Mobile-First & PWA
--   **App-like UX**: Fixed bottom navigation bar, sticky headers, and touch-optimized tap targets.
--   **Offline Capable**: Service Worker caching for map tiles and essential assets.
--   **Installable**: Full PWA manifest support for "Add to Home Screen" on iOS and Android.
+```mermaid
+stateDiagram-v2
+  [*] --> Plan
+  Plan --> Explore: "Tab switch"
+  Explore --> Plan: "Tab switch"
+  Plan --> POIDetail: "Select POI"
+  Explore --> POIDetail: "Select POI"
+  POIDetail --> Explore: "Back to registry"
 
-## 🛠️ Tech Stack
+  Plan --> HikerMode: "Triple tap coin (mobile)"
+  Explore --> HikerMode: "Triple tap coin (mobile)"
+  HikerMode --> Plan: "Triple tap coin / swipe down"
 
--   **Framework**: SvelteKit (Static Adapter)
--   **Styling**: Tailwind CSS v4 + Custom "Tactical" Design System
--   **Map Engine**: MapLibre GL JS
--   **Data Sources**:
-    -   OpenStreetMap (Vector Tiles via OpenFreeMap)
-    -   Esri World Imagery
-    -   MediaWiki API (Wikipedia)
-    -   Turf.js (Geospatial Analysis)
--   **Build Tool**: Vite
+  state HikerMode {
+    [*] --> Active
+    Active --> SimplifiedHUD: "Toggle HUD"
+    SimplifiedHUD --> Active: "Toggle HUD"
+  }
+```
 
-## 🚀 Getting Started
+## High-Level Architecture
 
-1.  **Install dependencies**:
-    ```bash
-    npm install
-    # or
-    bun install
-    ```
+```mermaid
+flowchart TD
+  A["SvelteKit Route: +page.svelte"] --> B["Map.svelte"]
+  A --> C["HikerHUD.svelte"]
+  A --> D["hikerMode store"]
+  A --> E["compassService"]
+  A --> F["navigationService"]
+  A --> G["gamificationService"]
+  A --> H["audioService"]
 
-2.  **Start the development server**:
-    ```bash
-    npm run dev
-    # or
-    bun run dev
-    ```
+  B --> I["MapLibre GL"]
+  B --> J["Geolocation API"]
+  B --> K["wikipedia service"]
+  B --> L["wikiPins filter"]
+  B --> M["trail + itinerary data"]
 
-3.  **Build for production**:
-    ```bash
-    npm run build
-    ```
+  N["+page.ts load"] --> K
+  O["service-worker.ts"] --> P["CacheStorage"]
+  O --> I
 
-4.  **Preview production build**:
-    ```bash
-    npm run preview
-    ```
+  K --> Q["Wikipedia API"]
+  M --> A
+  M --> B
+```
 
-## 📱 Mobile Installation (iOS)
-1.  Open the app in Safari.
-2.  Tap the **Share** button.
-3.  Select **"Add to Home Screen"**.
-4.  Launch from the home screen for the full full-screen experience.
+## Dataflow: Position, Navigation, HUD
 
----
+```mermaid
+sequenceDiagram
+  participant GPS as "Geolocation.watchPosition"
+  participant Map as "Map.svelte"
+  participant Nav as "navigationService"
+  participant Page as "+page.svelte"
+  participant Store as "hikerMode"
+  participant HUD as "HikerHUD"
 
-## 📰 Internal Memo: Deployment of Digital Atlas v4.2
+  GPS->>Map: "raw lat/lon + accuracy + speed + heading"
+  Map->>Nav: "updatePosition(rawCoord)"
+  Nav-->>Map: "snappedCoord, drift, stage metrics, ETA"
+  Map-->>Page: "onNavigationUpdate(metrics)"
+  Page->>Store: "updateMetrics(...)"
+  Store-->>HUD: "reactive HUD values"
+  Page->>Map: "heading-up / north-up decisions"
+```
 
-**For Immediate Release: Personal Expedition Tooling**
+## Compass + Heading Strategy (Anti-Fragile)
 
-**A bespoke tactical instrument designed to eliminate uncertainty and maximize discovery for the 2026 Expedition.**
+The app does not trust one signal blindly. It fuses compass and GPS-course behavior:
 
-**Summary**
-Corey O'Neal today announced the final deployment of the **Hadrian's Wall Digital Atlas**, a custom-engineered Progressive Web App (PWA) designed exclusively for his upcoming 2026 trek. Unlike commercial alternatives, this tool prioritizes specific "corridor intelligence"—filtering out noise to focus solely on the 15-minute walking radius of the trail—ensuring high-value historical and logistical data is instantly accessible, even without a cell signal.
+1. `compassService` reads `deviceorientation` / `devicemotion`.
+2. Uses WebKit heading when available, with smoothing and variance checks.
+3. In Hiker Mode:
+   - Prefer GPS course heading when moving fast enough.
+   - Hold last reliable compass heading briefly during short instability.
+   - Latch fallback to North-Up if instability persists.
+   - Show non-blocking notice: `"Compass unstable; using North-Up for now."`
 
-**The Problem**
-Generic mapping tools (AllTrails, Google Maps) fail in the specific context of a long-distance historical trek. They require constant connectivity, lack integrated historical context (combining Frye’s history with Bourdain’s culinary intel), and drown the user in irrelevant data. The cognitive load of switching between a guidebook, a separate map app, and a trail PDF is too high for a solo walker facing fatigue and variable weather.
+```mermaid
+flowchart TD
+  A["Compass reading"] --> B{"Stable?"}
+  B -->|Yes| C["Use compass heading"]
+  B -->|No| D{"Moving >= GPS threshold?"}
+  D -->|Yes| E["Use GPS course heading"]
+  D -->|No| F{"Recent reliable heading exists?"}
+  F -->|Yes| G["Hold last reliable compass heading"]
+  F -->|No| H["North-Up fallback"]
+  H --> I["Show dismissible notice"]
+  C --> J["Update hikerMode heading"]
+  E --> J
+  G --> J
+  I --> J
+```
 
-**The Solution**
-The Digital Atlas solves this by pre-caching high-resolution topographic and satellite data for offline use. It integrates a curated "Intelligence Registry" directly onto the map, highlighting critical logistics (pubs, water) alongside deep historical context. The "Smart Corridor" logic acts as a digital blinder, showing only what is reachable, ensuring decisions are made quickly and confidently.
+## Plan System
 
-> "I didn't want a map; I wanted a tactical instrument. Something that tells me not just where I am, but where the nearest pint and Roman fort are, without needing a cell tower."
-> — **Corey O'Neal**, Lead Developer & Sole User.
+Plan data is defined in `src/lib/data/trail.ts` and rendered in the drawer Plan tab.
 
-### ❓ Internal FAQs
+- Stages include:
+  - Transfer/departure days (`skinny` cards)
+  - Walking days
+  - Distances, elevation, weather, fueling logistics, milestones
+- Current schedule is Day `0..7`:
+  - Day 0 starts April 12
+  - Day 7 is rail return (`Corbridge (Rail) -> Edinburgh (Rail)`) on April 19
 
-**Q: Why build a custom app instead of using AllTrails?**
-**A:** AllTrails is for hiking; this is for *experiencing*. Generic apps don't tell you which pub has the best cask ale or which pile of rocks was once a Mithraic temple. This app integrates my specific itinerary, "Bourdain-style" food intel, and historical data into one view.
+Plan summary includes:
 
-**Q: What happens when the signal dies in Northumberland?**
-**A:** The system is designed as **"Offline First."** Vector tiles, route geometry, and wiki summaries are cached on the device via a Service Worker. The app functions as a standalone GPS unit, independent of the cloud.
+- total miles and elevation gain
+- plan average speed (`planAvgSpeedMidMph`)
+- dynamic light window strip for UK dates (Apr 11-20)
 
-**Q: How does this help with "decision fatigue"?**
-**A:** By using "Corridor Logic." The app *only* shows points of interest within a 1.2km radius of the path. I don't need to know about a museum 5 miles away; I need to know what's reachable *now*.
+```mermaid
+flowchart LR
+  A["trail.ts itinerary"] --> B["+page.svelte Plan UI"]
+  A --> C["navigationService walking stages"]
+  C --> D["daily goal + remaining miles"]
+  D --> E["HUD pace to 5PM + ETA"]
+```
+
+## Explore + Pins
+
+There are two pin pipelines:
+
+1. Curated pins (overnights, heritage, hospitality)
+   - merged by coordinate in `Map.svelte`
+   - rendered with RPG Awesome category icons
+2. Discovery pins (Wikipedia)
+   - fetched via `wikipedia.ts`
+   - ranked and deduped
+   - filtered by corridor and fallback line distance using `wikiPins.ts`
+
+Wikipedia pins are constrained to the corridor window between Carlisle and Corbridge.
+
+```mermaid
+flowchart TD
+  A["overnightStops"] --> B["Curated Registry Merge"]
+  C["englishHeritageSites"] --> B
+  D["hospitalitySites"] --> B
+  B --> E["Curated map markers"]
+
+  F["wikipedia.ts fetchWikiPOIs"] --> G["Rank + cache + dedupe"]
+  G --> H["selectRenderableWikiPOIs"]
+  H --> I["Corridor + line-distance filter"]
+  I --> J["Discovery map markers"]
+```
+
+## Map Functionality
+
+- Engine: MapLibre GL.
+- Base styles:
+  - Topo (OpenFreeMap Liberty)
+  - Streets (OpenFreeMap Bright)
+  - Satellite (Esri imagery + OpenFreeMap place labels)
+- Route variants:
+  - `osm` full route geometry
+  - `simplified` decimated geometry
+- Layers include:
+  - main trail line
+  - selected stage highlight
+  - hiker glow overlay (when active)
+  - user accuracy circle
+  - user marker with drift color change
+
+```mermaid
+flowchart TB
+  A["Map style"] --> B["Base layers"]
+  C["Route variant"] --> D["trail source"]
+  D --> E["trail-line"]
+  F["Selected stage"] --> G["selected-stage-line + core"]
+  H["Hiker active"] --> I["hiker-glow-outer/core"]
+  J["GPS updates"] --> K["user marker + accuracy circle"]
+  L["POI registry"] --> M["curated/discovery markers"]
+```
+
+## Offline + PWA
+
+- Manifest: `static/manifest.webmanifest` (`display: standalone`, portrait orientation).
+- Service worker:
+  - pre-caches build/static assets and app shell
+  - network-first for app JS/CSS to avoid stale deployments
+  - cache-first fallback for map tiles and cached assets
+  - navigation fallback to cached shell offline
+
+```mermaid
+flowchart TD
+  A["Request"] --> B{"Navigation?"}
+  B -->|Yes| C["Network-first"]
+  C -->|fail| D["Serve cached shell"]
+
+  B -->|No| E{"App JS/CSS/Font?"}
+  E -->|Yes| F["Network-first, cache update"]
+  F -->|fail| G["Serve cached asset"]
+
+  E -->|No| H{"Map tile/build asset?"}
+  H -->|Yes| I["Cache-if-ok and return"]
+  H -->|No| J["Fetch normally with cache fallback"]
+```
+
+## Mobile UX Notes
+
+- App starts with a brief splash screen on mobile.
+- Bottom nav controls `Plan / Explore / Map / Registry`.
+- Drawer is swipe/tap closable on mobile.
+- Hiker Mode is mobile-only and auto-deactivates if viewport is no longer mobile.
+
+## Project Structure
+
+```text
+src/
+  routes/
+    +page.ts             # initial POI preload
+    +page.svelte         # orchestration, tabs, drawer, hiker mode
+  lib/
+    components/
+      Map.svelte         # map runtime, layers, geolocation, markers
+      HikerHUD.svelte    # hiker overlay HUD
+    data/
+      trail.ts           # itinerary, POIs, hubs, computed plan metrics
+      routes.ts          # route geometry variants
+    services/
+      compass.ts         # orientation/motion + calibration state
+      navigation.ts      # snapped metrics, ETA, daily goal pacing
+      wikipedia.ts       # geosearch + summary cache + ranking
+      gamification.ts    # integrity + badge unlocks
+      audio.ts           # step cadence audio
+    stores/
+      hikerMode.ts       # reactive hiker state store
+    utils/
+      wikiPins.ts        # renderable pin filtering logic
+      blobMorph.ts       # coin morph transition
+  service-worker.ts      # offline caching strategy
+```
+
+## Local Development
+
+```bash
+cd hadrians-wall-smart-map
+npm install
+npm run dev
+```
+
+## Quality Checks
+
+```bash
+npm run check
+npm run test
+```
+
+## Core External Dependencies
+
+- SvelteKit + Vite
+- Tailwind CSS v4
+- MapLibre GL
+- Turf.js
+- Wikipedia MediaWiki API
+- RPG Awesome + Pixel Icon Library
+- iA Writer fonts
+
+## Deployment Notes
+
+- Designed for standalone PWA install on iOS.
+- Requires secure context (HTTPS) for orientation/motion APIs in production.
+- Service worker is versioned and claims clients on activate.

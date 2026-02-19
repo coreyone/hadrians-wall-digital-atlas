@@ -92,7 +92,6 @@
     const COMPASS_FALLBACK_EXIT_MS = 1400;
     const COMPASS_HEADING_HOLD_MS = 8000;
     const COMPASS_NOTICE_DELAY_MS = 3200;
-    const MOBILE_SPLASH_SHOW_DELAY_MS = 120;
     const MOBILE_SPLASH_MIN_VISIBLE_MS = 320;
     const MOBILE_SPLASH_HARD_TIMEOUT_MS = 1700;
     const planAvgSpeedMidLabel = `${planAvgSpeedMidMph.toFixed(2)} MPH`;
@@ -228,28 +227,28 @@
 
         const mql = window.matchMedia('(max-width: 768px)');
         isMobile = mql.matches;
-        const handleMedia = (e: MediaQueryListEvent) => (isMobile = e.matches);
+        const handleMedia = (e: MediaQueryListEvent) => {
+            isMobile = e.matches;
+            if (!e.matches) {
+                showMobileSplash = false;
+            }
+        };
         mql.addEventListener('change', handleMedia);
         const ukTickInterval = setInterval(() => {
             ukNowTick = Date.now();
         }, 60000);
 
-        let splashShowTimer: ReturnType<typeof setTimeout> | null = null;
         let splashMinTimer: ReturnType<typeof setTimeout> | null = null;
         let splashHardTimer: ReturnType<typeof setTimeout> | null = null;
-        if (isMobile && !mapReady) {
-            showMobileSplash = false;
+        if (isMobile) {
+            showMobileSplash = true;
             splashMinElapsed = false;
-            splashShowTimer = setTimeout(() => {
-                if (mapReady) return;
-                showMobileSplash = true;
-                splashMinTimer = setTimeout(() => {
-                    splashMinElapsed = true;
-                    if (mapReady) {
-                        showMobileSplash = false;
-                    }
-                }, MOBILE_SPLASH_MIN_VISIBLE_MS);
-            }, MOBILE_SPLASH_SHOW_DELAY_MS);
+            splashMinTimer = setTimeout(() => {
+                splashMinElapsed = true;
+                if (mapReady) {
+                    showMobileSplash = false;
+                }
+            }, MOBILE_SPLASH_MIN_VISIBLE_MS);
             splashHardTimer = setTimeout(() => {
                 splashMinElapsed = true;
                 if (showMobileSplash) {
@@ -292,7 +291,6 @@
             window.removeEventListener('offline', handleOffline);
             mql.removeEventListener('change', handleMedia);
             clearInterval(ukTickInterval);
-            if (splashShowTimer) clearTimeout(splashShowTimer);
             if (splashMinTimer) clearTimeout(splashMinTimer);
             if (splashHardTimer) clearTimeout(splashHardTimer);
             if (batteryRef && batteryHandler) {
