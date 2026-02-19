@@ -248,7 +248,7 @@
     }
 
     async function runCoinMorph(direction: "expand" | "collapse") {
-        if (!isMobile || !mobileCoinButton || typeof window === "undefined")
+        if (!isPortable || !mobileCoinButton || typeof window === "undefined")
             return;
 
         const liveMobileRect = mobileCoinButton.getBoundingClientRect();
@@ -715,13 +715,13 @@
     }
 
     function handleDrawerHandleTouchStart(event: TouchEvent) {
-        if (!isMobile || !isSidebarOpen) return;
+        if (!isPortable || !isSidebarOpen) return;
         drawerSwipeStartY = event.changedTouches[0]?.clientY ?? 0;
         drawerSwipeStartX = event.changedTouches[0]?.clientX ?? 0;
     }
 
     function handleDrawerHandleTouchEnd(event: TouchEvent) {
-        if (!isMobile || !isSidebarOpen) return;
+        if (!isPortable || !isSidebarOpen) return;
         const endY = event.changedTouches[0]?.clientY ?? 0;
         const endX = event.changedTouches[0]?.clientX ?? 0;
         const deltaY = endY - drawerSwipeStartY;
@@ -926,8 +926,8 @@
 <div
     class="crt-workstation flex h-[100dvh] w-full overflow-hidden bg-canvas text-slate-900 antialiased text-[13px] selection:bg-blue-500/30 relative"
 >
-    <!-- Sticky Header (Mobile) -->
-    {#if isMobile}
+    <!-- Sticky Header (Mobile/Tablet) -->
+    {#if isPortable}
         <header
             class="crt-mobile-header fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200 pt-[env(safe-area-inset-top)] transition-transform duration-300 {!isSidebarOpen
                 ? 'translate-y-0'
@@ -1002,8 +1002,8 @@
         </header>
     {/if}
 
-    <!-- Mobile Backdrop: Closes sidebar when map strip is tapped -->
-    {#if isMobile && isSidebarOpen}
+    <!-- Mobile/Tablet Backdrop: Closes sidebar when map strip is tapped -->
+    {#if isPortable && isSidebarOpen}
         <button
             onclick={() => (isSidebarOpen = false)}
             class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
@@ -1014,14 +1014,14 @@
 
     <aside
         class="crt-sidebar crt-shell {isSidebarOpen
-            ? 'translate-y-0 md:translate-x-0'
-            : 'translate-y-full md:-translate-x-full'} fixed inset-x-0 bottom-0 md:inset-y-0 md:left-0 z-40 h-[94vh] md:h-full md:w-[352px] bg-white/98 backdrop-blur-2xl border-t md:border-t-0 md:border-r border-slate-200 transition-transform duration-500 md:duration-300 {isSidebarOpen
-            ? 'md:relative'
-            : 'fixed md:fixed'} flex flex-col shadow-2xl rounded-t-2xl md:rounded-none overflow-hidden"
+            ? 'translate-y-0 lg:translate-x-0'
+            : 'translate-y-full lg:-translate-x-full'} fixed inset-x-0 bottom-0 lg:inset-y-0 lg:left-0 z-40 h-[94vh] lg:h-full lg:w-[352px] bg-white/98 backdrop-blur-2xl border-t lg:border-t-0 lg:border-r border-slate-200 transition-transform duration-500 lg:duration-300 {isSidebarOpen
+            ? 'lg:relative'
+            : 'fixed lg:fixed'} flex flex-col shadow-2xl rounded-t-2xl lg:rounded-none overflow-hidden"
         style="-webkit-backdrop-filter: blur(40px);"
     >
-        <!-- Drawer Handle for Mobile -->
-        {#if isMobile}
+        <!-- Drawer Handle for Mobile/Tablet -->
+        {#if isPortable}
             <button
                 type="button"
                 class="w-full flex justify-center py-2 shrink-0"
@@ -1056,7 +1056,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    {#if isMobile}
+                    {#if isPortable}
                         <button
                             onclick={() => (isSidebarOpen = false)}
                             class="p-2 text-slate-500 hover:text-slate-900 transition-colors"
@@ -1563,7 +1563,7 @@
                             <button
                                 onclick={() => {
                                     mapComponent?.flyToPOI(selectedPOI);
-                                    if (isMobile) isSidebarOpen = false;
+                                    if (isPortable) isSidebarOpen = false;
                                 }}
                                 class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-black text-[10px] uppercase tracking-widest transition-all shadow-glow flex items-center gap-2"
                                 >Take me there {@html icons.arrowRight}</button
@@ -2019,7 +2019,7 @@
                 {mapStyle}
                 {selectedRoute}
                 {isHeadingUp}
-                {isMobile}
+                isMobile={isPortable}
                 {showMilestones}
                 hikerActive={$hikerMode.isActive}
                 hikerHeading={$hikerMode.heading}
@@ -2067,7 +2067,7 @@
             </div>
         {/if}
         <div
-            class="crt-map-controls {isMobile
+            class="crt-map-controls {isPortable
                 ? 'absolute bottom-32 right-4 flex flex-col items-end gap-3 z-30'
                 : 'absolute top-4 right-4 z-30 flex flex-col items-end gap-2'}"
         >
@@ -2078,7 +2078,7 @@
             >
                 <button
                     onclick={() => mapComponent?.triggerLocateMe()}
-                    class="ds-control-btn {isMobile
+                    class="ds-control-btn {isPortable
                         ? 'p-2.5'
                         : 'p-1.5'} text-slate-600 active:text-blue-600 border-r border-slate-100 transition-all"
                     title="Show My Location">{@html icons.locate}</button
@@ -2086,7 +2086,7 @@
                 <button
                     onclick={() => (isHeadingUp = !isHeadingUp)}
                     disabled={$hikerMode.simplifiedHUD}
-                    class="ds-control-btn {isMobile
+                    class="ds-control-btn {isPortable
                         ? 'px-3 py-2 text-[10px]'
                         : 'px-2 py-1.5 text-[10px]'} font-black uppercase transition-all {isHeadingUp
                         ? 'ds-control-btn-active bg-blue-600 text-white'
@@ -2103,7 +2103,7 @@
                 </button>
                 <button
                     onclick={() => (showMilestones = !showMilestones)}
-                    class="ds-control-btn {isMobile
+                    class="ds-control-btn {isPortable
                         ? 'px-3 py-2 text-[10px]'
                         : 'px-2 py-1.5 text-[10px]'} font-black uppercase transition-all {showMilestones
                         ? 'ds-control-btn-active bg-amber-600 text-white'
@@ -2121,7 +2121,7 @@
             >
                 <button
                     onclick={() => (selectedRoute = "osm")}
-                    class="ds-control-btn {isMobile
+                    class="ds-control-btn {isPortable
                         ? 'px-3 py-2 text-[10px]'
                         : 'px-2 py-1.5 text-[10px]'} font-black uppercase transition-all {selectedRoute ===
                     'osm'
@@ -2131,7 +2131,7 @@
                 >
                 <button
                     onclick={() => (selectedRoute = "simplified")}
-                    class="ds-control-btn {isMobile
+                    class="ds-control-btn {isPortable
                         ? 'px-3 py-2 text-[10px]'
                         : 'px-2 py-1.5 text-[10px]'} font-black uppercase transition-all {selectedRoute ===
                     'simplified'
