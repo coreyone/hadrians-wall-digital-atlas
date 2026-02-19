@@ -283,7 +283,8 @@
 
         const mql = window.matchMedia("(max-width: 768px)");
         isMobile = mql.matches;
-        if (isMobile) isSidebarOpen = false;
+        // On mobile, start with sidebar closed to show map; on desktop, start open.
+        isSidebarOpen = !isMobile;
         const handleMedia = (e: MediaQueryListEvent) => {
             isMobile = e.matches;
             if (!e.matches) {
@@ -983,7 +984,9 @@
     <aside
         class="crt-sidebar crt-shell {isSidebarOpen
             ? 'translate-y-0 md:translate-x-0'
-            : 'translate-y-full md:-translate-x-full'} fixed inset-x-0 bottom-0 md:inset-y-0 md:left-0 z-40 h-[94vh] md:h-full md:w-[352px] bg-surface/95 backdrop-blur-2xl border-t md:border-t-0 md:border-r border-white/10 transition-transform duration-500 md:duration-300 md:relative flex flex-col shadow-2xl rounded-t-2xl md:rounded-none overflow-hidden"
+            : 'translate-y-full md:-translate-x-full'} fixed inset-x-0 bottom-0 md:inset-y-0 md:left-0 z-40 h-[94vh] md:h-full md:w-[352px] bg-slate-900/95 backdrop-blur-2xl border-t md:border-t-0 md:border-r border-white/10 transition-transform duration-500 md:duration-300 {isSidebarOpen
+            ? 'md:relative'
+            : 'fixed md:fixed'} flex flex-col shadow-2xl rounded-t-2xl md:rounded-none overflow-hidden"
         style="-webkit-backdrop-filter: blur(40px);"
     >
         <!-- Drawer Handle for Mobile -->
@@ -2149,7 +2152,7 @@
     <!-- Absolute Bottom Tab Bar (Mobile) - using absolute instead of fixed to align with h-dvh container -->
     {#if isMobile}
         <nav
-            class="crt-mobile-nav absolute bottom-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-white/10 safe-p-bottom transition-transform duration-300 {selectedPOI
+            class="crt-mobile-nav crt-shell absolute bottom-0 inset-x-0 z-50 h-[65px] bg-slate-900/95 backdrop-blur-xl border-t border-white/10 overflow-hidden transition-transform duration-300 {selectedPOI
                 ? 'translate-y-full'
                 : ''}"
             style="-webkit-backdrop-filter: blur(20px);"

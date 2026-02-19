@@ -295,9 +295,7 @@ button {
 }
 
 .crt-shell {
-  position: relative;
-  background: linear-gradient(180deg, var(--surface-raised), var(--surface));
-  box-shadow: var(--shadow-md);
+  /* Utility base for glass/panel elements - specific colors should be added via tailwind classes */
 }
 
 .crt-shell::before {
