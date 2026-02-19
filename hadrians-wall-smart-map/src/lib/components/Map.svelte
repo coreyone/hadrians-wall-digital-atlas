@@ -783,13 +783,89 @@
         }
     }
 
+    // --- ADAPTIVE NAVIGATION LOGIC (iOS 2026 PWA) ---
+    const UI_THROTTLE_MS = 3000;
+    const STATIONARY_THRESHOLD_MPH = 0.45;
+    const STATIONARY_COORDS_DELTA_M = 4.0;
+    const POOR_ACCURACY_THRESHOLD_M = 100.0;
+    const RECOVERY_BACKOFF_MS = [3000, 10000, 30000];
+
+    let lastUiUpdate = 0;
+    let recoveryAttempt = 0;
+    let isTrackingBackgrounded = false;
+    let trackingState = $state<"HIGH_ACCURACY" | "LOW_POWER" | "ERROR">("LOW_POWER");
+    let lastStableCoord: [number, number] | null = null;
+
+    function clearWatch() {
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+    }
+
     function locateMe() {
+        if (!hikerActive || isTrackingBackgrounded) {
+            clearWatch();
+            return;
+        }
+
         if (watchId !== null) return;
+
+        const options: PositionOptions =
+            trackingState === "HIGH_ACCURACY"
+                ? {
+                      enableHighAccuracy: true,
+                      maximumAge: 0,
+                      timeout: 10000,
+                  }
+                : {
+                      enableHighAccuracy: false,
+                      maximumAge: 60000,
+                      timeout: 20000,
+                  };
+
         watchId = navigator.geolocation.watchPosition(
             (pos) => {
-                if (!map) return;
+                if (!map || !hikerActive) return;
+
                 const { longitude, latitude, accuracy, heading, speed } =
                     pos.coords;
+                const now = Date.now();
+
+                // 1. Accuracy Gate & Error Recovery
+                if (accuracy > POOR_ACCURACY_THRESHOLD_M) {
+                    handlePoorAccuracy();
+                    return;
+                }
+                recoveryAttempt = 0;
+
+                // 2. Throttle Logic
+                if (now - lastUiUpdate < UI_THROTTLE_MS) return;
+                lastUiUpdate = now;
+
+                // 3. Movement Detection (Adaptive Escalation)
+                const currentCoord: [number, number] = [longitude, latitude];
+                let isStationary = false;
+
+                if (speed !== null && speed < STATIONARY_THRESHOLD_MPH) {
+                    isStationary = true;
+                } else if (lastStableCoord) {
+                    const dist = turf.distance(
+                        turf.point(lastStableCoord),
+                        turf.point(currentCoord),
+                        { units: "meters" },
+                    );
+                    if (dist < STATIONARY_COORDS_DELTA_M) isStationary = true;
+                }
+
+                if (isStationary && trackingState === "HIGH_ACCURACY") {
+                    transitionTracking("LOW_POWER");
+                } else if (!isStationary && trackingState !== "HIGH_ACCURACY") {
+                    transitionTracking("HIGH_ACCURACY");
+                }
+                lastStableCoord = currentCoord;
+
+                // 4. Update Core UI
                 const rawCoord: [number, number] = [longitude, latitude];
                 const baseMetrics = navigationService.updatePosition(rawCoord);
                 const gpsHeading =
@@ -804,17 +880,19 @@
                     speed >= 0
                         ? speed * 2.2369362920544
                         : null;
+
                 const metrics: NavigationMetrics = {
                     ...baseMetrics,
                     gpsHeading,
                     gpsSpeedMph,
                 };
+
                 const [snappedLng, snappedLat] = metrics.snappedCoord;
                 userLocation = { lng: snappedLng, lat: snappedLat, accuracy };
                 driftMeters = metrics.driftMeters;
                 onNavigationUpdate?.(metrics);
 
-                // Update Accuracy Circle (Communicate uncertainty)
+                // Update Accuracy Circle
                 const circle = turf.circle(
                     [longitude, latitude],
                     accuracy / 1000,
@@ -825,6 +903,7 @@
                 ) as maplibregl.GeoJSONSource;
                 if (source) source.setData(circle);
 
+                // Update User Marker
                 if (!userMarker) {
                     const el = document.createElement("div");
                     el.className =
@@ -853,23 +932,71 @@
 
                 renderNearbyFloatingPOIs(metrics.snappedCoord);
 
-                const now = Date.now();
-                const flyInterval = lowPowerMode ? 2400 : 900;
+                const flyInterval = lowPowerMode ? 4000 : 1800;
                 if (now - lastFlyTo >= flyInterval) {
                     lastFlyTo = now;
                     map.easeTo({
                         center: [snappedLng, snappedLat],
                         zoom: 15,
-                        duration: lowPowerMode ? 1400 : 900,
+                        duration: lowPowerMode ? 2000 : 1200,
                     });
                 }
             },
-            (err) => console.error(err),
-            { enableHighAccuracy: true },
+            (err) => {
+                console.warn("Geolocation error:", err);
+                handlePoorAccuracy();
+            },
+            options,
         );
     }
 
+    function transitionTracking(newState: "HIGH_ACCURACY" | "LOW_POWER") {
+        if (trackingState === newState) return;
+        trackingState = newState;
+        clearWatch();
+        // Small delay to prevent rapid cycling
+        setTimeout(() => locateMe(), 500);
+    }
+
+    function handlePoorAccuracy() {
+        trackingState = "ERROR";
+        clearWatch();
+        const backoff =
+            RECOVERY_BACKOFF_MS[
+                Math.min(recoveryAttempt, RECOVERY_BACKOFF_MS.length - 1)
+            ];
+        recoveryAttempt++;
+        setTimeout(() => {
+            if (hikerActive && !isTrackingBackgrounded) {
+                transitionTracking("LOW_POWER");
+            }
+        }, backoff);
+    }
+
+    // Lifecycle: Pause on Background
+    function handleVisibilityChange() {
+        isTrackingBackgrounded = document.visibilityState === "hidden";
+        if (isTrackingBackgrounded) {
+            clearWatch();
+        } else if (hikerActive) {
+            locateMe();
+        }
+    }
+
+    $effect(() => {
+        if (hikerActive) {
+            locateMe();
+        } else {
+            clearWatch();
+            if (userMarker) {
+                userMarker.remove();
+                userMarker = null;
+            }
+        }
+    });
+
     onMount(() => {
+        document.addEventListener("visibilitychange", handleVisibilityChange);
         corridor = getCorridor(1.1);
         buildWikiWindowCorridor();
         map = new maplibregl.Map({
