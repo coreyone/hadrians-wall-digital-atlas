@@ -40,7 +40,7 @@
         name?: string;
     }
 
-    let isSidebarOpen = $state(true);
+    let isSidebarOpen = $state(false);
     let selectedPOI = $state<POI | null>(null);
     let searchQuery = $state("");
     let isHeadingUp = $state(false);
@@ -2146,10 +2146,10 @@
         </div>
     </main>
 
-    <!-- Fixed Bottom Tab Bar (Mobile) -->
+    <!-- Absolute Bottom Tab Bar (Mobile) - using absolute instead of fixed to align with h-dvh container -->
     {#if isMobile}
         <nav
-            class="crt-mobile-nav fixed bottom-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-white/10 safe-p-bottom transition-transform duration-300 {selectedPOI
+            class="crt-mobile-nav absolute bottom-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-white/10 safe-p-bottom transition-transform duration-300 {selectedPOI
                 ? 'translate-y-full'
                 : ''}"
             style="-webkit-backdrop-filter: blur(20px);"
