@@ -172,7 +172,7 @@
             // Scale model to fit nicely
             const size = box.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
-            const scale = 5.2 / maxDim;
+            const scale = 4.8 / maxDim;
             model.scale.set(scale, scale, scale);
 
             // Initial rotation setup
@@ -210,7 +210,7 @@
             const time = performance.now() * 0.001;
 
             // Floating effect
-            model.position.y = (Math.sin(time * 2) * 0.15) - 0.28;
+            model.position.y = (Math.sin(time * 2) * 0.15) - 0.42;
 
             // Base spin - only if hiker mode is active
             if ($hikerMode.isActive) {

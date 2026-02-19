@@ -109,7 +109,7 @@
             aria-label="Triple tap Roman Coin to exit Hiker Mode"
             title="Triple tap to exit Hiker Mode"
         >
-            <div class="w-12 h-12 relative">
+            <div class="h-full w-full relative">
                 <Coin3D
                     bind:this={coinComponent}
                     class="w-full h-full"

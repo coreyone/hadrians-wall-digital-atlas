@@ -993,11 +993,7 @@
                         aria-label="Triple tap Roman Coin to toggle Hiker Mode"
                         title="Triple Tap Roman Coin"
                     >
-                        <div
-                            class="{$hikerMode.isActive
-                                ? 'h-9 w-9'
-                                : 'h-6 w-6'} relative"
-                        >
+                        <div class="h-full w-full relative">
                             <Coin3D
                                 bind:this={headerCoinRef}
                                 class="w-full h-full drop-shadow-sm"
@@ -1095,7 +1091,7 @@
                             aria-label="Triple tap Roman Coin to toggle Hiker Mode"
                             title="Triple Tap Roman Coin"
                         >
-                            <div class="h-5 w-5 relative">
+                            <div class="h-full w-full relative">
                                 <Coin3D
                                     bind:this={headerCoinRef}
                                     class="w-full h-full drop-shadow-sm"
