@@ -39,6 +39,7 @@
         onNavigationUpdate?: (metrics: NavigationMetrics) => void;
         onHikerPoiSelect?: (poi: any) => void;
         onMapReady?: () => void;
+        onInteraction?: () => void;
     }
 
     let {
@@ -59,6 +60,7 @@
         onNavigationUpdate,
         onHikerPoiSelect,
         onMapReady,
+        onInteraction,
     }: Props = $props();
 
     let mapContainer: HTMLDivElement;
@@ -895,7 +897,12 @@
 
             map.on("mousemove", (e) => {
                 mouseCoords = { lng: e.lngLat.lng, lat: e.lngLat.lat };
+                onInteraction?.();
             });
+
+            map.on("dragstart", () => onInteraction?.());
+            map.on("zoomstart", () => onInteraction?.());
+            map.on("click", () => onInteraction?.());
 
             map.on("idle", () => {
                 // Background Warming: Prefetch other styles into browser cache

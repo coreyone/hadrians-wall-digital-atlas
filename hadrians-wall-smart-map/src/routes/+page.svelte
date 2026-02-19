@@ -88,6 +88,14 @@
     let dismissedCompassFallbackNotice = $state(false);
     let lastAppliedHeading = $state<number | null>(null);
     let lastAppliedCalibration = $state<boolean | null>(null);
+    let hikerHUDRef = $state<ReturnType<typeof HikerHUD>>();
+    let headerCoinRef = $state<ReturnType<typeof Coin3D>>();
+
+    function wakeCoins() {
+        headerCoinRef?.wake();
+        hikerHUDRef?.wake();
+    }
+
     let discoveredPOIs = $derived(data.initialPOIs ?? []);
     const GPS_COURSE_SPEED_THRESHOLD_MPH = 1.5;
     const GPS_COURSE_RECOVERY_SPEED_THRESHOLD_MPH = 1.1;
@@ -820,6 +828,7 @@
 <!-- Hiker HUD Overlay -->
 {#if $hikerMode.isActive && isMobile}
     <HikerHUD
+        bind:this={hikerHUDRef}
         onToggleSimplified={toggleSimplifiedHUD}
         onCoinTap={handleCoinTap}
         hideTopCoin={coinMorphing}
@@ -952,6 +961,7 @@
                                 : 'h-6 w-6'} relative"
                         >
                             <Coin3D
+                                bind:this={headerCoinRef}
                                 class="w-full h-full drop-shadow-sm"
                                 interactive={false}
                             />
@@ -2001,6 +2011,7 @@
                 onNavigationUpdate={handleNavigationUpdate}
                 onHikerPoiSelect={handleHikerPoiSelect}
                 onMapReady={handleMapReady}
+                onInteraction={wakeCoins}
             />
         </div>
 

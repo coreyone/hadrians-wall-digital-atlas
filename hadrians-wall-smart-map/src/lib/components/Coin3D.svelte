@@ -66,6 +66,9 @@
     let isLoaded = $state(false);
     let isVisible = $state(false);
     let error = $state(false);
+    let isSleeping = $state(false);
+    let lastActivityTime = $state(Date.now());
+    const SLEEP_TIMEOUT = 10000; // 10 seconds of idle before sleep
 
     // Scene refs
     let renderer: THREE.WebGLRenderer | undefined;
@@ -179,7 +182,13 @@
     }
 
     function animate() {
-        if (!isVisible) return;
+        if (!isVisible || !browser || isSleeping) return;
+
+        // Idle sleep check
+        if (Date.now() - lastActivityTime > SLEEP_TIMEOUT) {
+            isSleeping = true;
+            return;
+        }
 
         animationFrameId = requestAnimationFrame(animate);
 
@@ -213,8 +222,18 @@
     }
 
     // Interaction handler
+    export function wake() {
+        const wasSleeping = isSleeping;
+        lastActivityTime = Date.now();
+        isSleeping = false;
+        if (wasSleeping && isVisible && isLoaded) {
+            animate();
+        }
+    }
+
     export function triggerJiggle() {
         if (!model) return;
+        wake();
         isJiggling = true;
         jiggleTime = 0;
     }
@@ -230,7 +249,7 @@
                     isVisible = entry.isIntersecting;
 
                     if (isVisible && !wasVisible && isLoaded) {
-                        animate();
+                        wake();
                     }
 
                     if (isVisible && !model && !error) {

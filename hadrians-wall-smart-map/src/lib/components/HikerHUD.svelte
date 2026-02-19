@@ -19,6 +19,11 @@
     }: Props = $props();
 
     let topCoinButton = $state<HTMLButtonElement | null>(null);
+    let coinComponent = $state<ReturnType<typeof Coin3D>>();
+
+    export function wake() {
+        coinComponent?.wake();
+    }
 
     function publishTopCoinLayout() {
         if (!topCoinButton || !onTopCoinLayout) return;
@@ -106,6 +111,7 @@
         >
             <div class="w-8 h-8 relative">
                 <Coin3D
+                    bind:this={coinComponent}
                     class="w-full h-full object-contain"
                     interactive={true}
                 />
