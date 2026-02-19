@@ -1412,11 +1412,15 @@
     )}"
     bind:this={mapContainer}
 >
-    <div
-        class="ds-panel absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm pointer-events-none select-none tabular-nums"
+    <a
+        href="https://www.google.com/maps/search/?api=1&query={mouseCoords.lat},{mouseCoords.lng}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="ds-panel absolute bottom-4 right-12 z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm hover:text-blue-600 hover:border-blue-300 transition-colors tabular-nums active:scale-95"
+        title="Open in Google Maps"
     >
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
-    </div>
+    </a>
 
     {#if hikerActive && driftMeters > 25}
         <div

@@ -390,8 +390,6 @@
         return () => {
             window.removeEventListener("online", handleOnline);
             window.removeEventListener("offline", handleOffline);
-            mql.removeEventListener("change", handleMedia);
-            portableMql.removeEventListener("change", handlePortableMedia);
             clearInterval(ukTickInterval);
             if (splashMinTimer) clearTimeout(splashMinTimer);
             if (splashHardTimer) clearTimeout(splashHardTimer);
