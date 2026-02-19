@@ -909,7 +909,11 @@
             style="-webkit-backdrop-filter: blur(20px);"
         >
             <div class="flex items-center justify-between h-14 px-4">
-                <div class="flex items-center gap-2">
+                <button
+                    class="flex items-center gap-2 text-left active:opacity-70 transition-opacity"
+                    onclick={() => (isSidebarOpen = true)}
+                    aria-label="Open Plan and Explore"
+                >
                     <span
                         class="atlas-logo-mark atlas-logo-mark-mobile"
                         aria-hidden="true"
@@ -923,7 +927,7 @@
                             Hadrian Atlas
                         </h1>
                     </div>
-                </div>
+                </button>
                 <div class="flex items-center gap-2">
                     <button
                         bind:this={mobileCoinButton}
@@ -2140,14 +2144,14 @@
                 >
             </div>
 
-            <button
-                class="ds-control-fab {isMobile
-                    ? 'p-4 rounded-lg'
-                    : 'p-3 rounded-md'} bg-white/95 border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 active:text-blue-600 flex items-center justify-center"
-                style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);"
-                onclick={toggleSearch}
-                title="Search Registry">{@html icons.search}</button
-            >
+            {#if !isMobile}
+                <button
+                    class="ds-control-fab p-3 rounded-md bg-white/95 border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 active:text-blue-600 flex items-center justify-center"
+                    style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);"
+                    onclick={toggleSearch}
+                    title="Search Registry">{@html icons.search}</button
+                >
+            {/if}
         </div>
     </main>
 
