@@ -107,8 +107,8 @@
         // Camera setup
         const width = container.clientWidth;
         const height = container.clientHeight;
-        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-        camera.position.z = 6.5;
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.z = 7;
 
         // Renderer setup
         renderer = new THREE.WebGLRenderer({
@@ -135,32 +135,44 @@
         canvas = renderer.domElement;
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-        dirLight.position.set(2, 2, 5);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        dirLight.position.set(5, 5, 5);
         scene.add(dirLight);
 
-        const backLight = new THREE.DirectionalLight(0xffd700, 1);
-        backLight.position.set(-2, -2, -5);
-        scene.add(backLight);
+        const spotLight = new THREE.SpotLight(0xffd700, 20);
+        spotLight.position.set(0, 5, 10);
+        spotLight.angle = Math.PI / 4;
+        spotLight.penumbra = 0.1;
+        scene.add(spotLight);
 
         // Setup Model from Cache
         // CLONE the scene to allow independent instances
         model = modelData.scene.clone();
 
         if (model) {
+            // Apply gold emissive effect to meshes
+            model.traverse((child: any) => {
+                if (child.isMesh) {
+                    const material = child.material;
+                    if (material) {
+                        material.emissive = new THREE.Color(0xffd700);
+                        material.emissiveIntensity = 0.15;
+                    }
+                }
+            });
+
             // Center model
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
             model.position.sub(center);
-            model.position.y -= 0.4; // Shift down further to center visually and avoid top cutoff
 
             // Scale model to fit nicely
             const size = box.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
-            const scale = 4.8 / maxDim;
+            const scale = 5.2 / maxDim;
             model.scale.set(scale, scale, scale);
 
             // Initial rotation setup
@@ -195,6 +207,11 @@
         animationFrameId = requestAnimationFrame(animate);
 
         if (model && renderer && scene && camera) {
+            const time = performance.now() * 0.001;
+
+            // Floating effect
+            model.position.y = Math.sin(time * 2) * 0.15;
+
             // Base spin - only if hiker mode is active
             if ($hikerMode.isActive) {
                 model.rotation.y += 0.01;
