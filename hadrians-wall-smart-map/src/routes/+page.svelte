@@ -49,8 +49,8 @@
     let searchQuery = $state("");
     let isHeadingUp = $state(false);
     let mapComponent: any = $state();
-    let isMobile = $derived(isBrowser && window.matchMedia(MOBILE_MQ).matches);
-    let isPortable = $derived(isBrowser && window.matchMedia(PORTABLE_MQ).matches);
+    let isMobile = $state(isBrowser && window.matchMedia(MOBILE_MQ).matches);
+    let isPortable = $state(isBrowser && window.matchMedia(PORTABLE_MQ).matches);
     let isOnline = $state(true);
 
     type AppMode = "plan" | "explore";

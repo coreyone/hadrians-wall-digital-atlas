@@ -1071,9 +1071,9 @@
                 });
             });
 
-            map.on("style.load", () => {
-                const source = map.getSource("trail") as maplibregl.GeoJSONSource;
-                if (source) source.setData(trailGeoJSON);
+            map?.on("style.load", () => {
+                const source = map?.getSource("trail") as maplibregl.GeoJSONSource;
+                if (source) source.setData(trailGeoJSON as any);
 
                 if (initialPOIs.length > 0) {
                     initialPOIs.forEach(poi => allWikiPOIs.set(poi.pageid, poi));
@@ -1083,7 +1083,7 @@
                 updatePOIs();
             });
 
-            map.on("moveend", () => {
+            map?.on("moveend", () => {
                 updatePOIs();
                 refreshWikiMarkers();
             });
@@ -1144,10 +1144,10 @@
         const nextMarkerIds = new Set<string | number>();
 
         for (const feature of clusters) {
-            const isCluster = feature.properties.cluster;
+            const isCluster = (feature.properties as any).cluster;
             const id = isCluster
                 ? `cluster-${feature.id}`
-                : feature.properties.pageid;
+                : (feature.properties as any).pageid;
             nextMarkerIds.add(id);
 
             if (!wikiMarkers.has(id)) {
