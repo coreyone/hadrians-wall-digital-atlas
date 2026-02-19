@@ -51,6 +51,7 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import { browser } from "$app/environment";
+    import { hikerMode } from "$lib/stores/hikerMode";
 
     interface Props {
         class?: string;
@@ -158,7 +159,7 @@
             // Scale model to fit nicely
             const size = box.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
-            const scale = 3.2 / maxDim;
+            const scale = 4.8 / maxDim;
             model.scale.set(scale, scale, scale);
 
             // Initial rotation setup
@@ -193,8 +194,10 @@
         animationFrameId = requestAnimationFrame(animate);
 
         if (model && renderer && scene && camera) {
-            // Base spin
-            model.rotation.y += 0.01;
+            // Base spin - only if hiker mode is active
+            if ($hikerMode.isActive) {
+                model.rotation.y += 0.01;
+            }
 
             // Jiggle logic
             if (isJiggling) {
