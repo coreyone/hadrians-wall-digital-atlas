@@ -104,8 +104,9 @@
     const COMPASS_FALLBACK_EXIT_MS = 1400;
     const COMPASS_HEADING_HOLD_MS = 8000;
     const COMPASS_NOTICE_DELAY_MS = 3200;
-    const MOBILE_SPLASH_MIN_VISIBLE_MS = 320;
-    const MOBILE_SPLASH_HARD_TIMEOUT_MS = 1700;
+    const MOBILE_SPLASH_MIN_VISIBLE_MS = 2200;
+    const MOBILE_SPLASH_HARD_TIMEOUT_MS = 6000;
+    
     const planAvgSpeedMidLabel = `${planAvgSpeedMidMph.toFixed(2)} MPH`;
     const PLAN_LIGHT_START_DATE_KEY = "2026-04-11";
     const PLAN_LIGHT_END_DATE_KEY = "2026-04-20";
@@ -302,12 +303,12 @@
         isSidebarOpen = !isPortable;
         const handleMedia = (e: MediaQueryListEvent) => {
             isMobile = e.matches;
-            if (!e.matches) {
-                showMobileSplash = false;
-            }
         };
         const handlePortableMedia = (e: MediaQueryListEvent) => {
             isPortable = e.matches;
+            if (!e.matches) {
+                showMobileSplash = false;
+            }
         };
         mql.addEventListener("change", handleMedia);
         portableMql.addEventListener("change", handlePortableMedia);
@@ -317,7 +318,7 @@
 
         let splashMinTimer: ReturnType<typeof setTimeout> | null = null;
         let splashHardTimer: ReturnType<typeof setTimeout> | null = null;
-        if (isMobile) {
+        if (isPortable) {
             showMobileSplash = true;
             splashMinElapsed = false;
             splashMinTimer = setTimeout(() => {
@@ -367,6 +368,7 @@
             window.removeEventListener("online", handleOnline);
             window.removeEventListener("offline", handleOffline);
             mql.removeEventListener("change", handleMedia);
+            portableMql.removeEventListener("change", handlePortableMedia);
             clearInterval(ukTickInterval);
             if (splashMinTimer) clearTimeout(splashMinTimer);
             if (splashHardTimer) clearTimeout(splashHardTimer);
@@ -668,7 +670,7 @@
 
     function handleMapReady() {
         mapReady = true;
-        if (isMobile && splashMinElapsed) {
+        if (isPortable && splashMinElapsed) {
             showMobileSplash = false;
         }
     }
@@ -879,7 +881,7 @@
 
 {#if showMobileSplash}
     <div
-        class="fixed inset-0 z-[120] md:hidden overflow-hidden splash-screen"
+        class="fixed inset-0 z-[120] lg:hidden overflow-hidden splash-screen"
         role="status"
         aria-live="polite"
         aria-label="Loading Hadrian Atlas"
