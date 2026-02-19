@@ -40,13 +40,17 @@
         name?: string;
     }
 
+    const isBrowser = typeof window !== "undefined";
+    const PORTABLE_MQ = "(max-width: 1024px)";
+    const MOBILE_MQ = "(max-width: 768px)";
+
     let isSidebarOpen = $state(false);
     let selectedPOI = $state<POI | null>(null);
     let searchQuery = $state("");
     let isHeadingUp = $state(false);
     let mapComponent: any = $state();
-    let isMobile = $state(false);
-    let isPortable = $state(false);
+    let isMobile = $state(isBrowser && window.matchMedia(MOBILE_MQ).matches);
+    let isPortable = $state(isBrowser && window.matchMedia(PORTABLE_MQ).matches);
     let isOnline = $state(true);
 
     type AppMode = "plan" | "explore";
@@ -72,7 +76,7 @@
     let hikerTopCoinRect = $state<DOMRect | null>(null);
     let coinMorphing = $state(false);
     let coinMorphBusy = $state(false);
-    let showMobileSplash = $state(false);
+    let showSplash = $state(isPortable); // Rule of Least Surprise: Start true on portable
     let splashMinElapsed = $state(false);
     let mapReady = $state(false);
     let ukNowTick = $state(Date.now());
@@ -293,8 +297,8 @@
         window.addEventListener("online", handleOnline);
         window.addEventListener("offline", handleOffline);
 
-        const mql = window.matchMedia("(max-width: 768px)");
-        const portableMql = window.matchMedia("(max-width: 1024px)");
+        const mql = window.matchMedia(MOBILE_MQ);
+        const portableMql = window.matchMedia(PORTABLE_MQ);
 
         isMobile = mql.matches;
         isPortable = portableMql.matches;
@@ -307,7 +311,7 @@
         const handlePortableMedia = (e: MediaQueryListEvent) => {
             isPortable = e.matches;
             if (!e.matches) {
-                showMobileSplash = false;
+                showSplash = false;
             }
         };
         mql.addEventListener("change", handleMedia);
@@ -319,18 +323,18 @@
         let splashMinTimer: ReturnType<typeof setTimeout> | null = null;
         let splashHardTimer: ReturnType<typeof setTimeout> | null = null;
         if (isPortable) {
-            showMobileSplash = true;
+            showSplash = true;
             splashMinElapsed = false;
             splashMinTimer = setTimeout(() => {
                 splashMinElapsed = true;
                 if (mapReady) {
-                    showMobileSplash = false;
+                    showSplash = false;
                 }
             }, MOBILE_SPLASH_MIN_VISIBLE_MS);
             splashHardTimer = setTimeout(() => {
                 splashMinElapsed = true;
-                if (showMobileSplash) {
-                    showMobileSplash = false;
+                if (showSplash) {
+                    showSplash = false;
                 }
             }, MOBILE_SPLASH_HARD_TIMEOUT_MS);
         }
@@ -671,7 +675,7 @@
     function handleMapReady() {
         mapReady = true;
         if (isPortable && splashMinElapsed) {
-            showMobileSplash = false;
+            showSplash = false;
         }
     }
 
@@ -879,7 +883,7 @@
     </div>
 {/if}
 
-{#if showMobileSplash}
+{#if showSplash}
     <div
         class="fixed inset-0 z-[120] lg:hidden overflow-hidden splash-screen"
         role="status"
