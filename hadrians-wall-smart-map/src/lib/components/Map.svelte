@@ -15,7 +15,7 @@
     } from "$lib/data/trail";
     import { routeVariants } from "$lib/data/routes";
     import { fetchWikiPOIs, type WikiPOI } from "$lib/services/wikipedia";
-    import { selectRenderableWikiPOIs } from "$lib/utils/wikiPins";
+    import { selectRenderableWikiPOIs, getClusteredWikiPOIs } from "$lib/utils/wikiPins";
     import {
         navigationService,
         type NavigationMetrics,
@@ -80,6 +80,8 @@
     let driftMeters = $state(0);
     let registryPOIs: any[] = [];
     let floatingMarkers: maplibregl.Marker[] = [];
+    let wikiMarkers = new Map<number | string, maplibregl.Marker>();
+    let allWikiPOIs = new Map<number, WikiPOI>();
     let glowFrame: number | null = null;
     let lastGlowTick = 0;
     let lastFlyTo = 0;
@@ -1068,18 +1070,29 @@
                             .addTo(map);
                 });
 
-                if (initialPOIs.length > 0) renderPOIs(initialPOIs);
+            map.on("style.load", () => {
+                const source = map.getSource("trail") as maplibregl.GeoJSONSource;
+                if (source) source.setData(trailGeoJSON);
+
+                if (initialPOIs.length > 0) {
+                    initialPOIs.forEach(poi => allWikiPOIs.set(poi.pageid, poi));
+                    refreshWikiMarkers();
+                }
                 preloadWikiPOIsForHikerSection();
                 updatePOIs();
             });
 
-            map.on("moveend", updatePOIs);
+            map.on("moveend", () => {
+                updatePOIs();
+                refreshWikiMarkers();
+            });
         }
 
         return () => {
             stopGlowPulse();
             clearFloatingMarkers();
             clearPaceMarkers();
+            clearWikiMarkers();
             if (watchId !== null) {
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
@@ -1093,46 +1106,114 @@
         };
     });
 
-    let renderedPageIds = new Set<number>();
-    function renderPOIs(pois: WikiPOI[]) {
+    function clearWikiMarkers() {
+        for (const marker of wikiMarkers.values()) {
+            marker.remove();
+        }
+        wikiMarkers.clear();
+    }
+
+    function refreshWikiMarkers() {
+        if (!map) return;
+        const zoom = map.getZoom();
+        const bounds = map.getBounds();
+        const bbox: [number, number, number, number] = [
+            bounds.getWest(),
+            bounds.getSouth(),
+            bounds.getEast(),
+            bounds.getNorth(),
+        ];
+
         const activeCorridor = wikiCorridor || corridor;
-        const validPOIs = selectRenderableWikiPOIs(pois, {
-            renderedPageIds,
-            corridor: activeCorridor,
-            fallbackLine: wikiWindowLine,
-            fallbackMaxDistanceKm: 2.5,
+        const candidates = Array.from(allWikiPOIs.values());
+
+        // Filter by corridor
+        const filtered = candidates.filter((poi) => {
+            if (!activeCorridor) return true;
+            try {
+                const pt = turf.point([poi.lon, poi.lat]);
+                return turf.booleanPointInPolygon(pt, activeCorridor);
+            } catch {
+                return true;
+            }
         });
 
-        for (const poi of validPOIs) {
-            const el = document.createElement("div");
-            const size = Math.min(22, Math.max(14, 14 + poi.rank / 10));
+        // Cluster
+        const clusters = getClusteredWikiPOIs(filtered, zoom, bbox);
+        const nextMarkerIds = new Set<string | number>();
 
-            el.className = "poi-marker z-10";
-            el.dataset.pageid = poi.pageid.toString();
+        for (const feature of clusters) {
+            const isCluster = feature.properties.cluster;
+            const id = isCluster
+                ? `cluster-${feature.id}`
+                : feature.properties.pageid;
+            nextMarkerIds.add(id);
 
-            el.innerHTML = `
-                <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-125 hover:z-40 active:scale-90 overflow-visible">
-                        <div class="marker-icon bg-white/90 backdrop-blur-sm rounded-sm border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 0.95 : size}px; height: ${isMobile ? size * 0.95 : size}px;">
-                        <div class="text-black flex items-center justify-center leading-none font-bold" style="font-size: ${Math.max(10, Math.min(16, size * (isMobile ? 0.65 : 0.6)))}px; font-family: serif;">
-                            W
+            if (!wikiMarkers.has(id)) {
+                const el = document.createElement("div");
+                const [lng, lat] = feature.geometry.coordinates;
+
+                if (isCluster) {
+                    const count = feature.properties.point_count;
+                    const topTitle = feature.properties.topTitle;
+
+                    el.className = "poi-marker z-10 cluster-marker";
+                    el.innerHTML = `
+                        <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95">
+                            <div class="marker-icon bg-slate-900/90 backdrop-blur-sm rounded-full border border-slate-700 shadow-lg flex items-center justify-center overflow-hidden w-8 h-8">
+                                <div class="text-white text-[11px] font-black tabular-nums">
+                                    ${count}
+                                </div>
+                            </div>
+                            <div class="poi-label bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
+                                <span class="text-[9px] font-black text-white uppercase tracking-tighter whitespace-nowrap">${topTitle} & ${count - 1} more</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="poi-label label-priority-4 bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
-                        <span class="${isMobile ? "text-[11px]" : "text-[9px]"} font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
-                    </div>
-                </div>
-            `;
+                    `;
+                    el.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        map?.flyTo({ center: [lng, lat], zoom: zoom + 2 });
+                    });
+                } else {
+                    const poi = feature.properties as WikiPOI;
+                    const size = Math.min(22, Math.max(14, 14 + poi.rank / 10));
+                    el.className = "poi-marker z-10";
+                    el.dataset.pageid = poi.pageid.toString();
 
-            el.addEventListener("click", (e) => {
-                e.stopPropagation();
-                if (onPoiSelect) onPoiSelect({ ...poi });
-                map?.flyTo({ center: [poi.lon, poi.lat], zoom: 14 });
-            });
-            if (map) {
-                new maplibregl.Marker({ element: el })
-                    .setLngLat([poi.lon, poi.lat])
-                    .addTo(map);
-                renderedPageIds.add(poi.pageid);
+                    el.innerHTML = `
+                        <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-125 hover:z-40 active:scale-90 overflow-visible">
+                                <div class="marker-icon bg-white/90 backdrop-blur-sm rounded-sm border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 0.95 : size}px; height: ${isMobile ? size * 0.95 : size}px;">
+                                <div class="text-black flex items-center justify-center leading-none font-bold" style="font-size: ${Math.max(10, Math.min(16, size * (isMobile ? 0.65 : 0.6)))}px; font-family: serif;">
+                                    W
+                                </div>
+                            </div>
+                            <div class="poi-label label-priority-4 bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">
+                                <span class="${isMobile ? "text-[11px]" : "text-[9px]"} font-black text-white uppercase tracking-tighter whitespace-nowrap">${poi.title}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    el.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        if (onPoiSelect) onPoiSelect({ ...poi });
+                        map?.flyTo({ center: [lng, lat], zoom: 14 });
+                    });
+                }
+
+                if (map) {
+                    const marker = new maplibregl.Marker({ element: el })
+                        .setLngLat([lng, lat])
+                        .addTo(map);
+                    wikiMarkers.set(id, marker);
+                }
+            }
+        }
+
+        // Cleanup old markers
+        for (const [id, marker] of wikiMarkers.entries()) {
+            if (!nextMarkerIds.has(id)) {
+                marker.remove();
+                wikiMarkers.delete(id);
             }
         }
     }
@@ -1147,15 +1228,15 @@
             ),
         );
 
-        const deduped = new Map<number, WikiPOI>();
         batches.forEach((batch) => {
             if (batch.status !== "fulfilled") return;
             batch.value.forEach((poi) => {
-                if (!deduped.has(poi.pageid)) deduped.set(poi.pageid, poi);
+                if (!allWikiPOIs.has(poi.pageid))
+                    allWikiPOIs.set(poi.pageid, poi);
             });
         });
 
-        renderPOIs(Array.from(deduped.values()));
+        refreshWikiMarkers();
     }
 
     async function updatePOIs() {
@@ -1163,7 +1244,14 @@
         try {
             const center = map.getCenter();
             const pois = await fetchWikiPOIs(center.lat, center.lng, 3000);
-            renderPOIs(pois);
+            let added = false;
+            pois.forEach((poi) => {
+                if (!allWikiPOIs.has(poi.pageid)) {
+                    allWikiPOIs.set(poi.pageid, poi);
+                    added = true;
+                }
+            });
+            if (added) refreshWikiMarkers();
         } catch {
             // Offline-first behavior: preserve already-rendered POIs and skip network-dependent refresh.
         }

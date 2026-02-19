@@ -1,6 +1,7 @@
 import * as turf from '@turf/turf';
-import type { Feature, LineString } from 'geojson';
+import type { Feature, LineString, Point } from 'geojson';
 import type { WikiPOI } from '$lib/services/wikipedia';
+import Supercluster from 'supercluster';
 
 interface SelectRenderableWikiPOIsOptions {
     renderedPageIds: Set<number>;
@@ -58,4 +59,47 @@ export function selectRenderableWikiPOIs(
     }
 
     return corridorErrored ? unseen : [];
+}
+
+/**
+ * Clusters POIs using Supercluster.
+ * Returns a mix of individual WikiPOIs and Clusters.
+ */
+export function getClusteredWikiPOIs(
+    pois: WikiPOI[],
+    zoom: number,
+    bbox: [number, number, number, number],
+    options: { radius?: number; maxZoom?: number } = {}
+) {
+    const index = new Supercluster({
+        radius: options.radius || 40,
+        maxZoom: options.maxZoom || 16,
+        // We can attach properties to clusters
+        map: (props) => ({ 
+            sumRank: props.rank || 0,
+            count: 1,
+            topRank: props.rank || 0,
+            topTitle: props.title || ''
+        }),
+        reduce: (acc, props) => {
+            acc.sumRank += props.sumRank;
+            acc.count += props.count;
+            if (props.topRank > acc.topRank) {
+                acc.topRank = props.topRank;
+                acc.topTitle = props.topTitle;
+            }
+        }
+    });
+
+    const features: Feature<Point, WikiPOI>[] = pois.map(poi => ({
+        type: 'Feature',
+        geometry: {
+            type: 'Point',
+            coordinates: [poi.lon, poi.lat]
+        },
+        properties: poi
+    }));
+
+    index.load(features);
+    return index.getClusters(bbox, Math.floor(zoom));
 }
