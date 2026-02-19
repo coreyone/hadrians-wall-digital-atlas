@@ -787,7 +787,7 @@
             lastAppliedCalibration = compassFallbackLatched;
         }
 
-        if ($hikerMode.simplifiedHUD) {
+        if ($hikerMode.simplifiedHUD || !$hikerMode.isCompassActive) {
             isHeadingUp = false;
             showCompassFallbackNotice = false;
             return;

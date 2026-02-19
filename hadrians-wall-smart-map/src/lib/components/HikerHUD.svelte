@@ -149,6 +149,18 @@
                     >
                 {/if}
                 <button
+                    onclick={() => hikerMode.toggleCompass()}
+                    class="hud-toggle ds-chip pointer-events-auto rounded-md border px-2 py-1 text-[13px] font-black uppercase tracking-[0.2em] transition-colors flex items-center justify-center {$hikerMode.isCompassActive
+                        ? 'text-blue-600 border-blue-200 bg-blue-50'
+                        : 'text-slate-400 border-slate-200 hover:text-slate-600'}"
+                    aria-label="Toggle Compass"
+                    title={$hikerMode.isCompassActive
+                        ? "Compass ON"
+                        : "Compass OFF"}
+                >
+                    <i class="hn hn-arrow-alt-circle-up"></i>
+                </button>
+                <button
                     onclick={onToggleSimplified}
                     class="hud-toggle ds-chip pointer-events-auto rounded-md border px-2 py-1 text-[9px] font-black uppercase tracking-[0.2em]"
                 >

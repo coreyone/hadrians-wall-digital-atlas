@@ -9,6 +9,7 @@ export interface HikerBadge {
 interface HikerState {
     isActive: boolean;
     is3D: boolean;
+    isCompassActive: boolean;
     isCalibrating: boolean;
     heading: number;
     pitch: number;
@@ -42,6 +43,7 @@ interface HikerState {
 const initialState: HikerState = {
     isActive: false,
     is3D: false,
+    isCompassActive: true,
     isCalibrating: false,
     heading: 0,
     pitch: 60,
@@ -81,6 +83,7 @@ function createHikerStore() {
             update((s) => ({
                 ...s,
                 isActive: true,
+                isCompassActive: true,
                 is3D: !s.simplifiedHUD,
                 pitch: s.simplifiedHUD ? 0 : 60
             })),
@@ -88,10 +91,16 @@ function createHikerStore() {
             update((s) => ({
                 ...s,
                 isActive: false,
+                isCompassActive: true,
                 is3D: false,
                 isCalibrating: false,
                 isOffTrail: false,
                 driftMeters: 0
+            })),
+        toggleCompass: () =>
+            update((s) => ({
+                ...s,
+                isCompassActive: !s.isCompassActive
             })),
         setHeading: (heading: number) =>
             update((s) => ({
