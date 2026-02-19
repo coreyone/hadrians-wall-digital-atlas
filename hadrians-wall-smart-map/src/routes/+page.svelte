@@ -2193,16 +2193,6 @@
                         >Map</span
                     >
                 </button>
-                <button
-                    onclick={toggleSearch}
-                    class="flex flex-col items-center gap-1 flex-1 text-slate-500"
-                >
-                    <div class="p-1">{@html icons.search}</div>
-                    <span
-                        class="text-[9px] font-black uppercase tracking-widest"
-                        >Registry</span
-                    >
-                </button>
             </div>
         </nav>
     {/if}
