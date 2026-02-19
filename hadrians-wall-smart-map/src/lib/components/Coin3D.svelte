@@ -108,7 +108,7 @@
         const width = container.clientWidth;
         const height = container.clientHeight;
         camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-        camera.position.z = 5;
+        camera.position.z = 6.5;
 
         // Renderer setup
         renderer = new THREE.WebGLRenderer({
@@ -155,6 +155,7 @@
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
             model.position.sub(center);
+            model.position.y -= 0.4; // Shift down further to center visually and avoid top cutoff
 
             // Scale model to fit nicely
             const size = box.getSize(new THREE.Vector3());

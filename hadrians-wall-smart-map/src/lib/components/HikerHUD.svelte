@@ -103,7 +103,7 @@
             type="button"
             onclick={onCoinTap}
             bind:this={topCoinButton}
-            class="relative flex h-12 w-12 items-center justify-center rounded-full border border-amber-200/80 bg-slate-900/85 shadow-[0_0_20px_rgba(245,158,11,0.45)] transition-all duration-300 {hideTopCoin
+            class="relative flex h-12 w-12 items-center justify-center rounded-full border border-amber-200/70 bg-gradient-to-br from-amber-50 via-yellow-100 to-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.35)] transition-all duration-300 {hideTopCoin
                 ? 'pointer-events-none scale-75 opacity-0'
                 : 'scale-100 opacity-100'}"
             aria-label="Triple tap Roman Coin to exit Hiker Mode"
