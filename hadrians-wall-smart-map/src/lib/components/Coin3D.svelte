@@ -183,8 +183,8 @@
             pivot = new THREE.Group();
             pivot.add(model);
             
-            // Move pivot down -1.6 units to center within the UI circle
-            pivot.position.y = -1.6;
+            // Move pivot down -1.8 units to center within the UI circle
+            pivot.position.y = -1.8;
             
             scene.add(pivot);
             isLoaded = true;
@@ -217,8 +217,8 @@
         if (pivot && renderer && scene && camera) {
             const time = performance.now() * 0.001;
 
-            // Floating effect - oscillates around the offset y=-1.6
-            pivot.position.y = -1.6 + (Math.sin(time * 2) * 0.15);
+            // Floating effect - oscillates around the offset y=-1.8
+            pivot.position.y = -1.8 + (Math.sin(time * 2) * 0.15);
 
             // Base spin - only if hiker mode is active
             if ($hikerMode.isActive) {
