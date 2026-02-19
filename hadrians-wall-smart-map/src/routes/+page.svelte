@@ -46,6 +46,7 @@
     let isHeadingUp = $state(false);
     let mapComponent: any = $state();
     let isMobile = $state(false);
+    let isPortable = $state(false);
     let isOnline = $state(true);
 
     type AppMode = "plan" | "explore";
@@ -292,16 +293,24 @@
         window.addEventListener("offline", handleOffline);
 
         const mql = window.matchMedia("(max-width: 768px)");
+        const portableMql = window.matchMedia("(max-width: 1024px)");
+
         isMobile = mql.matches;
+        isPortable = portableMql.matches;
+
         // On mobile, start with sidebar closed to show map; on desktop, start open.
-        isSidebarOpen = !isMobile;
+        isSidebarOpen = !isPortable;
         const handleMedia = (e: MediaQueryListEvent) => {
             isMobile = e.matches;
             if (!e.matches) {
                 showMobileSplash = false;
             }
         };
+        const handlePortableMedia = (e: MediaQueryListEvent) => {
+            isPortable = e.matches;
+        };
         mql.addEventListener("change", handleMedia);
+        portableMql.addEventListener("change", handlePortableMedia);
         const ukTickInterval = setInterval(() => {
             ukNowTick = Date.now();
         }, 60000);
@@ -513,7 +522,7 @@
     let tapCount = 0;
 
     async function activateHikerMode() {
-        if (!isMobile) return;
+        if (!isPortable) return;
         if (coinMorphBusy) return;
         coinMorphBusy = true;
         try {
@@ -521,7 +530,7 @@
             coinAnimating = true;
             if (navigator.vibrate) navigator.vibrate(300);
 
-            if (isMobile) {
+            if (isPortable) {
                 await runCoinMorph("expand");
             }
 
@@ -568,7 +577,7 @@
     }
 
     $effect(() => {
-        if (!isMobile && $hikerMode.isActive) {
+        if (!isPortable && $hikerMode.isActive) {
             deactivateHikerMode();
         }
     });
@@ -577,7 +586,7 @@
         if (coinMorphBusy) return;
         coinMorphBusy = true;
         try {
-            if (isMobile) {
+            if (isPortable) {
                 await runCoinMorph("collapse");
             }
         } finally {
@@ -826,7 +835,7 @@
 />
 
 <!-- Hiker HUD Overlay -->
-{#if $hikerMode.isActive && isMobile}
+{#if $hikerMode.isActive && isPortable}
     <HikerHUD
         bind:this={hikerHUDRef}
         onToggleSimplified={toggleSimplifiedHUD}
@@ -836,7 +845,7 @@
     />
 {/if}
 
-{#if showCompassFallbackNotice && $hikerMode.isActive && isMobile}
+{#if showCompassFallbackNotice && $hikerMode.isActive && isPortable}
     <div
         class="fixed top-24 left-1/2 z-[70] flex w-[min(92vw,26rem)] -translate-x-1/2 items-center justify-between gap-2 rounded-xl border border-amber-300/35 bg-amber-500/90 px-3 py-2 text-slate-950 shadow-2xl"
     >
@@ -2131,18 +2140,20 @@
                 class="ds-control-pack flex bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg"
                 style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);"
             >
-                <button
-                    onclick={() => (mapStyle = "topo")}
-                    class="ds-control-btn {isMobile
-                        ? 'px-3 py-2 text-[10px]'
-                        : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
-                    'topo'
-                        ? 'ds-control-btn-active bg-slate-900 text-white'
-                        : 'text-slate-600 active:bg-slate-50'}">Topo</button
-                >
+                                <button
+                                    onclick={() => (mapStyle = "topo")}
+                                    class="ds-control-btn {isPortable
+                                        ? 'px-3 py-2 text-[10px]'
+                                        : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
+                                    'topo'
+                                        ? 'ds-control-btn-active bg-slate-900 text-white'
+                                        : 'text-slate-600 active:bg-slate-50'}"
+                                    >Topo</button
+                                >
+                
                 <button
                     onclick={() => (mapStyle = "satellite")}
-                    class="ds-control-btn {isMobile
+                    class="ds-control-btn {isPortable
                         ? 'px-3 py-2 text-[10px]'
                         : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
                     'satellite'
@@ -2152,7 +2163,7 @@
                 >
                 <button
                     onclick={() => (mapStyle = "streets")}
-                    class="ds-control-btn {isMobile
+                    class="ds-control-btn {isPortable
                         ? 'px-3 py-2 text-[10px]'
                         : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
                     'streets'
@@ -2161,7 +2172,7 @@
                 >
             </div>
 
-            {#if !isMobile}
+            {#if !isPortable}
                 <button
                     class="ds-control-fab p-3 rounded-md bg-white/95 border border-slate-200 shadow-2xl active:scale-90 transition-all text-slate-900 active:text-blue-600 flex items-center justify-center"
                     style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);"
@@ -2172,13 +2183,14 @@
         </div>
     </main>
 
-    <!-- Absolute Bottom Tab Bar (Mobile) - using absolute instead of fixed to align with h-dvh container -->
-    {#if isMobile}
+    <!-- Absolute Bottom Tab Bar (Mobile/Tablet) - using absolute instead of fixed to align with h-dvh container -->
+    {#if isPortable}
         <nav
             class="crt-mobile-nav crt-shell absolute bottom-0 inset-x-0 z-50 h-[calc(65px+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] bg-white/98 backdrop-blur-xl border-t border-slate-200 overflow-hidden transition-transform duration-300 {selectedPOI
                 ? 'translate-y-full'
                 : ''}"
             style="-webkit-backdrop-filter: blur(20px);"
+        >
         >
             <div class="flex items-center justify-around h-16">
                 <button
