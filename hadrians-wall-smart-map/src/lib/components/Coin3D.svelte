@@ -83,6 +83,7 @@
     let isJiggling = false;
     let jiggleTime = 0;
     const JIGGLE_DURATION = 0.5;
+    let pivot: THREE.Group | undefined;
 
     async function loadResources() {
         if (!browser) return;
@@ -178,7 +179,14 @@
             // Initial rotation setup
             model.rotation.y = 0;
 
-            scene.add(model);
+            // Wrap in pivot for stable animation/centering
+            pivot = new THREE.Group();
+            pivot.add(model);
+            
+            // Move pivot down -0.55 units to center within the UI circle
+            pivot.position.y = -0.55;
+            
+            scene.add(pivot);
             isLoaded = true;
             animate();
         }
@@ -206,15 +214,15 @@
 
         animationFrameId = requestAnimationFrame(animate);
 
-        if (model && renderer && scene && camera) {
+        if (pivot && renderer && scene && camera) {
             const time = performance.now() * 0.001;
 
-            // Floating effect
-            model.position.y = (Math.sin(time * 2) * 0.15) - 0.42;
+            // Floating effect - oscillates around the offset y=-0.55
+            pivot.position.y = -0.55 + (Math.sin(time * 2) * 0.15);
 
             // Base spin - only if hiker mode is active
             if ($hikerMode.isActive) {
-                model.rotation.y += 0.01;
+                pivot.rotation.y += 0.01;
             }
 
             // Jiggle logic
@@ -224,18 +232,18 @@
                     isJiggling = false;
                     jiggleTime = 0;
                     // Reset additional transforms
-                    model.rotation.z = 0;
-                    model.rotation.x = 0;
+                    pivot.rotation.z = 0;
+                    pivot.rotation.x = 0;
                 } else {
                     const intensity = 1 - jiggleTime / JIGGLE_DURATION;
                     const shake = Math.sin(jiggleTime * 30) * 0.2 * intensity;
-                    model.rotation.z = shake;
-                    model.rotation.x = shake * 0.5;
+                    pivot.rotation.z = shake;
+                    pivot.rotation.x = shake * 0.5;
                 }
             } else {
                 // Smooth decay for any residual rotation
-                model.rotation.z *= 0.9;
-                model.rotation.x *= 0.9;
+                pivot.rotation.z *= 0.9;
+                pivot.rotation.x *= 0.9;
             }
 
             renderer.render(scene, camera);
@@ -317,7 +325,7 @@
 </script>
 
 <div
-    class="relative {className}"
+    class="relative overflow-visible z-10 {className}"
     bind:this={container}
     onclick={handleClick}
     onkeydown={(e) => e.key === "Enter" && handleClick()}
