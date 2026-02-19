@@ -155,7 +155,7 @@
             // Scale model to fit nicely
             const size = box.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
-            const scale = 3.0 / maxDim;
+            const scale = 2.2 / maxDim;
             model.scale.set(scale, scale, scale);
 
             // Initial rotation setup

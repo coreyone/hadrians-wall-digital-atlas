@@ -283,6 +283,7 @@
 
         const mql = window.matchMedia("(max-width: 768px)");
         isMobile = mql.matches;
+        if (isMobile) isSidebarOpen = false;
         const handleMedia = (e: MediaQueryListEvent) => {
             isMobile = e.matches;
             if (!e.matches) {
@@ -896,7 +897,7 @@
 {/if}
 
 <div
-    class="crt-workstation flex h-screen w-full overflow-hidden bg-canvas text-slate-300 antialiased text-[13px] selection:bg-blue-500/30 relative"
+    class="crt-workstation flex h-[100dvh] w-full overflow-hidden bg-canvas text-slate-300 antialiased text-[13px] selection:bg-blue-500/30 relative"
 >
     <!-- Sticky Header (Mobile) -->
     {#if isMobile}
@@ -930,7 +931,7 @@
                             ? 'h-[3.375rem] w-[3.375rem]'
                             : 'h-9 w-9'} {coinMetallic || $hikerMode.isActive
                             ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.45)]'
-                            : 'border-blue-300/55 bg-transparent shadow-[0_0_12px_rgba(59,130,246,0.35)]'} {coinAnimating
+                            : 'border-amber-300/60 bg-white/95 shadow-[0_0_12px_rgba(251,191,36,0.2)]'} {coinAnimating
                             ? 'scale-110 rotate-[360deg]'
                             : ''} {coinMorphing || $hikerMode.isActive
                             ? 'pointer-events-none opacity-0 scale-75'
