@@ -49,8 +49,8 @@
     let searchQuery = $state("");
     let isHeadingUp = $state(false);
     let mapComponent: any = $state();
-    let isMobile = $state(isBrowser && window.matchMedia(MOBILE_MQ).matches);
-    let isPortable = $state(isBrowser && window.matchMedia(PORTABLE_MQ).matches);
+    let isMobile = $derived(isBrowser && window.matchMedia(MOBILE_MQ).matches);
+    let isPortable = $derived(isBrowser && window.matchMedia(PORTABLE_MQ).matches);
     let isOnline = $state(true);
 
     type AppMode = "plan" | "explore";
@@ -76,7 +76,15 @@
     let hikerTopCoinRect = $state<DOMRect | null>(null);
     let coinMorphing = $state(false);
     let coinMorphBusy = $state(false);
-    let showSplash = $state(isPortable); // Rule of Least Surprise: Start true on portable
+    let showSplash = $state(false); 
+    
+    // Rule of Least Surprise: Start true on portable if not already loaded
+    $effect.pre(() => {
+        if (isPortable && !mapReady) {
+            showSplash = true;
+        }
+    });
+
     let splashMinElapsed = $state(false);
     let mapReady = $state(false);
     let ukNowTick = $state(Date.now());
