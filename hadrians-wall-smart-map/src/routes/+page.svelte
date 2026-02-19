@@ -51,6 +51,7 @@
     let mapComponent: any = $state();
     let isMobile = $state(false);
     let isPortable = $state(false);
+    let hasTouch = $state(false);
     let isOnline = $state(true);
 
     type AppMode = "plan" | "explore";
@@ -94,6 +95,7 @@
 
             isMobile = mql.matches;
             isPortable = portableMql.matches;
+            hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             isSidebarOpen = !isPortable;
 
             const handleMedia = (e: MediaQueryListEvent) => {
@@ -101,6 +103,7 @@
             };
             const handlePortableMedia = (e: MediaQueryListEvent) => {
                 isPortable = e.matches;
+                isSidebarOpen = !e.matches;
                 if (!e.matches) {
                     showSplash = false;
                 }
@@ -113,10 +116,6 @@
                 portableMql.removeEventListener("change", handlePortableMedia);
             };
         }
-    });
-
-    $effect(() => {
-        isSidebarOpen = !isPortable;
     });
     let ukNowTick = $state(Date.now());
     let compassHeading = $state(0);
@@ -548,7 +547,7 @@
     let tapCount = 0;
 
     async function activateHikerMode() {
-        if (!isPortable) return;
+        if (!hasTouch && !isPortable) return;
         if (coinMorphBusy) return;
         coinMorphBusy = true;
         try {
@@ -603,7 +602,7 @@
     }
 
     $effect(() => {
-        if (!isPortable && $hikerMode.isActive) {
+        if (!isPortable && !hasTouch && $hikerMode.isActive) {
             deactivateHikerMode();
         }
     });
@@ -978,7 +977,7 @@
                     <button
                         bind:this={mobileCoinButton}
                         onclick={handleCoinTap}
-                        class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {$hikerMode.isActive
+                        class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] touch-none {$hikerMode.isActive
                             ? 'h-[3.375rem] w-[3.375rem]'
                             : 'h-9 w-9'} {coinMetallic || $hikerMode.isActive
                             ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.45)]'
@@ -1080,7 +1079,7 @@
                         <button
                             bind:this={mobileCoinButton}
                             onclick={handleCoinTap}
-                            class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {$hikerMode.isActive
+                            class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] touch-none {$hikerMode.isActive
                                 ? 'h-9 w-9'
                                 : 'h-8 w-8'} {coinMetallic || $hikerMode.isActive
                                 ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.35)]'
