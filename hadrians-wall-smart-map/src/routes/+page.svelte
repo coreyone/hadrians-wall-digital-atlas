@@ -19,6 +19,7 @@
     import { audioService } from "$lib/services/audio";
     import type { NavigationMetrics } from "$lib/services/navigation";
     import { runBlobMorph } from "$lib/utils/blobMorph";
+    import Coin3D, { prefetchCoin } from "$lib/components/Coin3D.svelte";
 
     let { data }: { data: PageData } = $props();
 
@@ -271,6 +272,9 @@
     }
 
     onMount(() => {
+        // Prefetch 3D coin assets when idle
+        prefetchCoin();
+
         const handleOnline = () => (isOnline = true);
         const handleOffline = () => (isOnline = false);
         isOnline = navigator.onLine;
@@ -934,13 +938,16 @@
                         aria-label="Triple tap Roman Coin to toggle Hiker Mode"
                         title="Triple Tap Roman Coin"
                     >
-                        <img
-                            src="/logo-coin.png"
-                            alt="Roman Coin Toggle"
-                            class="object-contain drop-shadow-sm {$hikerMode.isActive
+                        <div
+                            class="{$hikerMode.isActive
                                 ? 'h-9 w-9'
-                                : 'h-6 w-6'}"
-                        />
+                                : 'h-6 w-6'} relative"
+                        >
+                            <Coin3D
+                                class="w-full h-full drop-shadow-sm"
+                                interactive={false}
+                            />
+                        </div>
                     </button>
                     <div
                         class="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-white/5 border border-white/5"
@@ -1531,11 +1538,11 @@
                                 class="bg-amber-500/5 border border-amber-500/10 p-4 rounded-lg space-y-2.5"
                             >
                                 <span
-                                    class="text-[10px] font-black uppercase text-amber-500 tracking-[0.15em] flex items-center gap-2"
+                                    class="text-[10px] font-black uppercase text-amber-400 tracking-[0.15em] flex items-center gap-2"
                                     >Bourdain's Intel</span
                                 >
                                 <p
-                                    class="text-[13px] font-medium text-amber-200/80 leading-relaxed italic text-pretty"
+                                    class="text-[13px] font-medium text-amber-50 leading-relaxed italic text-pretty"
                                 >
                                     "{selectedPOI.bourdainIntel}"
                                 </p>
@@ -1547,11 +1554,11 @@
                                 class="bg-white/5 border border-white/5 p-4 rounded-lg space-y-2.5"
                             >
                                 <span
-                                    class="text-[10px] font-black uppercase text-slate-400 tracking-[0.15em] flex items-center gap-2"
+                                    class="text-[10px] font-black uppercase text-slate-300 tracking-[0.15em] flex items-center gap-2"
                                     >Frye's Perspective</span
                                 >
                                 <p
-                                    class="text-[13px] font-medium text-slate-300 leading-relaxed italic text-pretty"
+                                    class="text-[13px] font-medium text-slate-50 leading-relaxed italic text-pretty"
                                 >
                                     "{selectedPOI.fryeIntel}"
                                 </p>
@@ -1563,11 +1570,11 @@
                                 class="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-lg space-y-2.5"
                             >
                                 <span
-                                    class="text-[10px] font-black uppercase text-emerald-500 tracking-[0.15em] flex items-center gap-2"
+                                    class="text-[10px] font-black uppercase text-emerald-400 tracking-[0.15em] flex items-center gap-2"
                                     >Rick Steves' Advice</span
                                 >
                                 <p
-                                    class="text-[13px] font-medium text-emerald-200/80 leading-relaxed italic text-pretty"
+                                    class="text-[13px] font-medium text-emerald-50 leading-relaxed italic text-pretty"
                                 >
                                     "{selectedPOI.rickStevesIntel}"
                                 </p>
@@ -1579,11 +1586,11 @@
                                 class="bg-indigo-500/5 border border-indigo-500/10 p-4 rounded-lg space-y-2.5"
                             >
                                 <span
-                                    class="text-[10px] font-black uppercase text-indigo-400 tracking-[0.15em] flex items-center gap-2"
+                                    class="text-[10px] font-black uppercase text-indigo-300 tracking-[0.15em] flex items-center gap-2"
                                     >{@html icons.camera} Photography Tips</span
                                 >
                                 <p
-                                    class="text-[13px] font-medium text-indigo-200/80 leading-relaxed italic text-pretty"
+                                    class="text-[13px] font-medium text-indigo-50 leading-relaxed italic text-pretty"
                                 >
                                     "{selectedPOI.photoIntel}"
                                 </p>

@@ -649,7 +649,7 @@
         heritage: `<i class="ra ra-capitol map-pin-glyph" aria-hidden="true"></i>`,
         pub: `<i class="ra ra-beer map-pin-glyph" aria-hidden="true"></i>`,
         brewery: `<i class="ra ra-beer map-pin-glyph" aria-hidden="true"></i>`,
-        discovery: `<i class="ra ra-gem map-pin-glyph" aria-hidden="true"></i>`,
+        discovery: `<span style="font-family: serif; font-weight: bold;">W</span>`,
         cafe: `<i class="ra ra-coffee-mug map-pin-glyph" aria-hidden="true"></i>`,
         restaurant: `<i class="ra ra-knife-fork map-pin-glyph" aria-hidden="true"></i>`,
         deli: `<i class="ra ra-meat map-pin-glyph" aria-hidden="true"></i>`,
@@ -1098,16 +1098,16 @@
 
         for (const poi of validPOIs) {
             const el = document.createElement("div");
-            const size = Math.min(18, Math.max(10, 10 + poi.rank / 10));
+            const size = Math.min(22, Math.max(14, 14 + poi.rank / 10));
 
             el.className = "poi-marker z-10";
             el.dataset.pageid = poi.pageid.toString();
 
             el.innerHTML = `
                 <div class="instrument-shell flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 hover:scale-125 hover:z-40 active:scale-90 overflow-visible">
-                        <div class="marker-icon bg-white rounded-sm border-2 border-blue-600 shadow-xl flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 0.95 : size}px; height: ${isMobile ? size * 0.95 : size}px;">
-                        <div class="text-blue-600 flex items-center justify-center leading-none" style="font-size: ${Math.max(8, Math.min(13, size * (isMobile ? 0.58 : 0.54)))}px;">
-                            ${icons.discovery}
+                        <div class="marker-icon bg-white/90 backdrop-blur-sm rounded-sm border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden" style="width: ${isMobile ? size * 0.95 : size}px; height: ${isMobile ? size * 0.95 : size}px;">
+                        <div class="text-black flex items-center justify-center leading-none font-bold" style="font-size: ${Math.max(10, Math.min(16, size * (isMobile ? 0.65 : 0.6)))}px; font-family: serif;">
+                            W
                         </div>
                     </div>
                     <div class="poi-label label-priority-4 bg-slate-900/95 backdrop-blur-xl px-2 py-1 rounded-sm border border-slate-700 shadow-2xl transition-opacity duration-300 pointer-events-none">

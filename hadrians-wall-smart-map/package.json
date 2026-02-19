@@ -40,10 +40,12 @@
 		"@fontsource/ia-writer-quattro": "^5.2.5",
 		"@hackernoon/pixel-icon-library": "^1.0.6",
 		"@turf/turf": "^7.3.4",
+		"@types/three": "^0.183.0",
 		"clsx": "^2.1.1",
 		"lucide-svelte": "^0.574.0",
 		"maplibre-gl": "^5.18.0",
 		"rpg-awesome": "^0.2.0",
-		"tailwind-merge": "^3.4.1"
+		"tailwind-merge": "^3.4.1",
+		"three": "^0.183.0"
 	}
 }

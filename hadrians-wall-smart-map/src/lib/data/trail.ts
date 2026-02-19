@@ -328,114 +328,114 @@ export const overnightStops = [
 ];
 
 export const englishHeritageSites = [
-    { 
-        name: "Carlisle Castle", 
-        coords: [-2.9419, 54.8973], 
-        pageid: 856932, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Mon, Apr 13", 
-        staffed: true, 
+    {
+        name: "Carlisle Castle",
+        coords: [-2.9419, 54.8973],
+        pageid: 856932,
+        hours: "10:00 - 17:00",
+        visitDay: "Mon, Apr 13",
+        staffed: true,
         intel: "Built 1092 by William Rufus. Prison for Mary, Queen of Scots.",
         fryeIntel: "An evolution of the frontier: where Roman stone met medieval blood. Frye notes that few civilized people have ever lived without such barriers.",
         rickStevesIntel: "Carlisle serves as a convenient base for exploring the western sections of the wall."
     },
-    { 
-        name: "Tullie House Museum", 
-        coords: [-2.9400, 54.8960], 
-        pageid: 312242, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Mon, Apr 13", 
-        staffed: true, 
+    {
+        name: "Tullie House Museum",
+        coords: [-2.9400, 54.8960],
+        pageid: 312242,
+        hours: "10:00 - 17:00",
+        visitDay: "Mon, Apr 13",
+        staffed: true,
         intel: "Jacobean mansion detailing Roman occupancy and Border Reivers.",
         rickStevesIntel: "A surprisingly good museum with particularly praised Roman exhibits."
     },
-    { 
-        name: "Lanercost Priory", 
-        coords: [-2.6949, 54.9662], 
-        pageid: 967234, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Mon, Apr 13", 
-        staffed: true, 
-        intel: "Founded 1165. Built from stone taken from Hadrian's Wall." 
+    {
+        name: "Lanercost Priory",
+        coords: [-2.6949, 54.9662],
+        pageid: 967234,
+        hours: "10:00 - 17:00",
+        visitDay: "Mon, Apr 13",
+        staffed: true,
+        intel: "Founded 1165. Built from stone taken from Hadrian's Wall."
     },
-    { 
-        name: "Birdoswald Roman Fort", 
-        coords: [-2.6023, 54.9894], 
-        pageid: 2143239, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Tue, Apr 14", 
-        staffed: true, 
+    {
+        name: "Birdoswald Roman Fort",
+        coords: [-2.6023, 54.9894],
+        pageid: 2143239,
+        hours: "10:00 - 17:00",
+        visitDay: "Tue, Apr 14",
+        staffed: true,
         intel: "Known as Banna ('spur'). Commanding position overlooking meander of River Irthing.",
         fryeIntel: "Frye reminds us that Hadrian was the first to build a wall 'to separate the barbarians and the Romans.' Banna was a vital cog in that machine.",
         rickStevesIntel: "Birdoswald boasts the longest surviving stretch of the wall and is notably family-friendly.",
         photoIntel: "TOP 10 SPOT: The longest continuous stretch of Wall is perfect for 'leading line' compositions. Best in early morning to capture the mist lifting from the Irthing valley."
     },
-    { 
-        name: "Roman Army Museum", 
-        coords: [-2.5130, 54.9910], 
-        pageid: 41263032, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Wed, Apr 15", 
-        staffed: true, 
+    {
+        name: "Roman Army Museum",
+        coords: [-2.5130, 54.9910],
+        pageid: 41263032,
+        hours: "10:00 - 17:00",
+        visitDay: "Wed, Apr 15",
+        staffed: true,
         intel: "Experience life on the front line. Exclusive 3D Edge of Empire film.",
         rickStevesIntel: "Part of the essential six-mile central stretch that defines the Hadrian's Wall experience."
     },
-    { 
-        name: "Walltown Crags", 
-        coords: [-2.5061, 54.9927], 
-        pageid: 41263032, 
-        hours: "Dawn - Dusk", 
-        visitDay: "Wed, Apr 15", 
-        staffed: false, 
+    {
+        name: "Walltown Crags",
+        coords: [-2.5061, 54.9927],
+        pageid: 41263032,
+        hours: "Dawn - Dusk",
+        visitDay: "Wed, Apr 15",
+        staffed: false,
         intel: "One of the highest standing sections of the Wall.",
         fryeIntel: "The highest drama of the frontier. To Frye, these stones represent the attempt to create a safe space where civilization could flourish.",
         rickStevesIntel: "One of the highest standing and most dramatic sections of the frontier.",
         photoIntel: "TOP 10 SPOT: Dramatic elevation changes. Use a wide-angle lens to capture the Wall snaking across the Whin Sill escarpment. Peak drama at Sunset."
     },
     { name: "Great Chesters (Aesica)", coords: [-2.4640, 54.9950], pageid: 18177794, hours: "Dawn - Dusk", visitDay: "Wed, Apr 15", staffed: false },
-    { 
-        name: "Housesteads Roman Fort", 
-        coords: [-2.3310, 55.0130], 
-        pageid: 1825118, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Fri, Apr 17", 
-        staffed: true, 
+    {
+        name: "Housesteads Roman Fort",
+        coords: [-2.3310, 55.0130],
+        pageid: 1825118,
+        hours: "10:00 - 17:00",
+        visitDay: "Fri, Apr 17",
+        staffed: true,
         intel: "Vercovicium. Stone AD 124. Best preserved Roman latrines in Britain.",
         fryeIntel: "The definitive 'monument to Roman supremacy.' Frye sees this not just as a border control, but as a statement of total military dominance over the wild north.",
         rickStevesIntel: "A particularly well-preserved segment and a 'must-see'. The barracks and latrines illustrate daily Roman life vividly.",
         photoIntel: "TOP 10 SPOT: The hilltop position offers 360° views. Photograph the latrines for unique archaeological detail, or walk 500m West to Cuddy's Crags for the iconic 'Looking Back' shot of the fort."
     },
-    { 
-        name: "Carrawburgh (Temple of Mithras)", 
-        coords: [-2.2230, 55.0360], 
-        pageid: 12246314, 
-        hours: "Dawn - Dusk", 
-        visitDay: "Thu, Apr 16", 
-        special: "mithras", 
-        staffed: false, 
+    {
+        name: "Carrawburgh (Temple of Mithras)",
+        coords: [-2.2230, 55.0360],
+        pageid: 12246314,
+        hours: "Dawn - Dusk",
+        visitDay: "Thu, Apr 16",
+        special: "mithras",
+        staffed: false,
         intel: "Brocolitia. Built AD 200 by First Cohort of Batavians.",
         fryeIntel: "Where the blood of the cult met the brick of the wall. Rituals here were the spiritual glue for the men holding the civilized line.",
         photoIntel: "TOP 10 SPOT: Atmospheric and low-profile. Best photographed in low light (Dawn/Dusk) to emphasize the altars and the sense of hidden ritual."
     },
-    { 
-        name: "Chesters Roman Fort", 
-        coords: [-2.1390, 55.0260], 
-        pageid: 8768992, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Fri, Apr 17", 
-        staffed: true, 
+    {
+        name: "Chesters Roman Fort",
+        coords: [-2.1390, 55.0260],
+        pageid: 8768992,
+        hours: "10:00 - 17:00",
+        visitDay: "Fri, Apr 17",
+        staffed: true,
         intel: "Cilurnum. Most complete Roman cavalry fort in Britain. AD 123.",
         fryeIntel: "The technological peak of the barrier. A cavalry hub designed to project Roman power far beyond the stone itself.",
         rickStevesIntel: "Features the best remains of a Roman bath house and some of the best-preserved buildings along the entire Wall.",
         photoIntel: "TOP 10 SPOT: The Bath House by the River North Tyne is the highlight. Use a polarising filter to manage reflections on the water and stone."
     },
-    { 
-        name: "Corbridge Roman Town", 
-        coords: [-2.0170, 54.9750], 
-        pageid: 373397, 
-        hours: "10:00 - 17:00", 
-        visitDay: "Sun, Apr 19", 
-        staffed: true, 
+    {
+        name: "Corbridge Roman Town",
+        coords: [-2.0170, 54.9750],
+        pageid: 373397,
+        hours: "10:00 - 17:00",
+        visitDay: "Sun, Apr 19",
+        staffed: true,
         intel: "Major supply and industrial town. Granaries still standing.",
         fryeIntel: "The reward for the wall: a thriving industrial hub protected by the blood and brick of the northern frontier.",
         rickStevesIntel: "A supply fort with massive granaries in a very pretty, large village on the River Tyne.",
@@ -444,7 +444,7 @@ export const englishHeritageSites = [
     {
         name: "Vindolanda",
         coords: [-2.3608, 54.9911],
-        pageid: 373397, 
+        pageid: 373397,
         hours: "10:00 - 17:00",
         visitDay: "Thu, Apr 16",
         staffed: true,
@@ -457,33 +457,33 @@ export const englishHeritageSites = [
 ];
 
 export const hospitalitySites = [
-    { 
-        name: "Twice Brewed Inn & Brewery", 
-        coords: [-2.3958, 55.0036], 
-        category: 'brewery', 
+    {
+        name: "Twice Brewed Inn & Brewery",
+        coords: [-2.3958, 55.0036],
+        category: 'brewery',
         summary: "Sits right under the Wall's highest crags.",
         url: "https://twicebrewedinn.co.uk/",
         bourdainIntel: "Order the 'Sycamore Gap IPA'. Roman-themed ales and stargazing in the Dark Sky Park."
     },
-    { 
-        name: "The Samson Inn", 
-        coords: [-2.5700, 54.9900], 
-        category: 'pub', 
+    {
+        name: "The Samson Inn",
+        coords: [-2.5700, 54.9900],
+        category: 'pub',
         summary: "Traditional Cumbrian pub in Gilsland.",
         bourdainIntel: "Stone walls and wood beams. Properly remote, old-school walker's vibe."
     },
-    { 
-        name: "The George Hotel", 
-        coords: [-2.1383, 55.0242], 
-        category: 'hotel', 
+    {
+        name: "The George Hotel",
+        coords: [-2.1383, 55.0242],
+        category: 'hotel',
         summary: "Historic coaching inn on the River North Tyne.",
         url: "https://bespokehotels.com/the-george-hotel/",
         bourdainIntel: "Classic coaching route atmosphere. Pause after the crag descent for a riverside red."
     },
-    { 
-        name: "The Golden Lion", 
-        coords: [-2.0183, 54.9746], 
-        category: 'pub', 
+    {
+        name: "The Golden Lion",
+        coords: [-2.0183, 54.9746],
+        category: 'pub',
         summary: "Historic 18th-century coaching inn in Corbridge.",
         url: "https://www.goldenlioncorbridge.com/book",
         bourdainIntel: "Market-town energy. Mixed crowd of walkers and locals. The definitive finish-line pint."

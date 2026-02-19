@@ -1,0 +1,302 @@
+<script module>
+    import type * as THREE from "three";
+    import type { GLTFLoader as GLTFLoaderType } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+    interface ThreeResources {
+        THREE: typeof THREE;
+        GLTFLoader: typeof GLTFLoaderType;
+        modelData: any; // GLTF result
+    }
+
+    let resourcesPromise: Promise<ThreeResources> | null = null;
+
+    export function prefetchCoin() {
+        if (typeof window === "undefined") return;
+
+        if (!resourcesPromise) {
+            resourcesPromise = new Promise((resolve, reject) => {
+                const idle =
+                    (window as any).requestIdleCallback ||
+                    ((cb: any) => setTimeout(cb, 1));
+                idle(async () => {
+                    try {
+                        const [threeModule, loaderModule] = await Promise.all([
+                            import("three"),
+                            import("three/examples/jsm/loaders/GLTFLoader.js"),
+                        ]);
+
+                        const loader = new loaderModule.GLTFLoader();
+                        loader.load(
+                            "/logo-coin-model.glb",
+                            (gltf) => {
+                                resolve({
+                                    THREE: threeModule,
+                                    GLTFLoader: loaderModule.GLTFLoader,
+                                    modelData: gltf,
+                                });
+                            },
+                            undefined,
+                            (err) => reject(err),
+                        );
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            });
+        }
+        return resourcesPromise;
+    }
+</script>
+
+<script lang="ts">
+    import { onMount, onDestroy } from "svelte";
+    import { browser } from "$app/environment";
+
+    interface Props {
+        class?: string;
+        interactive?: boolean;
+    }
+
+    let { class: className = "", interactive = false }: Props = $props();
+
+    let container: HTMLDivElement | undefined = $state();
+    let canvas: HTMLCanvasElement | undefined = $state();
+
+    // State
+    let isLoaded = $state(false);
+    let isVisible = $state(false);
+    let error = $state(false);
+
+    // Scene refs
+    let renderer: THREE.WebGLRenderer | undefined;
+    let scene: THREE.Scene | undefined;
+    let camera: THREE.PerspectiveCamera | undefined;
+    let model: THREE.Group | undefined;
+    let animationFrameId: number;
+    let observer: IntersectionObserver | undefined;
+
+    // Animation vars
+    let isJiggling = false;
+    let jiggleTime = 0;
+    const JIGGLE_DURATION = 0.5;
+
+    async function loadResources() {
+        if (!browser) return;
+        try {
+            // Ensure prefetch is started if not already
+            const resources = await prefetchCoin();
+            if (resources) {
+                init(resources);
+            }
+        } catch (e) {
+            console.error("Failed to load 3D libraries/model", e);
+            error = true;
+        }
+    }
+
+    function init({ THREE, modelData }: ThreeResources) {
+        if (!container || !THREE || !modelData) return;
+
+        // Scene setup
+        scene = new THREE.Scene();
+
+        // Camera setup
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        camera.position.z = 5;
+
+        // Renderer setup
+        renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            antialias: true,
+            powerPreference: "high-performance",
+        });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+        // Clear container loop (safety)
+        while (container.firstChild && container.firstChild !== canvas) {
+            container.removeChild(container.firstChild);
+        }
+
+        renderer.domElement.style.position = "absolute";
+        renderer.domElement.style.top = "0";
+        renderer.domElement.style.left = "0";
+        renderer.domElement.style.width = "100%";
+        renderer.domElement.style.height = "100%";
+        renderer.domElement.style.pointerEvents = "none"; // Pass interactions to container
+        container.appendChild(renderer.domElement);
+        canvas = renderer.domElement;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+        dirLight.position.set(2, 2, 5);
+        scene.add(dirLight);
+
+        const backLight = new THREE.DirectionalLight(0xffd700, 1);
+        backLight.position.set(-2, -2, -5);
+        scene.add(backLight);
+
+        // Setup Model from Cache
+        // CLONE the scene to allow independent instances
+        model = modelData.scene.clone();
+
+        if (model) {
+            // Center model
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            model.position.sub(center);
+
+            // Scale model to fit nicely
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 3.0 / maxDim;
+            model.scale.set(scale, scale, scale);
+
+            // Initial rotation setup
+            model.rotation.y = 0;
+
+            scene.add(model);
+            isLoaded = true;
+            animate();
+        }
+
+        // Handle resize
+        const resizeObserver = new ResizeObserver(() => {
+            if (!container || !camera || !renderer) return;
+            const newWidth = container.clientWidth;
+            const newHeight = container.clientHeight;
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(newWidth, newHeight);
+        });
+        resizeObserver.observe(container);
+    }
+
+    function animate() {
+        if (!isVisible) {
+            // Pause if not visible
+            animationFrameId = requestAnimationFrame(animate);
+            return;
+        }
+
+        animationFrameId = requestAnimationFrame(animate);
+
+        if (model && renderer && scene && camera) {
+            // Base spin
+            model.rotation.y += 0.01;
+
+            // Jiggle logic
+            if (isJiggling) {
+                jiggleTime += 0.05;
+                if (jiggleTime > JIGGLE_DURATION) {
+                    isJiggling = false;
+                    jiggleTime = 0;
+                    // Reset additional transforms
+                    model.rotation.z = 0;
+                    model.rotation.x = 0;
+                } else {
+                    const intensity = 1 - jiggleTime / JIGGLE_DURATION;
+                    const shake = Math.sin(jiggleTime * 30) * 0.2 * intensity;
+                    model.rotation.z = shake;
+                    model.rotation.x = shake * 0.5;
+                }
+            } else {
+                // Smooth decay for any residual rotation
+                model.rotation.z *= 0.9;
+                model.rotation.x *= 0.9;
+            }
+
+            renderer.render(scene, camera);
+        }
+    }
+
+    // Interaction handler
+    export function triggerJiggle() {
+        if (!model) return;
+        isJiggling = true;
+        jiggleTime = 0;
+    }
+
+    onMount(() => {
+        if (!browser) return;
+
+        // Intersection Observer for lazy loading and pausing animation
+        observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    isVisible = entry.isIntersecting;
+                    if (entry.isIntersecting && !model && !error) {
+                        loadResources();
+                    }
+                });
+            },
+            { rootMargin: "100px" },
+        );
+
+        if (container) observer.observe(container);
+    });
+
+    onDestroy(() => {
+        if (typeof window !== "undefined") {
+            cancelAnimationFrame(animationFrameId);
+            if (renderer) {
+                renderer.dispose();
+                container?.removeChild(renderer.domElement);
+            }
+            // Dispose logic for cloned model...
+            if (model) {
+                model.traverse((child: any) => {
+                    if (child.isMesh) {
+                        // Don't dispose geometry/material if shared?
+                        // Three.js GLTFLoader reuses geometry/material on clone by default?
+                        // Actually, clone() of a Group usually shallow-copies meshes but shares geometry/material.
+                        // So we should NOT dispose shared geometry/material if we want other instances to live.
+                        // BUT proper referencing counting is hard here.
+                        // For now, simpler to NOT dispose geometry/materials, let Browser GC handle it if all refs are gone.
+                        // Or just dispose scene-specific stuff.
+                    }
+                });
+            }
+            if (observer) observer.disconnect();
+        }
+    });
+
+    function handleClick() {
+        if (interactive) {
+            triggerJiggle();
+        }
+    }
+</script>
+
+<div
+    class="relative {className}"
+    bind:this={container}
+    onclick={handleClick}
+    onkeydown={(e) => e.key === "Enter" && handleClick()}
+    role="button"
+    tabindex={interactive ? 0 : -1}
+    aria-label="3D Coin Model"
+>
+    <!-- Fallback Image (visible until loaded) -->
+    <img
+        src="/logo-coin.png"
+        alt="Roman Coin"
+        class="absolute inset-0 w-full h-full object-contain transition-opacity duration-500 {isLoaded
+            ? 'opacity-0'
+            : 'opacity-100'}"
+        loading="eager"
+    />
+</div>
+
+<style>
+    div {
+        display: block;
+        /* Container must have dimensions set by parent */
+    }
+</style>
