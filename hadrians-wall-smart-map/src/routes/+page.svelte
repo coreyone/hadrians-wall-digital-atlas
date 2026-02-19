@@ -1020,7 +1020,9 @@
             </button>
         {/if}
 
-        <header class="p-4 border-b border-slate-200/60 flex flex-col gap-4">
+        <header
+            class="px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-slate-200/60 flex flex-col gap-4"
+        >
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <span class="atlas-logo-mark" aria-hidden="true">
@@ -1164,7 +1166,7 @@
                         </div>
 
                         <div
-                            class="ds-panel grid grid-cols-3 gap-1 bg-slate-50/50 p-3 rounded-lg border border-slate-200/60 text-white shadow-inner"
+                            class="ds-panel grid grid-cols-3 gap-1 bg-slate-50/50 p-3 rounded-lg border border-slate-200/60 text-slate-900 shadow-inner"
                         >
                             <div class="text-center">
                                 <span
@@ -1246,7 +1248,7 @@
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <h3
-                                                class="text-[13px] font-bold text-white tracking-tight leading-tight text-pretty"
+                                                class="text-[13px] font-bold text-slate-900 tracking-tight leading-tight text-pretty"
                                             >
                                                 {stage.from} → {stage.to}
                                             </h3>
@@ -1507,7 +1509,7 @@
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <h2
-                                    class="text-xl font-bold text-white leading-tight tracking-tight text-balance"
+                                    class="text-xl font-bold text-slate-900 leading-tight tracking-tight text-balance"
                                 >
                                     {selectedPOI.title || selectedPOI.name}
                                 </h2>
@@ -1539,13 +1541,15 @@
                                 <a
                                     href={selectedPOI.url}
                                     target="_blank"
-                                    class="px-3 py-2 bg-white/10 hover:bg-white/15 text-white border border-slate-200/60 rounded-md font-black text-[10px] uppercase tracking-widest transition-all shadow-sm"
+                                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200/60 rounded-md font-black text-[10px] uppercase tracking-widest transition-all shadow-sm"
                                     >Wikipedia</a
                                 >
                             {/if}
                             <button
-                                onclick={() =>
-                                    mapComponent?.flyToPOI(selectedPOI)}
+                                onclick={() => {
+                                    mapComponent?.flyToPOI(selectedPOI);
+                                    if (isMobile) isSidebarOpen = false;
+                                }}
                                 class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-black text-[10px] uppercase tracking-widest transition-all shadow-glow flex items-center gap-2"
                                 >Take me there {@html icons.arrowRight}</button
                             >
@@ -1564,7 +1568,7 @@
                                     >Bourdain's Intel</span
                                 >
                                 <p
-                                    class="text-[13px] font-medium text-amber-50 leading-relaxed italic text-pretty"
+                                    class="text-[13px] font-medium text-amber-900/80 leading-relaxed italic text-pretty"
                                 >
                                     "{selectedPOI.bourdainIntel}"
                                 </p>
@@ -1580,7 +1584,7 @@
                                     >Frye's Perspective</span
                                 >
                                 <p
-                                    class="text-[13px] font-medium text-slate-50 leading-relaxed italic text-pretty"
+                                    class="text-[13px] font-medium text-slate-700 leading-relaxed italic text-pretty"
                                 >
                                     "{selectedPOI.fryeIntel}"
                                 </p>
@@ -1596,7 +1600,7 @@
                                     >Rick Steves' Advice</span
                                 >
                                 <p
-                                    class="text-[13px] font-medium text-emerald-50 leading-relaxed italic text-pretty"
+                                    class="text-[13px] font-medium text-emerald-900/80 leading-relaxed italic text-pretty"
                                 >
                                     "{selectedPOI.rickStevesIntel}"
                                 </p>
@@ -1612,7 +1616,7 @@
                                     >{@html icons.camera} Photography Tips</span
                                 >
                                 <p
-                                    class="text-[13px] font-medium text-indigo-50 leading-relaxed italic text-pretty"
+                                    class="text-[13px] font-medium text-indigo-900/80 leading-relaxed italic text-pretty"
                                 >
                                     "{selectedPOI.photoIntel}"
                                 </p>
@@ -2035,7 +2039,7 @@
                         </div>
                         <button
                             onclick={closeIntelCard}
-                            class="rounded-md border border-white/15 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-800 hover:bg-white/10"
+                            class="rounded-md border border-white/15 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-white hover:bg-white/10"
                             >Close</button
                         >
                     </div>
