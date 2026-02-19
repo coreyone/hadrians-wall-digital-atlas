@@ -41,8 +41,8 @@
     }
 
     const isBrowser = typeof window !== "undefined";
-    const PORTABLE_MQ = "(max-width: 1024px)";
-    const MOBILE_MQ = "(max-width: 768px)";
+    const PORTABLE_MQ = "(max-width: 1023px)";
+    const MOBILE_MQ = "(max-width: 767px)";
 
     let isSidebarOpen = $state(false);
     let selectedPOI = $state<POI | null>(null);
@@ -893,7 +893,7 @@
 
 {#if showSplash}
     <div
-        class="fixed inset-0 z-[120] lg:hidden overflow-hidden splash-screen"
+        class="fixed inset-0 z-[120] overflow-hidden splash-screen bg-slate-950"
         role="status"
         aria-live="polite"
         aria-label="Loading Hadrian Atlas"
@@ -1064,6 +1064,31 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
+                    {#if !isPortable}
+                        <button
+                            bind:this={mobileCoinButton}
+                            onclick={handleCoinTap}
+                            class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] {$hikerMode.isActive
+                                ? 'h-9 w-9'
+                                : 'h-8 w-8'} {coinMetallic || $hikerMode.isActive
+                                ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.35)]'
+                                : 'border-amber-300/40 bg-white/95 shadow-[0_0_8px_rgba(251,191,36,0.15)]'} {coinAnimating
+                                ? 'scale-110 rotate-[360deg]'
+                                : ''} {coinMorphing || $hikerMode.isActive
+                                ? 'pointer-events-none opacity-0 scale-75'
+                                : 'opacity-100 scale-100'}"
+                            aria-label="Triple tap Roman Coin to toggle Hiker Mode"
+                            title="Triple Tap Roman Coin"
+                        >
+                            <div class="h-5 w-5 relative">
+                                <Coin3D
+                                    bind:this={headerCoinRef}
+                                    class="w-full h-full drop-shadow-sm"
+                                    interactive={false}
+                                />
+                            </div>
+                        </button>
+                    {/if}
                     {#if isPortable}
                         <button
                             onclick={() => (isSidebarOpen = false)}
