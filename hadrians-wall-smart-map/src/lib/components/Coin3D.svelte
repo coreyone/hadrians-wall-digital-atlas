@@ -1,6 +1,6 @@
-<script module>
-    import type * as THREE from "three";
-    import type { GLTFLoader as GLTFLoaderType } from "three/examples/jsm/loaders/GLTFLoader.js";
+<script module lang="ts">
+    import * as THREE from "three";
+    import { GLTFLoader as GLTFLoaderType } from "three/examples/jsm/loaders/GLTFLoader.js";
 
     interface ThreeResources {
         THREE: typeof THREE;

@@ -41,16 +41,16 @@
     }
 
     const isBrowser = typeof window !== "undefined";
-    const PORTABLE_MQ = "(max-width: 1023px)";
+    const PORTABLE_MQ = "(max-width: 1020px)";
     const MOBILE_MQ = "(max-width: 767px)";
 
-    let isSidebarOpen = $state(false);
+    let isSidebarOpen = $state(true);
     let selectedPOI = $state<POI | null>(null);
     let searchQuery = $state("");
     let isHeadingUp = $state(false);
     let mapComponent: any = $state();
-    let isMobile = $state(isBrowser && window.matchMedia(MOBILE_MQ).matches);
-    let isPortable = $state(isBrowser && window.matchMedia(PORTABLE_MQ).matches);
+    let isMobile = $state(false);
+    let isPortable = $state(false);
     let isOnline = $state(true);
 
     type AppMode = "plan" | "explore";
@@ -76,8 +76,10 @@
     let hikerTopCoinRect = $state<DOMRect | null>(null);
     let coinMorphing = $state(false);
     let coinMorphBusy = $state(false);
+    let splashMinElapsed = $state(false);
+    let mapReady = $state(false);
     let showSplash = $state(false); 
-    
+
     // Rule of Least Surprise: Start true on portable if not already loaded
     $effect.pre(() => {
         if (isPortable && !mapReady) {
@@ -85,8 +87,37 @@
         }
     });
 
-    let splashMinElapsed = $state(false);
-    let mapReady = $state(false);
+    $effect(() => {
+        if (typeof window !== "undefined") {
+            const mql = window.matchMedia(MOBILE_MQ);
+            const portableMql = window.matchMedia(PORTABLE_MQ);
+
+            isMobile = mql.matches;
+            isPortable = portableMql.matches;
+            isSidebarOpen = !isPortable;
+
+            const handleMedia = (e: MediaQueryListEvent) => {
+                isMobile = e.matches;
+            };
+            const handlePortableMedia = (e: MediaQueryListEvent) => {
+                isPortable = e.matches;
+                if (!e.matches) {
+                    showSplash = false;
+                }
+            };
+            mql.addEventListener("change", handleMedia);
+            portableMql.addEventListener("change", handlePortableMedia);
+
+            return () => {
+                mql.removeEventListener("change", handleMedia);
+                portableMql.removeEventListener("change", handlePortableMedia);
+            };
+        }
+    });
+
+    $effect(() => {
+        isSidebarOpen = !isPortable;
+    });
     let ukNowTick = $state(Date.now());
     let compassHeading = $state(0);
     let compassNeedsCalibration = $state(false);
@@ -305,25 +336,6 @@
         window.addEventListener("online", handleOnline);
         window.addEventListener("offline", handleOffline);
 
-        const mql = window.matchMedia(MOBILE_MQ);
-        const portableMql = window.matchMedia(PORTABLE_MQ);
-
-        isMobile = mql.matches;
-        isPortable = portableMql.matches;
-
-        // On mobile, start with sidebar closed to show map; on desktop, start open.
-        isSidebarOpen = !isPortable;
-        const handleMedia = (e: MediaQueryListEvent) => {
-            isMobile = e.matches;
-        };
-        const handlePortableMedia = (e: MediaQueryListEvent) => {
-            isPortable = e.matches;
-            if (!e.matches) {
-                showSplash = false;
-            }
-        };
-        mql.addEventListener("change", handleMedia);
-        portableMql.addEventListener("change", handlePortableMedia);
         const ukTickInterval = setInterval(() => {
             ukNowTick = Date.now();
         }, 60000);
