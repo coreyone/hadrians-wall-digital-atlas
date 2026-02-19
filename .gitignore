@@ -43,6 +43,7 @@ dev.log
 .gemini_security/
 *.png
 !hadrians-wall-smart-map/static/logo-coin.png
+!hadrians-wall-smart-map/static/loading-screen-hadrians-wall-path-map.webp
 *.txt
 *.csv
 *.pdf

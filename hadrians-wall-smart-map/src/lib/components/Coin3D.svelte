@@ -210,7 +210,7 @@
             const time = performance.now() * 0.001;
 
             // Floating effect
-            model.position.y = Math.sin(time * 2) * 0.15;
+            model.position.y = (Math.sin(time * 2) * 0.15) - 0.28;
 
             // Base spin - only if hiker mode is active
             if ($hikerMode.isActive) {

@@ -43,7 +43,7 @@ interface HikerState {
 const initialState: HikerState = {
     isActive: false,
     is3D: false,
-    isCompassActive: true,
+    isCompassActive: false,
     isCalibrating: false,
     heading: 0,
     pitch: 60,
@@ -83,7 +83,6 @@ function createHikerStore() {
             update((s) => ({
                 ...s,
                 isActive: true,
-                isCompassActive: true,
                 is3D: !s.simplifiedHUD,
                 pitch: s.simplifiedHUD ? 0 : 60
             })),
@@ -91,7 +90,6 @@ function createHikerStore() {
             update((s) => ({
                 ...s,
                 isActive: false,
-                isCompassActive: true,
                 is3D: false,
                 isCalibrating: false,
                 isOffTrail: false,

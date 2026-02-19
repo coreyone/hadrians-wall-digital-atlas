@@ -565,11 +565,9 @@
                 hasRequestedCompassPermission = true;
                 await compassService.requestPermission();
             }
-            await compassService.start();
             await audioService.resume();
             audioService.setEnabled(true);
             mapComponent?.triggerLocateMe();
-            isHeadingUp = !$hikerMode.simplifiedHUD;
             setTimeout(() => (coinAnimating = false), 720);
         } finally {
             coinMorphBusy = false;
@@ -578,10 +576,8 @@
 
     function deactivateHikerMode() {
         hikerMode.deactivate();
-        compassService.stop();
         audioService.setEnabled(false);
         audioService.stop();
-        isHeadingUp = false;
         hikerIntelCard = null;
         swipeTracking = false;
         coinAnimating = false;
@@ -751,6 +747,14 @@
     }
 
     $effect(() => {
+        if ($hikerMode.isActive && $hikerMode.isCompassActive) {
+            compassService.start();
+        } else {
+            compassService.stop();
+        }
+    });
+
+    $effect(() => {
         if (!$hikerMode.isActive) {
             showCompassFallbackNotice = false;
             dismissedCompassFallbackNotice = false;
@@ -910,7 +914,7 @@
         aria-label="Loading Hadrian Atlas"
     >
         <img
-            src="/loading-screen-hadrians-wall-path-map.png"
+            src="/loading-screen-hadrians-wall-path-map.webp"
             alt=""
             class="absolute inset-0 h-full w-full object-cover splash-image"
         />
