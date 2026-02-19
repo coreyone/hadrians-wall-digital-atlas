@@ -153,6 +153,8 @@
         },
     } as const;
 
+    const STAGGER_DELAY = 50;
+
     function ukDateKey(nowMs = Date.now()) {
         return new Intl.DateTimeFormat("en-CA", {
             timeZone: "Europe/London",
@@ -964,9 +966,9 @@
                                 : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]'} animate-pulse"
                         ></div>
                         <span
-                            class="text-[8px] font-black uppercase tracking-widest {isOnline
-                                ? 'text-emerald-500'
-                                : 'text-orange-500'}"
+                            class="text-[10px] font-black uppercase tracking-widest {isOnline
+                                ? 'text-emerald-600'
+                                : 'text-orange-600'}"
                             >{isOnline ? "Live" : "Offline"}</span
                         >
                     </div>
@@ -1021,7 +1023,7 @@
                             Hadrian Atlas
                         </h1>
                         <span
-                            class="text-[9px] text-slate-400 font-bold uppercase tracking-widest"
+                            class="text-[9px] text-slate-500 font-bold uppercase tracking-widest"
                             >v4.2 Tactical Instrument</span
                         >
                     </div>
@@ -1030,7 +1032,7 @@
                     {#if isMobile}
                         <button
                             onclick={() => (isSidebarOpen = false)}
-                            class="p-2 text-slate-400 hover:text-slate-900 transition-colors"
+                            class="p-2 text-slate-500 hover:text-slate-900 transition-colors"
                             >{@html icons.close}</button
                         >
                     {/if}
@@ -1044,9 +1046,9 @@
                                     : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]'} animate-pulse"
                             ></div>
                             <span
-                                class="text-[8px] font-black uppercase tracking-widest {isOnline
-                                    ? 'text-emerald-500'
-                                    : 'text-orange-500'}"
+                                class="text-[10px] font-black uppercase tracking-widest {isOnline
+                                    ? 'text-emerald-600'
+                                    : 'text-orange-600'}"
                                 >{isOnline ? "Live" : "Offline"}</span
                             >
                         </div>
@@ -1068,7 +1070,7 @@
                     class="ds-segmented-btn flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 {mode ===
                     'plan'
                         ? 'ds-segmented-btn-active bg-white shadow-sm text-slate-900'
-                        : 'ds-segmented-btn-inactive text-slate-400 hover:text-slate-600 hover:bg-slate-100'}"
+                        : 'ds-segmented-btn-inactive text-slate-500 hover:text-slate-600 hover:bg-slate-100'}"
                     >Plan</button
                 >
                 <button
@@ -1076,7 +1078,7 @@
                     class="ds-segmented-btn flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 {mode ===
                     'explore'
                         ? 'ds-segmented-btn-active bg-white shadow-sm text-slate-900'
-                        : 'ds-segmented-btn-inactive text-slate-400 hover:text-slate-600 hover:bg-slate-100'}"
+                        : 'ds-segmented-btn-inactive text-slate-500 hover:text-slate-600 hover:bg-slate-100'}"
                     >Explore</button
                 >
             </div>
@@ -1094,14 +1096,14 @@
                             class="ds-panel flex items-center justify-between gap-2 px-3 bg-slate-50/50 py-2.5 rounded-lg border border-slate-200/60 text-[10px] font-bold tabular-nums"
                         >
                             <span
-                                class="flex items-center gap-2 text-slate-500 uppercase tracking-tighter text-pretty md:text-nowrap"
+                                class="flex items-center gap-2 text-slate-600 uppercase tracking-tighter text-pretty md:text-nowrap"
                                 ><i
                                     class="hn hn-clock plan-light-strip__icon"
                                     aria-hidden="true"
                                 ></i>{planLightWindow.date}</span
                             >
                             <span
-                                class="text-blue-400 uppercase tracking-widest text-pretty text-right md:text-nowrap"
+                                class="text-blue-600 uppercase tracking-widest text-pretty text-right md:text-nowrap"
                                 >54°F · Mostly Clear</span
                             >
                         </div>
@@ -1110,7 +1112,7 @@
                             class="ds-panel plan-light-strip px-3 py-2 rounded-lg border border-slate-200/60"
                         >
                             <div
-                                class="plan-light-strip__grid text-[8px] font-black tracking-[0.06em] tabular-nums"
+                                class="plan-light-strip__grid text-[10px] font-black tracking-[0.06em] tabular-nums"
                             >
                                 <div class="plan-light-strip__cell">
                                     <span class="plan-light-strip__label"
@@ -1156,7 +1158,7 @@
                         >
                             <div class="text-center">
                                 <span
-                                    class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5"
+                                    class="block text-[10px] font-black text-slate-600 uppercase tracking-tighter mb-0.5"
                                     >Distance</span
                                 ><span
                                     class="font-bold text-xs tracking-tighter tabular-nums"
@@ -1167,7 +1169,7 @@
                                 class="text-center border-x border-slate-200/60"
                             >
                                 <span
-                                    class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5"
+                                    class="block text-[10px] font-black text-slate-600 uppercase tracking-tighter mb-0.5"
                                     >Gain</span
                                 ><span
                                     class="font-bold text-xs tracking-tighter tabular-nums"
@@ -1176,7 +1178,7 @@
                             </div>
                             <div class="text-center">
                                 <span
-                                    class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5"
+                                    class="block text-[10px] font-black text-slate-600 uppercase tracking-tighter mb-0.5"
                                     >Plan Avg Speed</span
                                 >
                                 <span
@@ -1190,13 +1192,13 @@
                     <div class="space-y-1.5">
                         <div class="flex items-center px-1.5">
                             <span
-                                class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500"
+                                class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-600"
                                 >Daily Stages</span
                             >
                         </div>
                         {#each itinerary as stage, i}
                             {@const skinnyStage = isSkinnyPlanStage(stage)}
-                            <div in:fade={{ delay: i * 50 }}>
+                            <div in:fade={{ delay: i * STAGGER_DELAY }}>
                                 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
                                 <div
                                     role={skinnyStage ? undefined : "button"}
@@ -1224,7 +1226,7 @@
                                                 : 'min-w-[52px]'} rounded-md border border-slate-200/60 bg-slate-50/50 px-2 py-1.5 text-center"
                                         >
                                             <span
-                                                class="block text-[8px] font-black uppercase tracking-[0.14em] text-slate-500"
+                                                class="block text-[10px] font-black uppercase tracking-[0.14em] text-slate-600"
                                                 >Day {stage.id}</span
                                             >
                                             <span
@@ -1239,7 +1241,7 @@
                                                 {stage.from} → {stage.to}
                                             </h3>
                                             <div
-                                                class="mt-1 flex flex-wrap items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.14em] text-slate-500"
+                                                class="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600"
                                             >
                                                 {#if skinnyStage}
                                                     {#if stage.planCardNote}
@@ -1269,7 +1271,7 @@
                                                 class="rounded-sm border border-slate-200/60 bg-slate-50/50 px-1.5 py-1 text-slate-800 text-center leading-tight"
                                             >
                                                 <span
-                                                    class="block text-[8px] tracking-[0.12em]"
+                                                    class="block text-[10px] tracking-[0.12em]"
                                                     >TIME</span
                                                 >
                                                 <span
@@ -1279,7 +1281,7 @@
                                                 >
                                             </span>
                                             <span
-                                                class="rounded-sm border border-blue-500/20 bg-blue-500/10 px-1.5 py-1 text-blue-400 text-center leading-tight"
+                                                class="rounded-sm border border-blue-500/20 bg-blue-500/10 px-1.5 py-1 text-blue-600 text-center leading-tight"
                                                 >{stage.distanceMi} mi</span
                                             >
                                             <span
@@ -1289,11 +1291,11 @@
                                             <span
                                                 class="rounded-sm border border-slate-200/60 bg-slate-50/50 px-1.5 py-1 text-center leading-tight {stage.supplyStatus ===
                                                 'Critical'
-                                                    ? 'text-orange-400'
+                                                    ? 'text-orange-600'
                                                     : stage.supplyStatus ===
                                                         'Low'
-                                                      ? 'text-amber-400'
-                                                      : 'text-emerald-400'}"
+                                                      ? 'text-amber-600'
+                                                      : 'text-emerald-600'}"
                                                 >{stage.supplyStatus}</span
                                             >
                                         </div>
@@ -1314,7 +1316,7 @@
                                                     class="bg-slate-50/50 p-2.5 rounded-md border border-slate-200/60"
                                                 >
                                                     <span
-                                                        class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5 text-nowrap"
+                                                        class="block text-[10px] font-black text-slate-600 uppercase tracking-tighter mb-0.5 text-nowrap"
                                                         >Surface</span
                                                     ><span
                                                         class="text-[11px] font-bold text-slate-800 block text-pretty"
@@ -1325,7 +1327,7 @@
                                                     class="bg-slate-50/50 p-2.5 rounded-md border border-slate-200/60"
                                                 >
                                                     <span
-                                                        class="block text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5 text-nowrap"
+                                                        class="block text-[10px] font-black text-slate-600 uppercase tracking-tighter mb-0.5 text-nowrap"
                                                         >Terrain</span
                                                     ><span
                                                         class="text-[11px] font-bold text-slate-800 leading-snug block text-pretty"
@@ -1335,19 +1337,19 @@
                                             </div>
 
                                             <div
-                                                class="rounded-md border border-slate-200/60 bg-slate-50/50 px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400"
+                                                class="rounded-md border border-slate-200/60 bg-slate-50/50 px-2.5 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500"
                                             >
-                                                <span class="text-slate-500"
+                                                <span class="text-slate-600"
                                                     >Supplies:</span
                                                 >
                                                 <span
                                                     class="ml-1 {stage.supplyStatus ===
                                                     'Critical'
-                                                        ? 'text-orange-400'
+                                                        ? 'text-orange-600'
                                                         : stage.supplyStatus ===
                                                             'Low'
-                                                          ? 'text-amber-400'
-                                                          : 'text-emerald-400'}"
+                                                          ? 'text-amber-600'
+                                                          : 'text-emerald-600'}"
                                                     >{stage.supplyStatus}</span
                                                 >
                                             </div>
@@ -1365,7 +1367,7 @@
                                                     class="w-full flex items-center justify-between group"
                                                 >
                                                     <span
-                                                        class="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-400 transition-colors"
+                                                        class="text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 group-hover:text-blue-600 transition-colors"
                                                         >Trail Milestones ({stage
                                                             .milestones
                                                             .length})</span
@@ -1407,7 +1409,7 @@
                                                                             class="flex items-center gap-2"
                                                                         >
                                                                             <span
-                                                                                class="text-[10px] font-mono text-blue-400 tabular-nums text-nowrap"
+                                                                                class="text-[10px] font-mono text-blue-600 tabular-nums text-nowrap"
                                                                                 >{new Date(
                                                                                     new Date(
                                                                                         "2026-04-13T09:00:00",
@@ -1439,7 +1441,7 @@
                                                                         </div>
                                                                     </div>
                                                                     <p
-                                                                        class="text-[11px] text-slate-500 leading-snug italic"
+                                                                        class="text-[11px] text-slate-600 leading-snug italic"
                                                                     >
                                                                         "{ms.intel}"
                                                                     </p>
@@ -1454,13 +1456,13 @@
                                                 class="bg-white/5 p-3 rounded-md border border-slate-200/60"
                                             >
                                                 <span
-                                                    class="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2"
+                                                    class="block text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2"
                                                     >Food + Logistics Notes</span
                                                 >
                                                 <ul class="space-y-1.5">
                                                     {#each stage.fuelingLogistics as item}
                                                         <li
-                                                            class="flex items-start gap-2 text-[11px] text-slate-400 leading-snug"
+                                                            class="flex items-start gap-2 text-[11px] text-slate-500 leading-snug"
                                                         >
                                                             <div
                                                                 class="mt-1.5 w-1 h-1 rounded-full bg-slate-600 shrink-0"
@@ -1487,7 +1489,7 @@
                 >
                     <button
                         onclick={() => (selectedPOI = null)}
-                        class="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-500 hover:text-blue-400 transition-colors tracking-[0.2em] active:scale-95"
+                        class="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-600 hover:text-blue-600 transition-colors tracking-[0.2em] active:scale-95"
                         >{@html icons.arrowLeft} Back to Registry</button
                     >
 
@@ -1505,10 +1507,10 @@
                                             <span
                                                 class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-sm {type ===
                                                 'hub'
-                                                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20'
+                                                    ? 'bg-blue-500/20 text-blue-600 border border-blue-500/20'
                                                     : type === 'heritage'
-                                                      ? 'bg-slate-500/20 text-slate-400 border border-slate-500/20'
-                                                      : 'bg-amber-500/20 text-amber-400 border border-amber-500/20'}"
+                                                      ? 'bg-slate-500/20 text-slate-500 border border-slate-500/20'
+                                                      : 'bg-amber-500/20 text-amber-600 border border-amber-500/20'}"
                                                 >{type}</span
                                             >
                                         {/each}
@@ -1516,7 +1518,7 @@
                                 {/if}
                             </div>
                             {#if selectedPOI.special === "mithras"}<div
-                                    class="text-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
+                                    class="text-amber-600 shadow-[0_0_15px_rgba(251,191,36,0.3)]"
                                 >
                                     {@html icons.star}
                                 </div>{/if}
@@ -1548,7 +1550,7 @@
                                 class="bg-amber-500/5 border border-amber-500/10 p-4 rounded-lg space-y-2.5"
                             >
                                 <span
-                                    class="text-[10px] font-black uppercase text-amber-400 tracking-[0.15em] flex items-center gap-2"
+                                    class="text-[10px] font-black uppercase text-amber-600 tracking-[0.15em] flex items-center gap-2"
                                     >Bourdain's Intel</span
                                 >
                                 <p
@@ -1580,7 +1582,7 @@
                                 class="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-lg space-y-2.5"
                             >
                                 <span
-                                    class="text-[10px] font-black uppercase text-emerald-400 tracking-[0.15em] flex items-center gap-2"
+                                    class="text-[10px] font-black uppercase text-emerald-600 tracking-[0.15em] flex items-center gap-2"
                                     >Rick Steves' Advice</span
                                 >
                                 <p
@@ -1596,7 +1598,7 @@
                                 class="bg-indigo-500/5 border border-indigo-500/10 p-4 rounded-lg space-y-2.5"
                             >
                                 <span
-                                    class="text-[10px] font-black uppercase text-indigo-300 tracking-[0.15em] flex items-center gap-2"
+                                    class="text-[10px] font-black uppercase text-indigo-600 tracking-[0.15em] flex items-center gap-2"
                                     >{@html icons.camera} Photography Tips</span
                                 >
                                 <p
@@ -1608,7 +1610,7 @@
                         {/if}
 
                         <div
-                            class="font-serif italic text-[15px] text-slate-400 leading-relaxed border-t border-slate-200/60 pt-6 text-pretty"
+                            class="font-serif italic text-[15px] text-slate-500 leading-relaxed border-t border-slate-200/60 pt-6 text-pretty"
                         >
                             "{selectedPOI.summary ||
                                 "Extracting archaeological data..."}"
@@ -1620,7 +1622,7 @@
                     <div class="flex flex-col gap-4">
                         <div class="relative group">
                             <div
-                                class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors"
+                                class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-600 group-focus-within:text-blue-600 transition-colors"
                             >
                                 {@html icons.search}
                             </div>
@@ -1640,7 +1642,7 @@
                                         !activeCategories.heritage)}
                                 class="ds-chip w-full min-w-0 px-1.5 py-1.5 rounded-md border text-[9px] md:text-[10px] font-black uppercase tracking-[0.08em] transition-all {activeCategories.heritage
                                     ? 'ds-chip-active bg-slate-700 border-slate-600 text-white shadow-sm'
-                                    : 'bg-slate-50/50 border-slate-200/60 text-slate-500'} flex items-center justify-center gap-1 text-nowrap"
+                                    : 'bg-slate-50/50 border-slate-200/60 text-slate-600'} flex items-center justify-center gap-1 text-nowrap"
                                 >Heritage <span class="tabular-nums"
                                     >{visibleHeritageSites.length}</span
                                 >{#if activeCategories.heritage}
@@ -1653,7 +1655,7 @@
                                         !activeCategories.pubs)}
                                 class="ds-chip w-full min-w-0 px-1.5 py-1.5 rounded-md border text-[9px] md:text-[10px] font-black uppercase tracking-[0.08em] transition-all {activeCategories.pubs
                                     ? 'ds-chip-active bg-amber-600 border-amber-500 text-white shadow-sm'
-                                    : 'bg-slate-50/50 border-slate-200/60 text-slate-500'} flex items-center justify-center gap-1 text-nowrap"
+                                    : 'bg-slate-50/50 border-slate-200/60 text-slate-600'} flex items-center justify-center gap-1 text-nowrap"
                                 >Pints & Eats <span class="tabular-nums"
                                     >{visibleHospitalitySites.length}</span
                                 >{#if activeCategories.pubs}
@@ -1666,7 +1668,7 @@
                                         !activeCategories.discovery)}
                                 class="ds-chip w-full min-w-0 px-1.5 py-1.5 rounded-md border text-[9px] md:text-[10px] font-black uppercase tracking-[0.08em] transition-all {activeCategories.discovery
                                     ? 'ds-chip-active bg-blue-600 border-blue-500 text-white shadow-sm'
-                                    : 'bg-slate-50/50 border-slate-200/60 text-slate-500'} flex items-center justify-center gap-1 text-nowrap"
+                                    : 'bg-slate-50/50 border-slate-200/60 text-slate-600'} flex items-center justify-center gap-1 text-nowrap"
                                 >Discovery <span class="tabular-nums"
                                     >{visibleDiscoveryPOIs.length}</span
                                 >{#if activeCategories.discovery}
@@ -1681,7 +1683,7 @@
                             <div
                                 class="flex flex-wrap items-center justify-between gap-2 text-[9px] font-bold uppercase tracking-[0.12em]"
                             >
-                                <span class="text-slate-500 text-pretty"
+                                <span class="text-slate-600 text-pretty"
                                     >{activeRegistryResultCount} visible result{activeRegistryResultCount ===
                                     1
                                         ? ""
@@ -1698,7 +1700,7 @@
                                     {#if searchNeedle || activeExploreCategoryCount < 3}
                                         <button
                                             onclick={resetExploreFilters}
-                                            class="rounded-sm border border-slate-200/80 px-2 py-1 text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-colors"
+                                            class="rounded-sm border border-slate-200/80 px-2 py-1 text-slate-500 hover:text-blue-600 hover:border-blue-500/30 transition-colors"
                                             >Reset</button
                                         >
                                     {/if}
@@ -1709,7 +1711,7 @@
 
                     {#if activeRegistryResultCount === 0}
                         <div
-                            class="rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-3 text-[10px] uppercase tracking-[0.14em] text-slate-500 font-bold"
+                            class="rounded-lg border border-slate-200/80 bg-slate-50/50 px-3 py-3 text-[10px] uppercase tracking-[0.14em] text-slate-600 font-bold"
                         >
                             No matches for current filters. Reset or broaden
                             your search.
@@ -1726,7 +1728,7 @@
                                     class="w-full flex items-center justify-between px-1 group"
                                 >
                                     <span
-                                        class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-800 transition-colors"
+                                        class="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] group-hover:text-slate-800 transition-colors"
                                         >English Heritage</span
                                     >
                                     <div class="flex items-center gap-2">
@@ -1781,11 +1783,11 @@
                                                         class="flex-1 min-w-0 flex items-center gap-2"
                                                     >
                                                         <span
-                                                            class="flex-1 min-w-0 font-bold text-slate-800 group-hover:text-blue-400 tracking-tight text-pretty leading-tight"
+                                                            class="flex-1 min-w-0 font-bold text-slate-800 group-hover:text-blue-600 tracking-tight text-pretty leading-tight"
                                                             >{site.name}</span
                                                         >
                                                         {#if site.special === "mithras"}<div
-                                                                class="text-amber-400 animate-pulse"
+                                                                class="text-amber-600 animate-pulse"
                                                             >
                                                                 {@html icons.star}
                                                             </div>{/if}
@@ -1812,7 +1814,7 @@
                                     class="w-full flex items-center justify-between px-1 group"
                                 >
                                     <span
-                                        class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-800 transition-colors"
+                                        class="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] group-hover:text-slate-800 transition-colors"
                                         >Food + Pubs</span
                                     >
                                     <div class="flex items-center gap-2">
@@ -1861,7 +1863,7 @@
                                                     {@html icons.beer}
                                                 </div>
                                                 <span
-                                                    class="flex-1 min-w-0 font-bold text-slate-800 group-hover:text-blue-400 tracking-tight text-pretty leading-tight"
+                                                    class="flex-1 min-w-0 font-bold text-slate-800 group-hover:text-blue-600 tracking-tight text-pretty leading-tight"
                                                     >{site.name}</span
                                                 >
                                                 {#if selectedPOI && (selectedPOI as any).name === site.name}
@@ -1885,7 +1887,7 @@
                                     class="w-full flex items-center justify-between px-1 group"
                                 >
                                     <span
-                                        class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-800 transition-colors"
+                                        class="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] group-hover:text-slate-800 transition-colors"
                                         >Wikipedia Discovery</span
                                     >
                                     <div class="flex items-center gap-2">
@@ -1923,7 +1925,7 @@
                                                     handlePOIClick(poi)}
                                             >
                                                 <div
-                                                    class="text-slate-500 group-hover:text-blue-400 shrink-0 transition-colors"
+                                                    class="text-slate-600 group-hover:text-blue-600 shrink-0 transition-colors"
                                                 >
                                                     {@html icons.discovery}
                                                 </div>
@@ -1932,7 +1934,7 @@
                                                         class="flex justify-between items-start gap-2 mb-0.5"
                                                     >
                                                         <span
-                                                            class="flex-1 min-w-0 font-bold text-slate-800 group-hover:text-blue-400 tracking-tight text-pretty"
+                                                            class="flex-1 min-w-0 font-bold text-slate-800 group-hover:text-blue-600 tracking-tight text-pretty"
                                                             >{poi.title}</span
                                                         >
                                                         <span
@@ -2056,9 +2058,9 @@
                     disabled={$hikerMode.simplifiedHUD}
                     class="ds-control-btn {isMobile
                         ? 'px-3 py-2 text-[10px]'
-                        : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {isHeadingUp
+                        : 'px-2 py-1.5 text-[10px]'} font-black uppercase transition-all {isHeadingUp
                         ? 'ds-control-btn-active bg-blue-600 text-white'
-                        : 'text-slate-500 active:bg-slate-50'} {$hikerMode.simplifiedHUD
+                        : 'text-slate-600 active:bg-slate-50'} {$hikerMode.simplifiedHUD
                         ? 'opacity-40 cursor-not-allowed'
                         : ''}"
                     title="Toggle Heading Up Mode"
@@ -2073,9 +2075,9 @@
                     onclick={() => (showMilestones = !showMilestones)}
                     class="ds-control-btn {isMobile
                         ? 'px-3 py-2 text-[10px]'
-                        : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {showMilestones
+                        : 'px-2 py-1.5 text-[10px]'} font-black uppercase transition-all {showMilestones
                         ? 'ds-control-btn-active bg-amber-600 text-white'
-                        : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100"
+                        : 'text-slate-600 active:bg-slate-50'} border-l border-slate-100"
                     title="Toggle Milestones Layer"
                 >
                     Logistics
@@ -2091,20 +2093,20 @@
                     onclick={() => (selectedRoute = "osm")}
                     class="ds-control-btn {isMobile
                         ? 'px-3 py-2 text-[10px]'
-                        : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute ===
+                        : 'px-2 py-1.5 text-[10px]'} font-black uppercase transition-all {selectedRoute ===
                     'osm'
                         ? 'ds-control-btn-active bg-blue-600 text-white'
-                        : 'text-slate-500 active:bg-slate-50'}"
+                        : 'text-slate-600 active:bg-slate-50'}"
                     title="High-Res OSM Footpath">Footpath</button
                 >
                 <button
                     onclick={() => (selectedRoute = "simplified")}
                     class="ds-control-btn {isMobile
                         ? 'px-3 py-2 text-[10px]'
-                        : 'px-2 py-1.5 text-[8px]'} font-black uppercase transition-all {selectedRoute ===
+                        : 'px-2 py-1.5 text-[10px]'} font-black uppercase transition-all {selectedRoute ===
                     'simplified'
                         ? 'ds-control-btn-active bg-blue-600 text-white'
-                        : 'text-slate-500 active:bg-slate-50'} border-l border-slate-100"
+                        : 'text-slate-600 active:bg-slate-50'} border-l border-slate-100"
                     title="Decimated OSM">Simple</button
                 >
             </div>
@@ -2121,7 +2123,7 @@
                         : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
                     'topo'
                         ? 'ds-control-btn-active bg-slate-900 text-white'
-                        : 'text-slate-500 active:bg-slate-50'}">Topo</button
+                        : 'text-slate-600 active:bg-slate-50'}">Topo</button
                 >
                 <button
                     onclick={() => (mapStyle = "satellite")}
@@ -2130,7 +2132,7 @@
                         : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
                     'satellite'
                         ? 'ds-control-btn-active bg-slate-900 text-white'
-                        : 'text-slate-500 active:bg-slate-50'} border-x border-slate-100"
+                        : 'text-slate-600 active:bg-slate-50'} border-x border-slate-100"
                     >Sat</button
                 >
                 <button
@@ -2140,7 +2142,7 @@
                         : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
                     'streets'
                         ? 'ds-control-btn-active bg-slate-900 text-white'
-                        : 'text-slate-500 active:bg-slate-50'}">Roads</button
+                        : 'text-slate-600 active:bg-slate-50'}">Roads</button
                 >
             </div>
 
@@ -2172,8 +2174,8 @@
                     }}
                     class="flex flex-col items-center gap-1 flex-1 {mode ===
                         'plan' && isSidebarOpen
-                        ? 'text-blue-400'
-                        : 'text-slate-500'}"
+                        ? 'text-blue-600'
+                        : 'text-slate-600'}"
                 >
                     <div class="p-1">{@html icons.list}</div>
                     <span
@@ -2189,8 +2191,8 @@
                     }}
                     class="flex flex-col items-center gap-1 flex-1 {mode ===
                         'explore' && isSidebarOpen
-                        ? 'text-blue-400'
-                        : 'text-slate-500'}"
+                        ? 'text-blue-600'
+                        : 'text-slate-600'}"
                 >
                     <div class="p-1">{@html icons.compass}</div>
                     <span
@@ -2201,8 +2203,8 @@
                 <button
                     onclick={() => (isSidebarOpen = false)}
                     class="flex flex-col items-center gap-1 flex-1 {!isSidebarOpen
-                        ? 'text-blue-400'
-                        : 'text-slate-500'}"
+                        ? 'text-blue-600'
+                        : 'text-slate-600'}"
                 >
                     <div class="p-1">{@html icons.map}</div>
                     <span
@@ -2323,8 +2325,8 @@
         color: var(--text-primary) !important;
     }
 
-    .crt-sidebar .text-slate-400,
     .crt-sidebar .text-slate-500,
+    .crt-sidebar .text-slate-600,
     .crt-sidebar .text-slate-600 {
         color: var(--text-secondary) !important;
     }
@@ -2333,9 +2335,9 @@
         color: var(--text-muted) !important;
     }
 
-    .crt-sidebar .text-blue-400,
-    .crt-sidebar .text-amber-400,
-    .crt-sidebar .text-amber-500 {
+    .crt-sidebar .text-blue-600,
+    .crt-sidebar .text-amber-600,
+    .crt-sidebar .text-amber-600 {
         color: var(--action-primary) !important;
         text-shadow: none;
     }
@@ -2403,7 +2405,7 @@
 
     .crt-sidebar .hover\:text-slate-300:hover,
     .crt-sidebar .hover\:text-white:hover,
-    .crt-sidebar .hover\:text-blue-400:hover {
+    .crt-sidebar .hover\:text-blue-600:hover {
         color: var(--text-primary) !important;
         text-shadow: none;
     }
@@ -2440,7 +2442,7 @@
         border-color: var(--stroke-default) !important;
     }
 
-    .crt-map-controls .text-slate-500,
+    .crt-map-controls .text-slate-600,
     .crt-map-controls .text-slate-600,
     .crt-map-controls .text-slate-900 {
         color: var(--text-secondary) !important;
@@ -2450,11 +2452,11 @@
         background: var(--surface-hover) !important;
     }
 
-    .crt-mobile-nav .text-slate-500 {
+    .crt-mobile-nav .text-slate-600 {
         color: var(--icon-muted) !important;
     }
 
-    .crt-mobile-nav .text-blue-400 {
+    .crt-mobile-nav .text-blue-600 {
         color: var(--action-primary) !important;
         text-shadow: none;
     }

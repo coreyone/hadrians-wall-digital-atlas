@@ -179,11 +179,7 @@
     }
 
     function animate() {
-        if (!isVisible) {
-            // Pause if not visible
-            animationFrameId = requestAnimationFrame(animate);
-            return;
-        }
+        if (!isVisible) return;
 
         animationFrameId = requestAnimationFrame(animate);
 
@@ -230,8 +226,14 @@
         observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
+                    const wasVisible = isVisible;
                     isVisible = entry.isIntersecting;
-                    if (entry.isIntersecting && !model && !error) {
+
+                    if (isVisible && !wasVisible && isLoaded) {
+                        animate();
+                    }
+
+                    if (isVisible && !model && !error) {
                         loadResources();
                     }
                 });
