@@ -22,7 +22,7 @@ self.addEventListener('install', (event) => {
 		);
 	}
 	event.waitUntil(addFilesToCache());
-    self.skipWaiting();
+	self.skipWaiting();
 });
 
 // 2. Activate: Cleanup old caches
@@ -31,7 +31,7 @@ self.addEventListener('activate', (event) => {
 		for (const key of await caches.keys()) {
 			if (key !== CACHE) await caches.delete(key);
 		}
-        await clients.claim();
+		await clients.claim();
 	}
 	event.waitUntil(deleteOldCaches());
 });
@@ -46,9 +46,9 @@ self.addEventListener('fetch', (event) => {
 	if (isLocalhost) return;
 
 	// Handle Map Tiles (OpenFreeMap & ESRI)
-	const isMapTile = url.host.includes('tiles.openfreemap.org') || 
-                      url.host.includes('services.arcgisonline.com') ||
-                      url.host.includes('demotiles.maplibre.org');
+	const isMapTile = url.host.includes('tiles.openfreemap.org') ||
+		url.host.includes('services.arcgisonline.com') ||
+		url.host.includes('demotiles.maplibre.org');
 	const isNavigation = event.request.mode === 'navigate';
 	const isSameOrigin = url.origin === self.location.origin;
 	const isBuildAsset = isSameOrigin && ASSET_SET.has(url.pathname);
@@ -110,15 +110,22 @@ self.addEventListener('fetch', (event) => {
 
 			try {
 				const response = await fetch(event.request);
-				
-                // Cache map tiles and same-origin build assets on-the-fly for offline use
+
+				// Cache map tiles and same-origin build assets on-the-fly for offline use
 				if (
 					(isMapTile && (response.ok || response.type === 'opaque')) ||
 					(isBuildAsset && response.ok)
 				) {
 					cache.put(event.request, response.clone());
 				}
-				
+
+				// Wallcast Audio Caching (Runtime)
+				// Cache .ogg/.mp3 files served from /wallcast/ or external if CORS allows
+				if (url.pathname.match(/\.(ogg|mp3|wav)$/) && response.ok) {
+					// Use a dedicated cache for large media if possible, but keeping it simple for now
+					cache.put(event.request, response.clone());
+				}
+
 				return response;
 			} catch {
 				// Fallback for failed fetches (offline)

@@ -1,0 +1,950 @@
+{
+  "version": "1.0",
+  "generated_at": "2023-10-27T10:00:00Z",
+  "episodes": [
+    {
+      "id": "test-ep-1",
+      "title": "The Roman Army",
+      "duration_seconds": 60,
+      "file_path": "/wallcast/test-audio.mp3",
+      "file_size_bytes": 1000,
+      "hash": "mock",
+      "script": {
+        "title": "Test",
+        "lines": []
+      },
+      "speakers": [
+        "scholar"
+      ],
+      "segment_id": "seg-test"
+    },
+    {
+      "id": "episode-1771551150099",
+      "title": "Hadrian's Enduring Line: An Imperial Frontier",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771551150099.mp3",
+      "file_size_bytes": 2049923,
+      "hash": "generated",
+      "script": {
+        "title": "Hadrian's Enduring Line: An Imperial Frontier",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Right here, beneath our feet, stretches a line that once defined an empire. Imagine standing at the very edge of the Roman world, a place where history isn't just told, it's etched into the very landscape.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Indeed. From Wallsend on the Tyne to Bowness-on-Solway, this wasn't just any barrier. Begun in AD 122 under Emperor Hadrian, it was a colossal feat of engineering: a formidable stone wall, augmented by massive ditches both front and rear. A tangible physical statement of Roman power, bristling with forts, smaller milecastles, and intervening turrets all along its considerable length.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "And a statement it was, not merely of defence, but of imperial ambition and pragmatism. Hadrian understood the economics of empire. This wall wasn't solely to keep 'barbarians' out; it was about defining a frontier, controlling trade, and legitimising Roman dominion. Those gates weren't just for military access; they were pivotal customs posts, regulating the flow of goods and people, shaping the economic landscape of Britannia.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "Yes, but to see it only as a military or economic frontier misses the point of daily life. This was a lived borderland. Think of the soldiers, yes, but also the families who often followed them, the traders, the local Britons who lived on both sides. It was a place of constant interaction, exchange, and negotiation, not just a stark 'civilization versus barbarism' divide. People crossed it, traded across it, perhaps even fell in love across it.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Absolutely. And that's the beauty of standing here today. You can almost hear the echoes of those lives, see the sentries on the ramparts, smell the cooking fires. Hadrian's Wall isn't just a ruin; it's a vibrant testament to human ingenuity, power, and connection. So, let's step along its ancient line, and uncover more of its incredible stories.",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "scholar",
+        "local"
+      ],
+      "segment_id": "seg-episode-1771551150099"
+    },
+    {
+      "id": "episode-1771562270794",
+      "title": "Hadrian's Wall: Where Empire Meets Earth",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771562270794.mp3",
+      "file_size_bytes": 1172012,
+      "hash": "generated",
+      "script": {
+        "title": "Hadrian's Wall: Where Empire Meets Earth",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Welcome to Wallcast, and an epic journey across one of history's most iconic frontiers! Imagine, as you stand here, a line stretching from your very feet. This isn't just a path; it’s a living timeline, laid over 1800 years ago.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Indeed. This colossal undertaking, begun in AD 122 under Emperor Hadrian, represents an astonishing feat of Roman engineering. From Wallsend on the River Tyne in the east to Bowness-on-Solway in the west, a stone wall, sometimes up to fifteen feet high, dissecting the entire width of the island. But it was far more than just a wall.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Picture it: massive ditches front and back, creating a formidable defensive zone. Along its length, large forts, smaller milecastles every Roman mile, and intervening turrets. It was a complete, integrated system designed to define and defend the boundary of Roman Britannia – a clear physical demarcation of their 'civilized' world.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "And that demarcation, David, was precisely the point. From an imperial perspective, Hadrian's Wall wasn't solely about repelling invaders. It was a colossal strategic statement. It solidified Rome's northernmost reach, clearly delineating territory, asserting power, and, crucially, establishing a fixed border to manage resources and, yes, control populations.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Consider the economics: the gates weren't merely military checkpoints. They almost certainly functioned as customs posts, controlling the movement of goods and people. This wasn't just defence; it was an exercise in geopolitical control and revenue generation, shaping a new economic frontier.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "Ah, but while the grand strategy and the monumental architecture are undeniable, what about the people who actually lived and died along this line? Imagine the soldiers, thousands of them, garrisoned in those forts, milecastles, and turrets. Far from home, in what must have seemed like the very edge of the world. Their daily lives were a blend of vigilance, boredom, camaraderie, and the subtle interactions that inevitably occur at any border.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "We often think of the Wall as an impenetrable barrier, but it was also a porous frontier. It defined a boundary, yes, but it didn't stop trade, diplomacy, or even families from crossing, exchanging ideas, goods, and cultures. It was a place where different worlds met, often peacefully, sometimes not. It wasn't just a military installation; it was a living, breathing landscape of human experience.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "And that, for me, is the magic of Hadrian's Wall. As you walk this ancient path, let your imagination connect the stone underfoot to those layers of history. Feel the strategic weight, the logistical marvel, and the vibrant, complex human stories woven into every stretch. Don't just see the ruins; see the arguments, feel the past. Notice differently. Keep exploring!",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "scholar",
+        "local"
+      ],
+      "segment_id": "seg-episode-1771562270794"
+    },
+    {
+      "id": "episode-1771565608036",
+      "title": "Hadrian's Wall: Stone, Soldiers, and Empire",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771565608036.mp3",
+      "file_size_bytes": 916460,
+      "hash": "generated",
+      "script": {
+        "title": "Hadrian's Wall: Stone, Soldiers, and Empire",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Alright, 'Wallcasters', welcome! You're standing right on the line of Hadrian's Wall, a monumental ribbon of stone stretching an incredible 73 miles across what was once the very edge of the Roman Empire! From Wallsend on the Tyne in the east, to Bowness-on-Solway in the west, this ancient frontier still carves its way across northern England.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Indeed, and when you look closely at the remnants around us, you begin to grasp the sheer audacity of its construction. Begun in AD 122 under Emperor Hadrian, this wasn't just a wall. It was a fully integrated defensive system: a stone barrier, massive V-shaped ditches both north and south, and a chain of large forts, smaller milecastles, and intervening turrets all along its length. A truly formidable expression of Roman military engineering.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "And that military prowess wasn't simply about keeping people out. From an imperial perspective, Hadrian's Wall was a colossal investment designed to solidify Roman control, define a clear imperial boundary, and perhaps most importantly, regulate movement. Those gates weren't solely for defence; they were likely customs posts, controlling trade and imposing taxes – a critical part of maintaining Britannia's economic value to Rome.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "Yes, and while we often imagine a stark military divide, what about the human story? Who were the soldiers garrisoned here? Not always Romans, but often men from across the empire – from Syria, Germany, Gaul – serving for decades. What was their daily life like, patrolling these windswept moors? We're talking about a vibrant, complex borderland, not just a static line. People lived, loved, traded, and died here, often integrating with the local populations, defying a simple 'civilization versus barbarism' narrative.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Absolutely fascinating! This wall isn't just an archaeological marvel; it's a testament to human ambition, conflict, and adaptation. As you continue along its path, let every stone, every dip in the ground, every distant vista tell you a piece of that incredible 2,000-year-old story. Keep exploring!",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "scholar",
+        "local"
+      ],
+      "segment_id": "seg-episode-1771565608036"
+    },
+    {
+      "id": "episode-1771566767477",
+      "title": "Carlisle Castle: Northern Bastion, Imperial Crossroads",
+      "duration_seconds": 758,
+      "file_path": "/wallcast/episode-1771566767477.mp3",
+      "file_size_bytes": 2145836,
+      "hash": "generated",
+      "script": {
+        "title": "Carlisle Castle: Northern Bastion, Imperial Crossroads",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Welcome, Wallcasters, to a place where history isn't just written in books, but etched into every weathered stone. We're standing today at Carlisle Castle, an imposing behemoth that dominates the Cumbrian skyline, a short distance from the western end of Hadrian's Wall. It's a structure that has witnessed over 900 years of tumultuous British history, a true palimpsest of power, conflict, and daily life. Let’s unravel its story.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Professor Frye, from an archaeological perspective, what immediately strikes you about this site and its origins?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Well, Dan, first and foremost, it's the sheer strategic brilliance of the location. We're on a natural ridge, overlooking the confluence of the Rivers Eden, Caldew, and Petteril. This wasn't just a convenient spot for a castle; it was a commanding position, an absolute linchpin for controlling the routes between England and Scotland, and critically, the fertile Solway Plain. It's no accident that the Romans built their fort of Luguvalium here, centuries before William Rufus arrived.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And that Roman presence is so crucial, isn't it? It grounds Carlisle in a much deeper, contested history than just the Norman Conquest. For the people who lived here, long before the castle, this was already a significant place. It shows how power structures, even across millennia, often gravitate to the same vital geographical points.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Precisely. William the Conqueror's initial push stopped at the Tees. It was his son, William II, Rufus, who in 1092 recognised the strategic imperative to extend English dominion northwards, deep into Cumbria. This wasn't just about defence; it was an act of aggressive imperial expansion, an attempt to 'civilise' what was perceived as a wild, ungovernable borderland. Carlisle was the spearhead of that strategy.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "So, from a wooden motte and bailey under William II, it transforms into this formidable stone keep we see today under Henry I around 1122. Professor Frye, can you describe the significance of that shift in material and what it entailed?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "The transition from timber to stone marks a fundamental shift in commitment and permanence. A wooden castle is a temporary assertion of power; a stone keep, like the one Henry I built here – one of the earliest and largest in England – is an indelible declaration. It's a massive investment in labour, resources, and engineering. It speaks of a king's long-term intention to hold this territory, to project power and deter challenges, particularly from the Scots.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And for the local population, the Brigantes who had lived here for centuries, then the Anglians, then the Norse-Gaels... what a sight it must have been. This wasn't just a military fort; it was a visible symbol of an entirely new authority, alien in its scale and construction. It must have totally reshaped their understanding of their world. Imagine the daily spectacle, the sheer human effort involved in quarrying and dragging that stone.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "And the cost, Mary, the sheer economic weight of such an undertaking. Building a stone castle of this magnitude wasn't just a matter of military strategy; it was an economic enterprise on an imperial scale. It drew resources, skilled labour, and administrative structures that redefined the region's economy. It was a tool of centralisation, a hub from which royal authority, law, and taxation could emanate.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "A fortress then, but also a microcosm of society. Mary, what can we infer about the 'lived experience' within these walls? Beyond the garrisons and sieges, what was daily life like for the people inside, and for the town growing up around it?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "Ah, the lived experience! It wasn't all grim. Castles were centres of administration, justice, and even hospitality. They housed garrisons, yes, but also their families, servants, chaplains, craftsmen. The Great Hall would have hosted banquets, courts, and negotiations. There was a constant flow of people, goods, and information. And crucially, it offered a degree of security to the town that grew up in its shadow, creating a reciprocal relationship – the castle needed the town's supplies, the town needed the castle's protection.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "We see the archaeological evidence of this reciprocal relationship. Excavations within the castle grounds and the immediate town show a rich material culture—pottery, tools, coinage—indicating a thriving economy despite the constant threat of conflict. The castle's architectural evolution, with later additions like the outer bailey and specific gatehouses, also reflects adjustments to accommodate more people and functions, not just purely defensive upgrades.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "The castle was truly at the sharp end of the Anglo-Scottish wars for centuries. Niall, how did its strategic role evolve through periods of intense conflict, like Edward I’s campaigns, and later, the Border Reivers?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Its role was paramount. For centuries, Carlisle Castle was the most important English fortress on the Scottish border. During the Wars of Scottish Independence, Edward I used it as his headquarters for his northern campaigns. It was besieged repeatedly – most notably by Robert Bruce in 1315. Holding Carlisle meant controlling the key invasion route, securing English supplies, and projecting power into Scotland. Without it, English control over the North was untenable.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Even during the Border Reivers era, when the conflict shifted from state-on-state warfare to localised raiding and lawlessness, the castle served as a bastion of royal authority, a prison, and a place of refuge. It was an unchanging anchor in a deeply unstable region.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And what an anchor! The castle's gates would have been a place of anxious waiting during raids, a place of relief when the Scottish raiders retreated. We know from contemporary accounts, like the Calendar of Border Papers, the incredible toll this constant low-level warfare took on communities. The castle wasn't just a structure; it was the psychological fulcrum of survival for many.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Speaking of people, one of its most famous residents was Mary Queen of Scots, imprisoned here in 1568. What can we piece together about her time within these walls, and what does it tell us about the castle's evolving function?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "Mary's imprisonment here is fascinating. While she was a royal prisoner, she wasn't kept in a dungeon. She resided in the Warden's Tower, a relatively comfortable apartment. It shows that even a formidable fortress could adapt to hold high-status prisoners, complete with their retinue. It symbolises the castle's transition from purely military stronghold to a state-controlled detention facility, a place where political leverage was maintained through enforced residence, rather than just physical confinement.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Architecturally, her quarters in the Warden's Tower would have offered a balance of security and comfort, with views out across the Eden. It was still very much part of the defensive circuit, but adapted. This flexibility in its design and purpose is a testament to its long life and continued relevance. Few medieval castles had such a sustained operational history.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Her presence here underscores the castle's enduring geopolitical importance. Elizabeth I understood that controlling Mary was key to controlling Scottish succession and preventing French or Catholic Spanish interference. Carlisle was the perfect place: secure, remote enough to limit communication, yet central enough to the borderlands to be a constant symbol of English power.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "And the story doesn't end there. The castle saw action again during the Civil War, and its very last major siege was during the Jacobite Rebellion of 1745. Professor Frye, what did these later conflicts reveal about the castle's adaptability in an age of gunpowder?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "The 17th and 18th centuries were a brutal test for medieval fortresses. While the keep itself was largely impervious to early cannon, the curtain walls and outer defences were vulnerable. We see evidence of adaptations – new gun platforms, bastions – but ultimately, it struggled against sustained artillery bombardment during the Civil War. Its fall to Parliamentary forces, and later its brief capture by Bonnie Prince Charlie, highlighted the limitations of even the most robust medieval design in the face of evolving siege warfare.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "The Jacobite siege brings us to an extraordinary human story, too. The castle was held by a small, ill-prepared English garrison, eventually surrendering to the Jacobites. Then, it was recaptured by the Duke of Cumberland after a short, bloody siege. The brutal reprisals that followed, with Jacobite prisoners executed right here, serve as a stark reminder of the harsh realities of loyalty and treason in a fractured nation.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "A true witness to profound shifts in power, technology, and identity. Niall, looking back, how does Carlisle Castle encapsulate the grand strategic narratives of British history?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "It’s a micro-history of Anglo-Scottish relations for almost a millennium. It represents England's persistent, often brutal, assertion of sovereignty over a contested borderland. It's a testament to the enduring power of geography in shaping political destiny and the colossal investment required to maintain imperial control. From Norman conquest to Jacobite rebellion, Carlisle Castle stands as a physical manifestation of a perpetually contested frontier, and a critical node in England's strategic defensive-offensive posture.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "And Mary, what enduring lessons can we take from Carlisle Castle about the intersection of human lives and grand historical forces?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "That underneath the grand narratives of kings and battles, there were always ordinary people living, working, fearing, and hoping. This castle wasn't just a static structure; it was a living, breathing community. It tells us that even the most formidable fortresses are shaped not just by strategic necessity, but by the everyday decisions and desires of the humans who built, defended, and ultimately, inhabited them. It's a reminder of the continuity of human experience through profound change.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "What an incredible journey through time and stone. Carlisle Castle is more than just a historical monument; it's a window into the soul of a nation, a testament to endurance, conflict, and adaptation. As you explore its keeps and courtyards, remember the layers of history beneath your feet, the strategic imperatives, the human stories, and the constant dialogue between landscape and power.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Walk differently, look differently, and let this magnificent castle speak to you of centuries of struggle and survival. Join us next time for more Wallcast explorations!",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "carlisle-castle"
+    },
+    {
+      "id": "episode-1771566872330",
+      "title": "Tullie: Carlisle's Cabinet of Curiosities and the Wall's Enduring Legacy",
+      "duration_seconds": 485,
+      "file_path": "/wallcast/episode-1771566872330.mp3",
+      "file_size_bytes": 592364,
+      "hash": "generated",
+      "script": {
+        "title": "Tullie: Carlisle's Cabinet of Curiosities and the Wall's Enduring Legacy",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Welcome, Wallcast listeners, to a journey deep into the heart of Hadrian's Wall country. We're in Carlisle today, a city whose very existence is woven into the fabric of this ancient frontier. And standing proudly amidst its historic streets is an institution that, for over a century, has been safeguarding and telling the stories of this landscape: the Tullie House Museum and Art Gallery, now simply known as Tullie.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Carlisle, or ancient Luguvalium, was never just 'behind' the Wall, was it? It was a critical hub. A fortress, a staging post, a civilian settlement that grew around the military might. The very ground beneath us screams strategic importance, a Roman presence that dictated so much of what followed.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Precisely, David. If Hadrian's Wall was Rome's geopolitical statement, then Carlisle was a key paragraph in that declaration. It was an essential node in the logistical network, controlling trade routes, troop movements, and projecting imperial authority into the Caledonian wilds. The sheer cost-benefit analysis of maintaining such a presence here, so far from Rome, tells you everything about its perceived value.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And yet, Niall, it wasn't just about the legions and the ledgers, was it? Carlisle became home. People lived, loved, traded, and died here. The artefacts we find, many now housed in Tullie, aren't just military records; they're glimpses into daily life, into the hopes and fears of those who populated this imperial frontier. It was a melting pot, not just a garrison.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Indeed, Mary. And it's that continuity of human endeavor that brings us to the Tullie House Museum itself. Opened in 1893 by the Carlisle Corporation. It's not a Roman structure, of course, but a product of Victorian civic pride, built on an earlier foundation.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "That's a crucial point, Dan. The original building is a converted Jacobean mansion. This architectural layering is fascinating. You have the bones of a 17th-century gentleman's residence, then the Victorian modifications to serve an entirely new, public function. It speaks volumes about how societies adapt and repurpose existing structures, much like Romans repurposed earlier forts.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "The Victorians, bless them, had a passion for collecting and classifying, didn't they? They saw museums, libraries, art schools, and technical schools – all initially housed within Tullie – as instruments of social improvement, education, and moral uplift. It wasn't just about displaying objects; it was about shaping citizens, giving them access to knowledge and culture.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "From an economic perspective, this was a clear investment in human capital. A local corporation funding such an ambitious project wasn't purely altruistic. It fostered an educated workforce, promoted local industry through technical training, and burnished Carlisle's image as a progressive, cultured centre. It was a soft power play, if you will, for a burgeoning industrial city.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "So, we have this Jacobean mansion, transformed, extended, and repurposed to house not just museum collections, but also a library, an art school, and a technical school. It sounds like a true community hub.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Think of the collections they would have amassed, especially from Hadrian's Wall. The Victorian antiquarians were prolific, sometimes controversially so, in their excavations. Tullie would have become a repository for inscriptions, sculptures, pottery – the physical evidence of that Roman frontier, often unearthed during railway building or agricultural expansion.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And the art school! Imagine the local artists sketching Roman reliefs, drawing inspiration from ancient forms. It created a dynamic interplay between the city's past and its contemporary creative spirit. It wasn't just a static display; it was a living, breathing educational ecosystem.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Which, ironically, echoes Rome's own strategy of cultural assimilation. By showcasing the 'greatness' of past civilisations, even an occupying one, it provided a narrative of progress and order that resonated with the Victorians' own imperial ambitions. The Wall, in this context, wasn't just a physical barrier but a symbol of civilization versus barbarism, a narrative that Tullie helped to perpetuate.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "That's a powerful connection, Niall. So, Tullie House becomes a lens through which Carlisle understands its past, from Roman legions to Jacobean gentry, and then projects that understanding into its future through education and art. And now, in 2024, it's rebranding, becoming simply 'Tullie'. What does that signify to you all?",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "I think it speaks to accessibility. 'Tullie' is simpler, more direct, perhaps less intimidating than 'Tullie House Museum and Art Gallery'. It suggests a desire to be more integrated into modern community life, to shed some of that Victorian formality while retaining its core purpose.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "It's about identity, isn't it? A confident assertion of its place in the modern cultural landscape, while still anchoring itself to the rich history it curates. It's a structure that adapts, much like the Wall itself adapted to changes in the frontier.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "It's a branding exercise, pure and simple. In an increasingly competitive cultural market, clarity and conciseness are assets. It signals a forward-thinking institution, ready to engage new audiences while honouring its legacy. A smart move to remain relevant and sustainable.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "So, whether you call it Tullie House or just Tullie, this institution remains a vital hub. It’s a place where the landscape, the deep time of indigenous presence, the Roman imperial strategy, the Jacobean architecture, and Victorian civic ambition all converge. It's a dynamic system, telling stories of power, design, and social life through its collections and its very being.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And for anyone walking the Wall, a visit here is essential. You'll find the personal stories, the myths debunked, and the everyday lives of those who once stood on this frontier brought vividly to life.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "And the physical evidence! The architectural fragments, the inscriptions – they are the arguments made by the Romans themselves, preserved for us to scrutinize and understand the realities of that 'civilized' frontier.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "It’s a masterclass in how local institutions can encapsulate grand narratives, providing crucial context for the grand strategy of empire and the economic drivers that shaped its reach.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "From Carlisle, at the western end of Hadrian's Wall, a city that embodies layers of history, we've explored how Tullie serves as its living memory. It's more than a building; it's a bridge between worlds. So, when you're next exploring this incredible landscape, stop by Tullie. Don't just see the Wall; understand the stories it holds, here, inside these walls. Walk differently, notice differently, and keep exploring. From all of us at Wallcast, thank you for listening.",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "tullie-house-museum"
+    },
+    {
+      "id": "episode-1771565778999",
+      "title": "Lanercost Priory: Chronicling the Borderlands",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771565778999.mp3",
+      "file_size_bytes": 1157804,
+      "hash": "generated",
+      "script": {
+        "title": "Lanercost Priory: Chronicling the Borderlands",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Standing here at Lanercost, you can feel the weight of history not just beneath your feet, but in the very air. We’re just a stone's throw from Hadrian’s Wall, yet we've stepped into a completely different era. This isn't Roman, but its story is just as compelling, rooted in the same tumultuous borderlands.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Nestled in this tranquil valley, with the River Irthing flowing nearby, lies the magnificent Lanercost Priory. Founded between 1165 and 1174, most likely 1169, by Robert de Vaux, it became home to Augustinian canons. Look up, and you might even spot Naworth Castle on the horizon, a constant visual reminder of the close, often complex, ties between these powerful establishments.",
+            "tone": "enthusiastic"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "Ah, the Augustinian canons. We often picture monks as utterly detached, living purely contemplative lives. But at Lanercost, that wasn't entirely the case. These men were active members of society, not just praying but managing estates, interacting with the local populace, and crucially, engaging intellectually. Their 'lived experience' here was far from isolated; it was deeply interwoven with the fabric of medieval border life. Imagine the quiet rhythm of their days, punctuated by prayer, study, and the constant awareness of a shifting, sometimes dangerous, world just beyond their walls.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "And those walls tell a story in themselves. The very architecture of Lanercost Priory speaks volumes about its resilience in a contested landscape. Unlike the linear, militaristic precision of Hadrian's Wall, this is a medieval monastic complex, robustly built yet designed for spiritual rather than purely defensive purposes. Yet, it had to endure. Think of the choice of stone, the thickness of the foundations—evidence of a community not only seeking spiritual solace but also needing to withstand the frequent raids and skirmishes that plagued these Anglo-Scottish marches. It's a testament to medieval construction and the enduring human will to build and rebuild in the face of adversity.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Indeed, resilience was key. Robert de Vaux's decision to found Lanercost Priory wasn't merely an act of piety; it was a strategic move within a complex geopolitical landscape. Placing a major monastic foundation here, within sight of his own Naworth Castle, served multiple purposes. It projected spiritual authority, yes, but also solidified feudal power and economic control in a volatile frontier zone. Monasteries, particularly wealthy ones, were significant economic actors, landowners, and sources of stability. In the context of the burgeoning Wars of Scottish Independence, a priory like Lanercost wasn't just a place of prayer; it was an intelligence hub, a potential refuge, and a crucial institution for maintaining order and influence in a region prone to flux. Its existence here was an imperial statement.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "And speaking of those tumultuous times, Lanercost Priory gifted us one of the most vital historical sources for this period: the Lanercost Chronicle. Compiled right here by the canons, it's a thirteenth-century history of England and, crucially, a detailed account of the Wars of Scottish Independence. It's an extraordinary lens through which to view these grand strategies and daily struggles.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "The Chronicle truly epitomizes the intellectual life fostered within these walls. These were literate men, documenting the events unfolding around them, from major political shifts to local happenings. It’s an invaluable 'primary source' that brings us so close to the fears, ambitions, and realities of people living in these borderlands. It's not just a collection of facts; it’s a narrative shaped by those who lived it, offering us an unfiltered glimpse into their world.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "From its founding to its role in chronicling an era, Lanercost Priory stands as a powerful reminder of how layers of history, faith, power, and human endeavour converge in places like this. It truly invites us to understand this landscape not just through Roman eyes, but through the eyes of those who came long after, shaping its identity anew.",
+            "tone": "enthusiastic"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "lanercost-priory"
+    },
+    {
+      "id": "episode-1771565805014",
+      "title": "Birdoswald (Banna): A Natural Bastion",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771565805014.mp3",
+      "file_size_bytes": 661100,
+      "hash": "generated",
+      "script": {
+        "title": "Birdoswald (Banna): A Natural Bastion",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Alright Wall-walkers, pause for a moment here. Feel that breeze? Look around! We're standing at Birdoswald, known to the Romans as Banna, and what a place it is. Below us, the River Irthing carves a broad, looping meander, dramatically bounded by sheer cliffs to our south and east. It’s absolutely breathtaking, and you can instantly grasp why this site was so significant!",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Indeed, Dan. From an archaeological standpoint, Banna is a prime example of Roman engineers exploiting natural geography. This triangular spur of land, those formidable cliffs – they provided an incredible defensive advantage, essentially creating a natural bastion. It meant less work for the legionaries in constructing formidable artificial defenses on those sides, allowing them to focus resources elsewhere.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Precisely. The Romans weren't merely building a wall; they were establishing a sophisticated control network. Birdoswald wasn't just another fort; it was a critical strategic node. Its elevated position commanded the river crossing, vital for movement and supply, and it sat prominently along the older Stanegate road. This site isn't just about protection; it's a bold projection of imperial power, leveraging the very landscape to assert control over the frontier.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And while we admire the grand strategy and the engineering, let's consider the lived experience. Imagine being stationed here, day in, day out. That dramatic landscape, yes, it offered security, but it also profoundly shaped daily life. The name 'Banna' itself, reflecting 'horn' or 'peak,' is rooted in this very terrain. It wasn't just a name on a map; it was the constant, towering backdrop to the lives of soldiers and the local Britons, a place defined by its dramatic embrace of the river.",
+            "tone": "neutral"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "birdoswald-roman-fort"
+    },
+    {
+      "id": "episode-1771565839808",
+      "title": "Magnis: Stanegate's Frontier Heart",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771565839808.mp3",
+      "file_size_bytes": 872300,
+      "hash": "generated",
+      "script": {
+        "title": "Magnis: Stanegate's Frontier Heart",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Alright, everyone, welcome to Carvoran Roman Fort! If you're walking the Stanegate path right now, or just imagining yourself here, you're standing on ground that tells a story even older than Hadrian's Wall itself.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Indeed. Before Hadrian's monumental barrier, Rome's grip on northern Britannia was defined by the Stanegate. Magnis, or Carvoran as we call it today, was a crucial strategic node on this earlier frontier.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "It was less about a physical wall and more about a strategic road, linking Coria in the east to Luguvalium in the west, allowing for rapid troop movement and logistical control. A dynamic, rather than static, display of power.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "And the evidence from the ground supports this. Digs here at Carvoran reveal the classic Roman military blueprint: fortifications designed not just for defense, but for projection. A clear line drawn, establishing 'Romanitas' against the perceived 'barbarism' beyond.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "This fort, even pre-Wall, speaks volumes about Rome's attempts to impose order on a volatile landscape, a smaller, earlier 'wall' of men and stone.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "But let's not just imagine soldiers marching. Magnis wasn't a sterile military camp; it was a living, breathing community. We find evidence not just of weaponry, but of domestic life – pottery, jewelry, even children's shoes.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "This was a place where cultures met and mingled, where locals interacted with the Roman military machine. A fascinating tapestry of daily life, often far removed from the grand pronouncements of emperors in Rome.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Absolutely, Mary. So, as you continue your journey along this ancient Stanegate, take a moment to really *feel* that earlier frontier. This wasn't just a placeholder until Hadrian's Wall arrived; it was Rome's first bold statement in this wild north.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Carvoran, Magnis, reminds us that history is layered, not linear. Keep those eyes peeled, keep exploring!",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "roman-army-museum"
+    },
+    {
+      "id": "episode-1771565869591",
+      "title": "Walltown's Silent Sentinels: Milecastle 45",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771565869591.mp3",
+      "file_size_bytes": 585836,
+      "hash": "generated",
+      "script": {
+        "title": "Walltown's Silent Sentinels: Milecastle 45",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Right here, the wind whips across Walltown Crags, a spectacular vantage point on Hadrian's Wall. It’s impossible not to feel the sheer scale of the landscape and the ambition of Rome. And nestled into this dramatic terrain, almost beneath our feet, lies the often-overlooked but crucial Milecastle 45. A single Roman mile west of the mighty fort of Aesica, this small outpost held a colossal strategic significance.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Indeed. While we might focus on the grandeur of the Wall itself, it was these milecastles, placed at every Roman mile, that truly punctuated Rome's presence. Milecastle 45, though largely reduced to its foundations now, would have been a robust, square stone structure, perhaps 60 Roman feet to a side. Its two main gates – one leading north, beyond the Wall, and another south, into Roman Britain – were meticulously built and guarded. Excavations here, though limited, reveal the typical soldier's detritus: pottery, fragments of iron tools, evidence of hearths. These aren't just ruins; they're precise architectural blueprints for maintaining control.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Precisely. The Milecastle system was the granular application of imperial power. It wasn't enough to build a linear barrier; the Wall needed to be actively controlled, patrolled, and its gateways regulated. Each milecastle served as a border control post, a mini-barracks, and a signaling station. This wasn't just about defence against the so-called 'barbarians' to the north; it was about defining and policing the edge of the empire, controlling trade, movement, and projecting an unwavering statement of Roman authority. The economic implications of controlling such a frontier, taxing goods, regulating passage, were immense.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And yet, behind that grand strategic vision, what was life actually like for the eight, maybe sixteen, men stationed here? Milecastle 45 wasn't a bustling fort. It was a small, often isolated outpost. Imagine the sheer monotony, the biting winds, the endless watch. Was it a glorious frontier posting, as we often romanticize? Or was it more likely a cold, sometimes terrifying, often mind-numbingly dull existence, far from home, surrounded by a landscape and perhaps people whose customs were alien? We talk of 'civilization versus barbarism,' but for the individual soldier, it was more likely about keeping warm, scrounging for decent rations, and enduring the long, dark nights. It's a reminder that even the grandest empires are built on the very human, very ordinary experiences of individuals.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Standing here, looking out over the undulating landscape, you can almost feel the presence of those soldiers. Their daily routines, their quiet endurance, all part of the vast tapestry of Hadrian's Wall. Milecastle 45 at Walltown isn't just a dot on a map; it's a window into the intersection of imperial strategy, architectural ingenuity, and the deeply human experience of life on the edge. Next time you walk this path, pause here. Look closely at the ground. Notice the subtle undulations. Understand that beneath your feet lies not just stone, but centuries of human endeavour, ambition, and adaptation. Keep exploring, and let the Wall whisper its stories.",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "walltown-crags"
+    },
+    {
+      "id": "episode-1771565912184",
+      "title": "Housesteads: An Eagle's Nest on the Wall",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771565912184.mp3",
+      "file_size_bytes": 1730540,
+      "hash": "generated",
+      "script": {
+        "title": "Housesteads: An Eagle's Nest on the Wall",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Standing here, high above the Northumberland landscape, you can feel the wind whip around you, carrying whispers from nearly two millennia ago. We’re at Housesteads Roman Fort, an auxiliary fort dramatically perched on the end of the formidable Whin Sill. Just look around – it's an incredible spot.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "And that dramatic positioning isn't accidental, it's a masterclass in Roman military engineering. The Whin Sill here provides a natural, near-impregnable defence on three sides. It's a textbook example of how they integrated their defensive architecture with the natural terrain.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Indeed. This wasn't merely a fort; it was a strategically vital observation post. From this commanding height, the Romans could monitor a vast swathe of the 'barbarian' territory to the north. It’s about intelligence gathering, projecting an image of unshakeable power, and maintaining control over the wider frontier economy, not just the immediate defence of the Wall.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "But let's not get too carried away with the 'civilization versus barbarism' narrative, fascinating as it is for the military minds. What does it mean for the actual people living here? Imagine the isolation! Far from home, buffeted by the elements, overlooking 'sparsely populated hills' – that's a polite way of saying 'miles from anywhere'. The daily grind, the cold, the sheer monotony must have been immense. It's not just about grand strategy; it's about the very human experience of being on the edge of the known world.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "That's such a crucial point, Mary. As you walk these ramparts, just take a moment to look out, truly absorb that view to the north. It’s breathtaking, but also stark. You can almost feel the exposure.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "And the archaeological evidence supports that sense of daily life. Beneath our feet are the remains of barracks, granaries, a hospital, even arguably the best-preserved Roman latrine system in Britain. These aren't just abstract structures; they're the tangible clues of a highly organised, yet deeply human, existence. We see wear on door sills, graffiti on stones, indicating the persistent presence of men trying to make a life here.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "The granaries, in particular, speak volumes. Their robust construction and underfloor ventilation systems indicate a long-term, self-sufficient commitment to maintaining this outpost. Supplying a fort like Housesteads, at this distance, was an enormous logistical and economic undertaking for the empire. It reflects the immense resources Rome was prepared to commit to secure its northernmost frontier.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And those granaries, those barracks... they tell us about the social fabric too. These weren't just soldiers; they were often men from all over the empire, living cheek-by-jowl. We find evidence of different diets, different cultural practices. They adapted, they traded, they found ways to socialise and cope with the unique challenges of this place. It's not just a military machine; it's a microcosm of Roman society at its furthest reach.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "Absolutely. Housesteads isn't just an impressive ruin; it's a living system layered over time, where geography, power, design, and social life all converge. So as you continue to explore, notice the textures of the stone, the sheer drop of the crag, and try to feel the weight of nearly two thousand years beneath your feet. It truly transforms your understanding of the Wall.",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "housesteads-roman-fort"
+    },
+    {
+      "id": "episode-1771565944093",
+      "title": "Cilurnum: Life at the Water's Edge",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771565944093.mp3",
+      "file_size_bytes": 1028396,
+      "hash": "generated",
+      "script": {
+        "title": "Cilurnum: Life at the Water's Edge",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "Alright everyone, pause for a moment right here, on this evocative bend of the River North Tyne. Feel the breeze, hear the water. Look around you. You’re standing on the footprint of Cilurnum, known to us now as Walwick Chesters Fort, a crucial jewel in Hadrian's Wall's crown!",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Indeed. This isn't just another fort; Cilurnum was strategically critical. Commanding this crucial river crossing, it safeguarded the Wall where it met the water. Our excavations reveal a particularly well-appointed cavalry fort, designed not just for defence but as a long-term projection of Roman might into a challenging landscape. The physical evidence of its meticulous construction tells its own story.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "And 'might' is the operative word. While the tactical considerations are clear, Cilurnum represented a colossal investment for the Roman Empire. This fort, with its resident cohort of cavalry, wasn't just about security; it was about asserting total control over the frontier, facilitating trade, and demonstrating Rome’s unwavering dominance. The economic drain was immense, but the strategic value, from an imperial perspective, was deemed invaluable.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "But let's peel back the layers of grand strategy and look at the lived experience. For centuries, this was home. The incredibly preserved bathhouse here at Chesters isn't just about Roman hygiene; it was a vibrant social hub! Imagine soldiers and civilians unwinding, gossiping, building community, miles from Rome. It tells us that even on the edge of the known world, life was rich, complex, and deeply human, far beyond mere military function.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "From the river's strategic embrace to the echoes of laughter in the bathhouse, Cilurnum truly encapsulates the Roman story on Hadrian’s Wall. It’s a place where imperial ambition met daily life. So, as we move on, let's carry these stories with us, understanding that every stone here has a tale to tell.",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "chesters-roman-fort"
+    },
+    {
+      "id": "episode-1771565982901",
+      "title": "Vindolanda: Whispers from the Roman Frontier",
+      "duration_seconds": 0,
+      "file_path": "/wallcast/episode-1771565982901.mp3",
+      "file_size_bytes": 1505708,
+      "hash": "generated",
+      "script": {
+        "title": "Vindolanda: Whispers from the Roman Frontier",
+        "lines": [
+          {
+            "speaker_id": "presenter",
+            "text": "We're standing just south of what would become Hadrian's Wall, but for a moment, let's step back in time even further. Because here, nestled near Bardon Mill, lies Vindolanda – a site that truly opens a window into Roman Britain, *before* the Wall even existed.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "Indeed. Vindolanda wasn't merely a camp; it was a strategically vital auxiliary fort, a 'castrum', securing the Stanegate – a precursor to the Wall itself. You can still trace the outlines of its defenses, layered over centuries of Roman occupation, a testament to enduring military presence.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "Precisely. Before the Wall became the definitive frontier, the Stanegate was Rome's logistical backbone across the north, linking the Tyne to the Solway Firth. Vindolanda's placement wasn't accidental; it was a calculated projection of imperial power, safeguarding communications and supply lines in a volatile frontier zone.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "And what's truly astonishing is that we don't just have foundations and grand strategy. Thanks to the remarkable Vindolanda tablets, we have the most intimate insights into the human story here. These aren't just military reports; they're shopping lists, party invitations, personal letters. They peel back the veneer of 'soldiering' to reveal real people, with real lives, real worries.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "It's incredible, isn't it? To think that these fragile, wooden leaves – the oldest surviving handwritten documents in Britain – survived almost two millennia in the anaerobic mud here, giving us names, conversations, and the very handwriting of people who lived on this frontier. It's not just history; it's a whisper from the past.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "archaeologist",
+            "text": "The unique preservation conditions, the waterlogged ground, transformed what would typically perish into an unparalleled archaeological trove. It allows us to reconstruct not just the fort's physical evolution, but the material culture, the diet, even the footwear of its inhabitants – details rarely captured with such clarity elsewhere.",
+            "tone": "neutral"
+          },
+          {
+            "speaker_id": "strategist",
+            "text": "And the economic implications were vast. Maintaining a fort like Vindolanda, with its garrisons, its civilian 'vicus' growing around it, required a constant flow of resources, manpower, and administrative oversight. It was an expensive, demanding venture, showcasing Rome's commitment to holding this distant edge of the empire.",
+            "tone": "serious"
+          },
+          {
+            "speaker_id": "scholar",
+            "text": "So, when you walk these ruins, don't just see stones. Imagine the centurion dictating a letter, the cook arguing over supplies, the birthday party invitation from Sulpicia Lepidina to Claudia Severa. Vindolanda humanizes the empire, showing us the everyday realities of life on a frontier, far from Rome's marble halls.",
+            "tone": "excited"
+          },
+          {
+            "speaker_id": "presenter",
+            "text": "And that's the magic of Vindolanda. It's not just about what the Romans built, but how they lived. So as you explore these layers of history, listen closely. You might just hear those ancient voices whispering across the centuries. What an extraordinary place.",
+            "tone": "excited"
+          }
+        ]
+      },
+      "speakers": [
+        "presenter",
+        "scholar"
+      ],
+      "segment_id": "vindolanda"
+    }
+  ],
+  "segments": [
+    {
+      "id": "seg-test",
+      "name": "Segedunum Roman Fort",
+      "coordinates": [
+        [
+          54.9881,
+          -1.5349
+        ]
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "seg-episode-1771551150099",
+      "name": "Hadrian's Enduring Line: An Imperial Frontier",
+      "coordinates": [
+        [
+          54.9881,
+          -1.6194
+        ]
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "seg-episode-1771562270794",
+      "name": "Hadrian's Wall: Where Empire Meets Earth",
+      "coordinates": [
+        [
+          54.9881,
+          -1.6194
+        ]
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "seg-episode-1771565608036",
+      "name": "Hadrian's Wall: Stone, Soldiers, and Empire",
+      "coordinates": [
+        [
+          54.9881,
+          -1.6194
+        ]
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "carlisle-castle",
+      "name": "Carlisle Castle",
+      "coordinates": [
+        -2.9419,
+        54.8973
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "tullie-house-museum",
+      "name": "Tullie House Museum",
+      "coordinates": [
+        -2.94,
+        54.896
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "lanercost-priory",
+      "name": "Lanercost Priory",
+      "coordinates": [
+        -2.6949,
+        54.9662
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "birdoswald-roman-fort",
+      "name": "Birdoswald Roman Fort",
+      "coordinates": [
+        -2.6023,
+        54.9894
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "roman-army-museum",
+      "name": "Roman Army Museum",
+      "coordinates": [
+        -2.513,
+        54.991
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "walltown-crags",
+      "name": "Walltown Crags",
+      "coordinates": [
+        -2.5061,
+        54.9927
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "housesteads-roman-fort",
+      "name": "Housesteads Roman Fort",
+      "coordinates": [
+        -2.331,
+        55.013
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "chesters-roman-fort",
+      "name": "Chesters Roman Fort",
+      "coordinates": [
+        -2.139,
+        55.026
+      ],
+      "distance_miles": 0
+    },
+    {
+      "id": "vindolanda",
+      "name": "Vindolanda",
+      "coordinates": [
+        -2.3608,
+        54.9911
+      ],
+      "distance_miles": 0
+    }
+  ]
+}

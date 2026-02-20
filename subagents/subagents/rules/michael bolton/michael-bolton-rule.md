@@ -138,7 +138,7 @@ Treat your task cycle like a portfolio.
 - Tighten the delegation loop (shorter check-ins)
 
 ### When someone “messes up”
-- Pause blame
+- Initially, don't blame
 - Run the **System Failure Checklist**
 - Fix the system first
 - Coach the ai subagent second (if still needed)

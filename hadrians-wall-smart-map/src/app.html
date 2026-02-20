@@ -23,8 +23,11 @@
 	                </head>
 	
 	                <body data-sveltekit-preload-data="hover">
-	                        <div style="display: contents">%sveltekit.body%</div>
+	                        <div style="display: contents" id="app">%sveltekit.body%</div>
+                            <!-- Portal Roots for Design System Overlay Framework -->
+                            <div id="popover-root"></div>
+                            <div id="overlay-root"></div>
+                            <div id="toast-root"></div>
 	                </body>
-	        
 	
 </html>

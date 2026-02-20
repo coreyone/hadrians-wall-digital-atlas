@@ -155,13 +155,18 @@
   --motion-ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
 
-  /* Layering + opacity */
-  --z-base: 1;
+  /* Layering + opacity: Canonical Design System Tokens */
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-popover: 200;
+  --z-overlay: 400;
+  --z-toast: 600;
+
+  /* Legacy aliases (to be phased out to prevent z-index inflation) */
   --z-map-controls: 30;
   --z-drawer: 40;
   --z-nav: 50;
   --z-hud: 60;
-  --z-toast: 70;
   --opacity-disabled: 0.4;
   --opacity-muted: 0.72;
 

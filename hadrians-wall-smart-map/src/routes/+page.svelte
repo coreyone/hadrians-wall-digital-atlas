@@ -20,8 +20,21 @@
     import type { NavigationMetrics } from "$lib/services/navigation";
     import { runBlobMorph } from "$lib/utils/blobMorph";
     import Coin3D, { prefetchCoin } from "$lib/components/Coin3D.svelte";
+    import EpisodeCard from "$lib/components/wallcast/EpisodeCard.svelte";
+    import { wallcast } from "$lib/wallcast/store.svelte";
+    import type { Episode } from "$lib/server/wallcast/schema";
+    import { Radio } from "lucide-svelte";
 
     let { data }: { data: PageData } = $props();
+
+    let episodes = $derived(
+        (data as any).wallcastData?.episodes || [],
+    ) as Episode[];
+    $effect(() => {
+        if (wallcast.playlist.length === 0 && episodes.length > 0) {
+            wallcast.playlist = episodes;
+        }
+    });
 
     interface POI {
         title: string;
@@ -54,7 +67,7 @@
     let hasTouch = $state(false);
     let isOnline = $state(true);
 
-    type AppMode = "plan" | "explore";
+    type AppMode = "plan" | "explore" | "cast";
     let mode = $state<AppMode>("plan");
     let selectedStageId = $state<number | null>(null);
     let mapStyle = $state("topo");
@@ -79,7 +92,7 @@
     let coinMorphBusy = $state(false);
     let splashMinElapsed = $state(false);
     let mapReady = $state(false);
-    let showSplash = $state(false); 
+    let showSplash = $state(false);
 
     // Rule of Least Surprise: Start true on portable if not already loaded
     $effect.pre(() => {
@@ -95,7 +108,7 @@
 
             isMobile = mql.matches;
             isPortable = portableMql.matches;
-            hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
             isSidebarOpen = !isPortable;
 
             const handleMedia = (e: MediaQueryListEvent) => {
@@ -148,7 +161,7 @@
     const COMPASS_NOTICE_DELAY_MS = 3200;
     const MOBILE_SPLASH_MIN_VISIBLE_MS = 2200;
     const MOBILE_SPLASH_HARD_TIMEOUT_MS = 6000;
-    
+
     const planAvgSpeedMidLabel = `${planAvgSpeedMidMph.toFixed(2)} MPH`;
     const PLAN_LIGHT_START_DATE_KEY = "2026-04-11";
     const PLAN_LIGHT_END_DATE_KEY = "2026-04-20";
@@ -1079,7 +1092,8 @@
                             onclick={handleCoinTap}
                             class="flex items-center justify-center rounded-full border transition-all duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] touch-none {$hikerMode.isActive
                                 ? 'h-9 w-9'
-                                : 'h-8 w-8'} {coinMetallic || $hikerMode.isActive
+                                : 'h-8 w-8'} {coinMetallic ||
+                            $hikerMode.isActive
                                 ? 'border-amber-200/70 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.35)]'
                                 : 'border-amber-300/40 bg-white/95 shadow-[0_0_8px_rgba(251,191,36,0.15)]'} {coinAnimating
                                 ? 'scale-110 rotate-[360deg]'
@@ -1149,6 +1163,14 @@
                         ? 'ds-segmented-btn-active bg-white shadow-sm text-slate-900'
                         : 'ds-segmented-btn-inactive text-slate-500 hover:text-slate-600 hover:bg-slate-100'}"
                     >Explore</button
+                >
+                <button
+                    onclick={() => (mode = "cast")}
+                    class="ds-segmented-btn flex-1 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 {mode ===
+                    'cast'
+                        ? 'ds-segmented-btn-active bg-white shadow-sm text-slate-900'
+                        : 'ds-segmented-btn-inactive text-slate-500 hover:text-slate-600 hover:bg-slate-100'}"
+                    >Cast</button
                 >
             </div>
         </header>
@@ -1549,6 +1571,42 @@
                                 </div>
                             </div>
                         {/each}
+                    </div>
+                </div>
+            {:else if mode === "cast"}
+                <div class="p-4 space-y-4" in:fade>
+                    <div class="mb-4 space-y-1">
+                        <h2
+                            class="text-[14px] font-black tracking-[0.05em] uppercase text-slate-900 leading-tight"
+                        >
+                            Wallcast
+                        </h2>
+                        <p
+                            class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500"
+                        >
+                            Audio stories unlocked by your journey
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-3 pb-8">
+                        {#if episodes.length === 0}
+                            <div
+                                class="rounded-xl border border-slate-200/60 bg-white/50 p-6 text-center shadow-sm"
+                            >
+                                <p
+                                    class="text-[11px] font-bold uppercase text-slate-600"
+                                >
+                                    No episodes available yet.
+                                </p>
+                                <p class="text-[11px] text-slate-500 mt-2">
+                                    Check back later for new stories.
+                                </p>
+                            </div>
+                        {:else}
+                            {#each episodes as episode}
+                                <EpisodeCard {episode} />
+                            {/each}
+                        {/if}
                     </div>
                 </div>
             {:else if selectedPOI}
@@ -2188,17 +2246,16 @@
                 class="ds-control-pack flex bg-white/95 border border-slate-200 shadow-2xl overflow-hidden rounded-lg"
                 style="-webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);"
             >
-                                <button
-                                    onclick={() => (mapStyle = "topo")}
-                                    class="ds-control-btn {isPortable
-                                        ? 'px-3 py-2 text-[10px]'
-                                        : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
-                                    'topo'
-                                        ? 'ds-control-btn-active bg-slate-900 text-white'
-                                        : 'text-slate-600 active:bg-slate-50'}"
-                                    >Topo</button
-                                >
-                
+                <button
+                    onclick={() => (mapStyle = "topo")}
+                    class="ds-control-btn {isPortable
+                        ? 'px-3 py-2 text-[10px]'
+                        : 'px-2.5 py-1.5 text-[9px]'} font-black uppercase transition-all {mapStyle ===
+                    'topo'
+                        ? 'ds-control-btn-active bg-slate-900 text-white'
+                        : 'text-slate-600 active:bg-slate-50'}">Topo</button
+                >
+
                 <button
                     onclick={() => (mapStyle = "satellite")}
                     class="ds-control-btn {isPortable
@@ -2239,7 +2296,7 @@
                 : ''}"
             style="-webkit-backdrop-filter: blur(20px);"
         >
-        >
+            >
             <div class="flex items-center justify-around h-16">
                 <button
                     onclick={() => {
@@ -2273,6 +2330,25 @@
                     <span
                         class="text-[9px] font-black uppercase tracking-widest"
                         >Explore</span
+                    >
+                </button>
+                <button
+                    onclick={() => {
+                        mode = "cast";
+                        isSidebarOpen = true;
+                        selectedPOI = null;
+                    }}
+                    class="flex flex-col items-center gap-1 flex-1 {mode ===
+                        'cast' && isSidebarOpen
+                        ? 'text-blue-600'
+                        : 'text-slate-600'}"
+                >
+                    <div class="flex items-center justify-center h-6 w-6">
+                        <Radio size={20} strokeWidth={2} />
+                    </div>
+                    <span
+                        class="text-[9px] font-black uppercase tracking-widest"
+                        >Cast</span
                     >
                 </button>
                 <button

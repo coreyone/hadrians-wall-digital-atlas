@@ -15,11 +15,15 @@
     } from "$lib/data/trail";
     import { routeVariants } from "$lib/data/routes";
     import { fetchWikiPOIs, type WikiPOI } from "$lib/services/wikipedia";
-    import { selectRenderableWikiPOIs, getClusteredWikiPOIs } from "$lib/utils/wikiPins";
+    import {
+        selectRenderableWikiPOIs,
+        getClusteredWikiPOIs,
+    } from "$lib/utils/wikiPins";
     import {
         navigationService,
         type NavigationMetrics,
     } from "$lib/services/navigation";
+    import { wallcast } from "$lib/wallcast/store.svelte";
 
     interface Props {
         initialPOIs?: WikiPOI[];
@@ -486,6 +490,9 @@
             return;
         }
         renderNearbyFloatingPOIs([userLocation.lng, userLocation.lat]);
+
+        // Wallcast Geo-unlock
+        wallcast.checkProximity(userLocation.lat, userLocation.lng);
     });
 
     let paceMarkers: maplibregl.Marker[] = [];
@@ -793,7 +800,9 @@
     let lastUiUpdate = 0;
     let recoveryAttempt = 0;
     let isTrackingBackgrounded = false;
-    let trackingState = $state<"HIGH_ACCURACY" | "LOW_POWER" | "ERROR">("LOW_POWER");
+    let trackingState = $state<"HIGH_ACCURACY" | "LOW_POWER" | "ERROR">(
+        "LOW_POWER",
+    );
     let lastStableCoord: [number, number] | null = null;
 
     function clearWatch() {
@@ -1199,11 +1208,15 @@
             });
 
             map?.on("style.load", () => {
-                const source = map?.getSource("trail") as maplibregl.GeoJSONSource;
+                const source = map?.getSource(
+                    "trail",
+                ) as maplibregl.GeoJSONSource;
                 if (source) source.setData(trailGeoJSON as any);
 
                 if (initialPOIs.length > 0) {
-                    initialPOIs.forEach(poi => allWikiPOIs.set(poi.pageid, poi));
+                    initialPOIs.forEach((poi) =>
+                        allWikiPOIs.set(poi.pageid, poi),
+                    );
                     refreshWikiMarkers();
                 }
                 preloadWikiPOIsForHikerSection();
@@ -1416,7 +1429,9 @@
         href="https://www.google.com/maps/search/?api=1&query={mouseCoords.lat},{mouseCoords.lng}"
         target="_blank"
         rel="noopener noreferrer"
-        class="ds-panel absolute {isMobile ? 'bottom-20 right-4' : 'bottom-4 right-12'} z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm hover:text-blue-600 hover:border-blue-300 transition-colors tabular-nums active:scale-95"
+        class="ds-panel absolute {isMobile
+            ? 'bottom-20 right-4'
+            : 'bottom-4 right-12'} z-10 px-2 py-1 bg-white/90 backdrop-blur border border-slate-200 rounded-sm text-[9px] font-mono font-bold text-slate-500 shadow-sm hover:text-blue-600 hover:border-blue-300 transition-colors tabular-nums active:scale-95"
         title="Open in Google Maps"
     >
         {mouseCoords.lat.toFixed(5)}°N {Math.abs(mouseCoords.lng).toFixed(5)}°W
