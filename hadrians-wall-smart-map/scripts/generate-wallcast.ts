@@ -1,6 +1,5 @@
 
 import { parseArgs } from "util";
-import { z } from "zod";
 
 // Basic CLI argument parsing
 const { values } = parseArgs({
@@ -14,6 +13,12 @@ const { values } = parseArgs({
         },
         force: {
             type: 'boolean',
+        },
+        'min-minutes': {
+            type: 'string',
+        },
+        'target-minutes': {
+            type: 'string',
         },
         help: {
             type: 'boolean',
@@ -31,6 +36,8 @@ if (values.help) {
     --segment <id>  Generate audio for a specific segment only
     --dry-run       Run the pipeline without calling external APIs (LLM/TTS)
     --force         Overwrite existing audio files
+    --min-minutes   Enforce a minimum script duration in minutes (default: 8)
+    --target-minutes  Target script duration in minutes (default: 15)
     --help          Show this help message
   `);
     process.exit(0);
@@ -49,7 +56,52 @@ import path from 'path';
 const outputDir = path.join(process.cwd(), 'static', 'wallcast');
 const manifestPath = path.join(outputDir, 'manifest.json');
 
-const generateEpisode = async (topic: string, siteData?: any) => {
+type WallcastManifest = {
+    version: string;
+    generated_at: string;
+    episodes: any[];
+    segments: any[];
+};
+
+const createEmptyManifest = (): WallcastManifest => ({
+    version: "1.0",
+    generated_at: new Date().toISOString(),
+    episodes: [],
+    segments: []
+});
+
+const readManifest = (): WallcastManifest => {
+    if (!fs.existsSync(manifestPath)) {
+        return createEmptyManifest();
+    }
+
+    try {
+        const parsed = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as Partial<WallcastManifest>;
+        return {
+            version: parsed.version ?? "1.0",
+            generated_at: parsed.generated_at ?? new Date().toISOString(),
+            episodes: Array.isArray(parsed.episodes) ? parsed.episodes : [],
+            segments: Array.isArray(parsed.segments) ? parsed.segments : []
+        };
+    } catch {
+        console.warn("Could not parse existing manifest. Starting from empty manifest in memory.");
+        return createEmptyManifest();
+    }
+};
+
+const toSegmentId = (name: string): string =>
+    name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+const WORDS_PER_MINUTE = 130;
+
+const estimateDurationSecondsFromWords = (wordCount: number): number =>
+    Math.round((wordCount / WORDS_PER_MINUTE) * 60);
+
+const generateEpisode = async (topic: string, minMinutes: number, targetMinutes: number, siteData?: any) => {
     console.log(`\nGenerating Wallcast for: '${topic}'...`);
     console.log("-----------------------");
 
@@ -64,19 +116,32 @@ const generateEpisode = async (topic: string, siteData?: any) => {
 
     // 2. Script Generation
     console.log("2. Generating Script...");
-    const script = await generateScript(wikiData.extract.substring(0, 8000));
+    const script = await generateScript(wikiData.extract.substring(0, 8000), {
+        minMinutes,
+        targetMinutes
+    });
     if (!script) {
         console.error(`Failed to generate script for ${topic}.`);
         return;
     }
+    const totalWords = script.lines.reduce((acc, line) => acc + line.text.split(/\s+/).filter(Boolean).length, 0);
+    const estimatedDurationSeconds = estimateDurationSecondsFromWords(totalWords);
+
+    if (estimatedDurationSeconds < Math.round(minMinutes * 60)) {
+        console.error(
+            `Generated script too short (${(estimatedDurationSeconds / 60).toFixed(1)}m), minimum is ${minMinutes}m. Skipping ${topic}.`
+        );
+        return;
+    }
+
     console.log(`   Title: ${script.title}`);
     console.log(`   Lines: ${script.lines.length}`);
+    console.log(`   Estimated Runtime: ${(estimatedDurationSeconds / 60).toFixed(1)} minutes`);
 
     // 3. TTS Synthesis
     console.log("3. Synthesizing Audio...");
     const audioFiles: string[] = [];
 
-    const BATCH_SIZE = 1;
     for (const [index, line] of script.lines.entries()) {
         try {
             // Low noise console
@@ -113,22 +178,10 @@ const generateEpisode = async (topic: string, siteData?: any) => {
 
         // 6. Update Manifest
         console.log("5. Updating Manifest...");
-        let manifest: { version: string, generated_at: string, episodes: any[], segments: any[] } = { version: "1.0", generated_at: new Date().toISOString(), episodes: [], segments: [] };
-
-        if (fs.existsSync(manifestPath)) {
-            try {
-                manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-            } catch (e) {
-                console.warn("Could not parse existing manifest.");
-            }
-        }
+        const manifest = readManifest();
 
         const newEpisodeId = path.basename(finalEpisodePath, '.mp3');
         const newSegmentId = siteData?.id || `seg-${newEpisodeId}`;
-
-        // Calculate estimated duration (130 WPM average speaking rate)
-        const totalWords = script.lines.reduce((acc, line) => acc + line.text.split(/\s+/).length, 0);
-        const estimatedDurationSeconds = Math.round((totalWords / 130) * 60);
 
         // Check if episode already exists for this segment
         const existingIdx = manifest.episodes.findIndex(e => e.segment_id === newSegmentId);
@@ -165,6 +218,7 @@ const generateEpisode = async (topic: string, siteData?: any) => {
             manifest.segments.push(segmentData);
         }
 
+        manifest.generated_at = new Date().toISOString();
         fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
         console.log(`✅ Completed: ${script.title}`);
 
@@ -188,22 +242,49 @@ const main = async () => {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
+    const minMinutes = Math.max(1, Number(values['min-minutes'] ?? "8"));
+    const targetMinutes = Math.max(minMinutes, Number(values['target-minutes'] ?? "15"));
+
+    if (!Number.isFinite(minMinutes) || !Number.isFinite(targetMinutes)) {
+        console.error("Error: --min-minutes and --target-minutes must be valid numbers.");
+        process.exit(1);
+    }
+    console.log(`Duration settings: minimum ${minMinutes}m, target ${targetMinutes}m`);
+
     // Determine topics
     let topics = englishHeritageSites.map(site => ({
         name: site.name,
-        id: site.name.toLowerCase().replace(/\s+/g, '-'),
+        id: toSegmentId(site.name),
         coords: site.coords
     }));
 
     if (values.segment) {
-        topics = topics.filter(t => t.id === values.segment || t.name.includes(values.segment as string));
+        const segmentQuery = String(values.segment).toLowerCase();
+        topics = topics.filter(t => t.id === segmentQuery || t.name.toLowerCase().includes(segmentQuery));
+    }
+
+    if (!values.force) {
+        const manifest = readManifest();
+        const existingSegmentIds = new Set(
+            manifest.episodes
+                .map((episode) => episode?.segment_id)
+                .filter((segmentId): segmentId is string => typeof segmentId === 'string' && segmentId.length > 0)
+        );
+
+        const beforeCount = topics.length;
+        topics = topics.filter((topic) => !existingSegmentIds.has(topic.id));
+        const skippedCount = beforeCount - topics.length;
+
+        if (skippedCount > 0) {
+            console.log(`Skipping ${skippedCount} existing episode(s). Use --force to regenerate.`);
+        }
     }
 
     console.log(`Found ${topics.length} sites to process.`);
 
     for (const topic of topics) {
         try {
-            await generateEpisode(topic.name, topic);
+            await generateEpisode(topic.name, minMinutes, targetMinutes, topic);
         } catch (e) {
             console.error(`❌ Global error processing ${topic.name}:`, e);
         }

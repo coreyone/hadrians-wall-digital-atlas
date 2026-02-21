@@ -38,6 +38,39 @@
         }
     });
 
+    const toSegmentId = (name: string): string =>
+        name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+
+    const heritageSegmentIdByName: Record<string, string> = Object.fromEntries(
+        englishHeritageSites.map((site) => [site.name, toSegmentId(site.name)]),
+    );
+
+    let selectedHeritageSegmentId = $derived.by(() => {
+        const poiName = selectedPOI?.name || selectedPOI?.title;
+        if (!poiName) return null;
+        return heritageSegmentIdByName[poiName] ?? null;
+    });
+
+    let selectedHeritageEpisode = $derived.by(() => {
+        if (!selectedHeritageSegmentId) return null;
+        return (
+            episodes.find(
+                (episode) => episode.segment_id === selectedHeritageSegmentId,
+            ) ?? null
+        );
+    });
+
+    const formatEpisodeRuntime = (durationSeconds: number): string => {
+        const total = Math.max(0, Math.round(durationSeconds || 0));
+        const mins = Math.floor(total / 60);
+        const secs = total % 60;
+        return `${mins}:${String(secs).padStart(2, "0")}`;
+    };
+
     interface POI {
         title: string;
         summary?: string;
@@ -106,44 +139,8 @@
     let coinMorphBusy = $state(false);
     let splashMinElapsed = $state(false);
     let mapReady = $state(false);
-    let showSplash = $state(false);
-
-    // Rule of Least Surprise: Start true on portable if not already loaded
-    $effect.pre(() => {
-        if (isPortable && !mapReady) {
-            showSplash = true;
-        }
-    });
-
-    $effect(() => {
-        if (typeof window !== "undefined") {
-            const mql = window.matchMedia(MOBILE_MQ);
-            const portableMql = window.matchMedia(PORTABLE_MQ);
-
-            isMobile = mql.matches;
-            isPortable = portableMql.matches;
-            hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-            isSidebarOpen = !isPortable;
-
-            const handleMedia = (e: MediaQueryListEvent) => {
-                isMobile = e.matches;
-            };
-            const handlePortableMedia = (e: MediaQueryListEvent) => {
-                isPortable = e.matches;
-                isSidebarOpen = !e.matches;
-                if (!e.matches) {
-                    showSplash = false;
-                }
-            };
-            mql.addEventListener("change", handleMedia);
-            portableMql.addEventListener("change", handlePortableMedia);
-
-            return () => {
-                mql.removeEventListener("change", handleMedia);
-                portableMql.removeEventListener("change", handlePortableMedia);
-            };
-        }
-    });
+    let showSplash = $state(true);
+    let mapBootstrapped = $state(false);
     let ukNowTick = $state(Date.now());
     let compassHeading = $state(0);
     let compassNeedsCalibration = $state(false);
@@ -173,8 +170,8 @@
     const COMPASS_FALLBACK_EXIT_MS = 1400;
     const COMPASS_HEADING_HOLD_MS = 8000;
     const COMPASS_NOTICE_DELAY_MS = 3200;
-    const MOBILE_SPLASH_MIN_VISIBLE_MS = 2200;
-    const MOBILE_SPLASH_HARD_TIMEOUT_MS = 6000;
+    const SPLASH_MIN_VISIBLE_MS = 2200;
+    const SPLASH_HARD_TIMEOUT_MS = 6000;
 
     const planAvgSpeedMidLabel = `${planAvgSpeedMidMph.toFixed(2)} MPH`;
     const PLAN_LIGHT_START_DATE_KEY = "2026-04-11";
@@ -356,11 +353,29 @@
         // Prefetch 3D coin assets when idle
         prefetchCoin();
 
+        const mql = window.matchMedia(MOBILE_MQ);
+        const portableMql = window.matchMedia(PORTABLE_MQ);
+
+        isMobile = mql.matches;
+        isPortable = portableMql.matches;
+        hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+        isSidebarOpen = !isPortable;
+
         const handleOnline = () => (isOnline = true);
         const handleOffline = () => (isOnline = false);
         isOnline = navigator.onLine;
         window.addEventListener("online", handleOnline);
         window.addEventListener("offline", handleOffline);
+
+        const handleMedia = (e: MediaQueryListEvent) => {
+            isMobile = e.matches;
+        };
+        const handlePortableMedia = (e: MediaQueryListEvent) => {
+            isPortable = e.matches;
+            isSidebarOpen = !e.matches;
+        };
+        mql.addEventListener("change", handleMedia);
+        portableMql.addEventListener("change", handlePortableMedia);
 
         const ukTickInterval = setInterval(() => {
             ukNowTick = Date.now();
@@ -368,22 +383,25 @@
 
         let splashMinTimer: ReturnType<typeof setTimeout> | null = null;
         let splashHardTimer: ReturnType<typeof setTimeout> | null = null;
-        if (isPortable) {
-            showSplash = true;
-            splashMinElapsed = false;
-            splashMinTimer = setTimeout(() => {
-                splashMinElapsed = true;
-                if (mapReady) {
-                    showSplash = false;
-                }
-            }, MOBILE_SPLASH_MIN_VISIBLE_MS);
-            splashHardTimer = setTimeout(() => {
-                splashMinElapsed = true;
-                if (showSplash) {
-                    showSplash = false;
-                }
-            }, MOBILE_SPLASH_HARD_TIMEOUT_MS);
-        }
+        showSplash = true;
+        splashMinElapsed = false;
+        splashMinTimer = setTimeout(() => {
+            splashMinElapsed = true;
+            if (mapReady) {
+                showSplash = false;
+            }
+        }, SPLASH_MIN_VISIBLE_MS);
+        splashHardTimer = setTimeout(() => {
+            splashMinElapsed = true;
+            if (showSplash) {
+                showSplash = false;
+            }
+        }, SPLASH_HARD_TIMEOUT_MS);
+
+        // Ensure splash paints first; map initializes one frame later.
+        requestAnimationFrame(() => {
+            mapBootstrapped = true;
+        });
 
         const unsubscribeCompass = compassService.subscribe((state) => {
             compassHeading = state.heading;
@@ -417,6 +435,8 @@
         return () => {
             window.removeEventListener("online", handleOnline);
             window.removeEventListener("offline", handleOffline);
+            mql.removeEventListener("change", handleMedia);
+            portableMql.removeEventListener("change", handlePortableMedia);
             clearInterval(ukTickInterval);
             if (splashMinTimer) clearTimeout(splashMinTimer);
             if (splashHardTimer) clearTimeout(splashHardTimer);
@@ -714,7 +734,7 @@
 
     function handleMapReady() {
         mapReady = true;
-        if (isPortable && splashMinElapsed) {
+        if (splashMinElapsed) {
             showSplash = false;
         }
     }
@@ -938,11 +958,25 @@
         aria-live="polite"
         aria-label="Loading Hadrian Atlas"
     >
-        <img
-            src="/loading-screen-hadrians-wall-path-map.webp"
-            alt=""
-            class="absolute inset-0 h-full w-full object-cover splash-image"
-        />
+        <picture>
+            <source
+                media="(min-width: 820px) and (max-width: 1366px) and (orientation: landscape) and (pointer: coarse)"
+                srcset="/Hadrian-Splash-Loading-4-3.webp"
+            />
+            <source
+                media="(min-width: 1180px)"
+                srcset="/Hadrian-Splash-Loading-16-9.webp"
+            />
+            <source
+                media="(min-width: 768px)"
+                srcset="/Hadrian-Splash-Loading-4-3.webp"
+            />
+            <img
+                src="/loading-screen-hadrians-wall-path-map.webp"
+                alt=""
+                class="absolute inset-0 h-full w-full object-cover splash-image"
+            />
+        </picture>
         <div
             class="absolute inset-0 bg-gradient-to-b from-slate-950/25 via-slate-900/40 to-slate-950/90"
         ></div>
@@ -1019,11 +1053,20 @@
                         title="Triple Tap Roman Coin"
                     >
                         <div class="h-full w-full relative">
-                            <Coin3D
-                                bind:this={headerCoinRef}
-                                class="w-full h-full drop-shadow-sm"
-                                interactive={false}
-                            />
+                            {#if $hikerMode.isActive}
+                                <Coin3D
+                                    bind:this={headerCoinRef}
+                                    class="w-full h-full drop-shadow-sm"
+                                    interactive={false}
+                                />
+                            {:else}
+                                <img
+                                    src="/logo-coin.png"
+                                    alt="Roman Coin"
+                                    class="w-full h-full object-contain p-1 drop-shadow-sm transition-opacity duration-300"
+                                    loading="eager"
+                                />
+                            {/if}
                         </div>
                     </button>
                     <div
@@ -1118,11 +1161,20 @@
                             title="Triple Tap Roman Coin"
                         >
                             <div class="h-full w-full relative">
-                                <Coin3D
-                                    bind:this={headerCoinRef}
-                                    class="w-full h-full drop-shadow-sm"
-                                    interactive={false}
-                                />
+                                {#if $hikerMode.isActive}
+                                    <Coin3D
+                                        bind:this={headerCoinRef}
+                                        class="w-full h-full drop-shadow-sm"
+                                        interactive={false}
+                                    />
+                                {:else}
+                                    <img
+                                        src="/logo-coin.png"
+                                        alt="Roman Coin"
+                                        class="w-full h-full object-contain p-1 drop-shadow-sm transition-opacity duration-300"
+                                        loading="eager"
+                                    />
+                                {/if}
                             </div>
                         </button>
                     {/if}
@@ -1758,6 +1810,51 @@
                             "{selectedPOI.summary ||
                                 "Extracting archaeological data..."}"
                         </div>
+
+                        {#if selectedHeritageEpisode}
+                            <div
+                                class="bg-blue-500/5 border border-blue-500/15 p-4 rounded-lg space-y-3"
+                            >
+                                <span
+                                    class="text-[10px] font-black uppercase text-blue-700 tracking-[0.15em] flex items-center gap-2"
+                                >
+                                    <Radio size={13} strokeWidth={2} />
+                                    Wallcast Episode
+                                </span>
+                                <p
+                                    class="text-[12px] text-slate-700 font-semibold leading-relaxed text-pretty"
+                                >
+                                    Continue this stop with its paired audio
+                                    episode.
+                                </p>
+                                <div
+                                    class="rounded-md border border-blue-200/60 bg-white/80 px-3 py-2 flex items-center justify-between gap-3"
+                                >
+                                    <span
+                                        class="text-[12px] font-black text-slate-900 tracking-tight text-pretty"
+                                        >{selectedHeritageEpisode.title}</span
+                                    >
+                                    <span
+                                        class="text-[10px] font-black uppercase text-blue-700 tracking-wider text-nowrap"
+                                        >{formatEpisodeRuntime(
+                                            selectedHeritageEpisode.duration_seconds,
+                                        )}</span
+                                    >
+                                </div>
+                                <button
+                                    onclick={() => {
+                                        wallcast.loadEpisode(
+                                            selectedHeritageEpisode,
+                                        );
+                                        mode = "cast";
+                                        isSidebarOpen = true;
+                                    }}
+                                    class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-black text-[10px] uppercase tracking-widest transition-all shadow-glow flex items-center gap-2"
+                                >
+                                    Listen on Wallcast {@html icons.arrowRight}
+                                </button>
+                            </div>
+                        {/if}
                     </div>
                 </div>
             {:else}
@@ -2125,28 +2222,35 @@
 
     <main class="flex-1 relative bg-slate-100 overflow-hidden">
         <div class="absolute inset-0">
-            <Map
-                bind:this={mapComponent}
-                initialPOIs={data.initialPOIs}
-                {isVIP}
-                bind:selectedPOI
-                {selectedStageId}
-                {mapStyle}
-                {selectedRoute}
-                {isHeadingUp}
-                isMobile={isPortable}
-                {showMilestones}
-                hikerActive={$hikerMode.isActive}
-                hikerHeading={$hikerMode.heading}
-                hikerSimplified={$hikerMode.simplifiedHUD}
-                lowPowerMode={$hikerMode.isLowBattery}
-                freezeMap={Boolean(hikerIntelCard)}
-                onPoiSelect={handlePOIClick}
-                onNavigationUpdate={handleNavigationUpdate}
-                onHikerPoiSelect={handleHikerPoiSelect}
-                onMapReady={handleMapReady}
-                onInteraction={wakeCoins}
-            />
+            {#if mapBootstrapped}
+                <Map
+                    bind:this={mapComponent}
+                    initialPOIs={data.initialPOIs}
+                    {isVIP}
+                    bind:selectedPOI
+                    {selectedStageId}
+                    {mapStyle}
+                    {selectedRoute}
+                    {isHeadingUp}
+                    isMobile={isPortable}
+                    {showMilestones}
+                    hikerActive={$hikerMode.isActive}
+                    hikerHeading={$hikerMode.heading}
+                    hikerSimplified={$hikerMode.simplifiedHUD}
+                    lowPowerMode={$hikerMode.isLowBattery}
+                    freezeMap={Boolean(hikerIntelCard)}
+                    onPoiSelect={handlePOIClick}
+                    onNavigationUpdate={handleNavigationUpdate}
+                    onHikerPoiSelect={handleHikerPoiSelect}
+                    onMapReady={handleMapReady}
+                    onInteraction={wakeCoins}
+                />
+            {:else}
+                <div
+                    class="h-full w-full bg-slate-100"
+                    aria-hidden="true"
+                ></div>
+            {/if}
         </div>
 
         {#if hikerIntelCard}

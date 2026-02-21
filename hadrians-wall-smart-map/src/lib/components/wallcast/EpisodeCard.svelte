@@ -29,6 +29,55 @@
         const s = Math.floor(seconds % 60);
         return `${m}:${s.toString().padStart(2, "0")}`;
     }
+
+    function getSummary(text: string | undefined) {
+        if (!text) return "";
+        // Extract sentences
+        const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+
+        // Skip generic greetings/intros
+        const genericIntros = [
+            "welcome",
+            "alright",
+            "hello",
+            "hi there",
+            "back again",
+            "joining us",
+        ];
+        let startIndex = 0;
+
+        while (startIndex < sentences.length) {
+            const s = sentences[startIndex].toLowerCase();
+            const isGeneric = genericIntros.some((g) => s.includes(g));
+            // Only skip if it's short AND generic
+            if (isGeneric && s.length < 60) {
+                startIndex++;
+            } else {
+                break;
+            }
+        }
+
+        let summary = (sentences[startIndex] || sentences[0]).trim();
+
+        // If it's still very short, try to append the next sentence if it fits "one sentence summary" vibe
+        if (summary.length < 40 && sentences[startIndex + 1]) {
+            summary += " " + sentences[startIndex + 1].trim();
+        }
+
+        // Final trim and limit
+        if (summary.length > 140) {
+            summary = summary.slice(0, 137) + "...";
+        }
+
+        return summary;
+    }
+
+    const description = $derived(
+        getSummary(
+            episode.script.lines.find((l) => l.speaker_id === "presenter")
+                ?.text,
+        ) || episode.script.title,
+    );
 </script>
 
 <div
@@ -87,10 +136,7 @@
                         ? formatTime(wallcast.duration)
                         : formatTime(episode.duration_seconds)}
                 </span>
-                {episode.script.lines.find((l) => l.speaker_id === "presenter")
-                    ?.text ||
-                    episode.script.lines[0]?.text ||
-                    episode.script.title}
+                {description}
             </p>
         </div>
     </div>
