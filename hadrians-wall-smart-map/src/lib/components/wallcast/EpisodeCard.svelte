@@ -73,11 +73,13 @@
 
         <div class="flex-1 space-y-1.5 pt-1 pr-6">
             <h3
-                class="font-display text-xl font-bold leading-tight text-[var(--text-primary)]"
+                class="font-display text-xl font-bold leading-tight text-[var(--text-primary)] [text-wrap:balance]"
             >
                 {episode.title}
             </h3>
-            <p class="font-ui text-sm text-[var(--text-secondary)]">
+            <p
+                class="font-ui text-sm text-[var(--text-secondary)] [text-wrap:pretty]"
+            >
                 <span
                     class="font-data mr-2 rounded border border-[var(--stroke-subtle)] bg-[var(--surface-raised)] px-1.5 py-0.5 text-xs font-medium text-[var(--text-secondary)] shadow-sm"
                 >
@@ -85,7 +87,10 @@
                         ? formatTime(wallcast.duration)
                         : formatTime(episode.duration_seconds)}
                 </span>
-                {episode.script.title}
+                {episode.script.lines.find((l) => l.speaker_id === "presenter")
+                    ?.text ||
+                    episode.script.lines[0]?.text ||
+                    episode.script.title}
             </p>
         </div>
     </div>
