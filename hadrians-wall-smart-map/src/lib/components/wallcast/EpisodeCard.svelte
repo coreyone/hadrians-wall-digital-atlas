@@ -39,24 +39,18 @@
     onkeydown={(e) => e.key === "Enter" && handlePlay()}
 >
     <!-- Status Badge -->
-    <div class="absolute right-4 top-4 z-0">
+    <div class="absolute right-4 top-4 z-10">
         {#if isCurrent}
-            <div
-                class="font-data flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--success-500)]"
-            >
-                <span class="relative flex h-2 w-2">
-                    {#if isPlaying}
-                        <span
-                            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--success-500)] opacity-75"
-                        ></span>
-                    {/if}
+            <span class="relative flex h-2 w-2">
+                {#if isPlaying}
                     <span
-                        class="relative inline-flex h-2 w-2 rounded-full bg-[var(--success-500)]"
+                        class="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--success-500)] opacity-75"
                     ></span>
-                </span>
-                Now Playing
-            </div>
-            <Check size={18} class="text-[var(--icon-muted)]" />
+                {/if}
+                <span
+                    class="relative inline-flex h-2 w-2 rounded-full bg-[var(--success-500)]"
+                ></span>
+            </span>
         {/if}
     </div>
 
@@ -77,7 +71,7 @@
             {/if}
         </button>
 
-        <div class="flex-1 space-y-1.5 pt-1">
+        <div class="flex-1 space-y-1.5 pt-1 pr-6">
             <h3
                 class="font-display text-xl font-bold leading-tight text-[var(--text-primary)]"
             >
