@@ -17,7 +17,12 @@
     }
 
     function closePlayer() {
-        wallcast.closePlayer();
+        if (wallcast.playbackState === "playing") {
+            wallcast.pause();
+            wallcast.seek(0);
+        } else {
+            wallcast.closePlayer();
+        }
     }
 
     function formatTime(seconds: number) {
@@ -35,9 +40,8 @@
 
 {#if isVisible && episode}
     <div
-        use:portal={"toast-root"}
         transition:fly={{ y: 150, duration: 400, opacity: 0 }}
-        class="fixed bottom-[88px] md:bottom-6 left-4 right-4 z-[var(--z-toast)] mx-auto max-w-xl safe-m-bottom md:left-64 md:right-auto"
+        class="absolute bottom-[108px] lg:bottom-10 left-1/2 -translate-x-1/2 z-[var(--z-toast)] w-[calc(100%-2rem)] max-w-xl mx-auto safe-m-bottom"
     >
         <div
             class="ds-panel ds-panel-strong relative flex flex-col overflow-hidden rounded-2xl border border-stone-200/50 bg-white/95 p-4 shadow-2xl backdrop-blur-xl dark:border-stone-700/50 dark:bg-stone-900/95 dark:shadow-black/60 {wallcast.playbackState ===

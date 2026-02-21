@@ -115,7 +115,8 @@
         renderer = new THREE.WebGLRenderer({
             alpha: true,
             antialias: true,
-            powerPreference: "high-performance",
+            powerPreference: "low-power",
+            precision: "mediump",
         });
         renderer.setSize(width, height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -182,10 +183,10 @@
             // Wrap in pivot for stable animation/centering
             pivot = new THREE.Group();
             pivot.add(model);
-            
+
             // Move pivot down -1.8 units to center within the UI circle
             pivot.position.y = -1.8;
-            
+
             scene.add(pivot);
             isLoaded = true;
             animate();
@@ -203,6 +204,10 @@
         resizeObserver.observe(container);
     }
 
+    const FPS_LIMIT = 30;
+    const FRAME_MIN_TIME = 1000 / FPS_LIMIT;
+    let lastRenderTime = 0;
+
     function animate() {
         if (!isVisible || !browser || isSleeping) return;
 
@@ -214,11 +219,15 @@
 
         animationFrameId = requestAnimationFrame(animate);
 
+        const now = performance.now();
+        if (now - lastRenderTime < FRAME_MIN_TIME) return;
+        lastRenderTime = now;
+
         if (pivot && renderer && scene && camera) {
             const time = performance.now() * 0.001;
 
             // Floating effect - oscillates around the offset y=-1.8
-            pivot.position.y = -1.8 + (Math.sin(time * 2) * 0.15);
+            pivot.position.y = -1.8 + Math.sin(time * 2) * 0.15;
 
             // Base spin - only if hiker mode is active
             if ($hikerMode.isActive) {

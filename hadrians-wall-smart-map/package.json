@@ -43,15 +43,17 @@
 		"@fontsource/ia-writer-mono": "^5.2.5",
 		"@fontsource/ia-writer-quattro": "^5.2.5",
 		"@hackernoon/pixel-icon-library": "^1.0.6",
+		"@netlify/blobs": "^10.7.0",
 		"@turf/turf": "^7.3.4",
-		"@types/three": "^0.183.0",
+		"@types/three": "^0.170.0",
 		"clsx": "^2.1.1",
 		"howler": "^2.2.4",
 		"lucide-svelte": "^0.574.0",
 		"maplibre-gl": "^5.18.0",
 		"rpg-awesome": "^0.2.0",
 		"tailwind-merge": "^3.4.1",
-		"three": "^0.183.0",
+		"three": "^0.170.0",
+		"three-stdlib": "^2.36.1",
 		"zod": "^4.3.6"
 	}
 }

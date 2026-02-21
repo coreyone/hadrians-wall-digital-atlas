@@ -648,3 +648,53 @@ button {
     transition-duration: 1ms !important;
   }
 }
+
+/* Base scale for live tracker avatar */
+.live-tracker-scale {
+  transition: transform cubic-bezier(0.2, 0, 0, 1) 0.3s;
+  transform-origin: center center;
+}
+
+/* Scaling based on the parent map zoom state classes */
+.zoom-state-z4 .live-tracker-scale {
+  transform: scale(0.25);
+}
+
+.zoom-state-z5 .live-tracker-scale {
+  transform: scale(0.3);
+}
+
+.zoom-state-z6 .live-tracker-scale {
+  transform: scale(0.35);
+}
+
+.zoom-state-z7 .live-tracker-scale {
+  transform: scale(0.4);
+}
+
+.zoom-state-z8 .live-tracker-scale {
+  transform: scale(0.5);
+}
+
+.zoom-state-z9 .live-tracker-scale {
+  transform: scale(0.6);
+}
+
+.zoom-state-z10 .live-tracker-scale {
+  transform: scale(0.7);
+}
+
+.zoom-state-z11 .live-tracker-scale {
+  transform: scale(0.8);
+}
+
+.zoom-state-z12 .live-tracker-scale {
+  transform: scale(0.9);
+}
+
+.zoom-state-z13 .live-tracker-scale,
+.zoom-state-z14 .live-tracker-scale,
+.zoom-state-z15 .live-tracker-scale,
+.zoom-state-z16 .live-tracker-scale {
+  transform: scale(1);
+}

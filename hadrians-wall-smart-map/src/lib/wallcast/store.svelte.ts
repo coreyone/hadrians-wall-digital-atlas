@@ -163,12 +163,14 @@ export class WallcastStore {
     play() {
         if (this._sound) {
             this._sound.play();
+            this.playbackState = 'playing';
         }
     }
 
     pause() {
         if (this._sound) {
             this._sound.pause();
+            this.playbackState = 'paused';
         }
     }
 
@@ -193,6 +195,9 @@ export class WallcastStore {
     closePlayer() {
         this.unload();
         this.currentEpisode = null;
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('wallcast_last_episode');
+        }
     }
 
     private _startProgressLoop() {

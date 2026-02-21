@@ -38,6 +38,8 @@ interface HikerState {
     driftMeters: number;
     isOffTrail: boolean;
     badges: HikerBadge[];
+    liveBattery?: number;
+    liveLastSeen?: string;
 }
 
 const initialState: HikerState = {
@@ -71,7 +73,9 @@ const initialState: HikerState = {
     weatherCondition: 'Partly Cloudy',
     driftMeters: 0,
     isOffTrail: false,
-    badges: []
+    badges: [],
+    liveBattery: undefined,
+    liveLastSeen: undefined
 };
 
 function createHikerStore() {

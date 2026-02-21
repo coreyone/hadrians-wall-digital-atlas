@@ -1,23 +1,7 @@
 {
   "version": "1.0",
-  "generated_at": "2023-10-27T10:00:00Z",
+  "generated_at": "2026-02-21T00:21:50.422Z",
   "episodes": [
-    {
-      "id": "test-ep-1",
-      "title": "The Roman Army",
-      "duration_seconds": 60,
-      "file_path": "/wallcast/test-audio.mp3",
-      "file_size_bytes": 1000,
-      "hash": "mock",
-      "script": {
-        "title": "Test",
-        "lines": []
-      },
-      "speakers": [
-        "scholar"
-      ],
-      "segment_id": "seg-test"
-    },
     {
       "id": "episode-1771551150099",
       "title": "Hadrian's Enduring Line: An Imperial Frontier",

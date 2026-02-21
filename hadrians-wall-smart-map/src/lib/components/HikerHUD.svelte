@@ -117,6 +117,49 @@
                 />
             </div>
         </button>
+
+        {#if $hikerMode.liveLastSeen}
+            <div
+                class="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-max text-center transition-all duration-300 {hideTopCoin
+                    ? 'opacity-0 scale-95'
+                    : 'opacity-100 scale-100'}"
+            >
+                <div
+                    class="inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 backdrop-blur border border-amber-500/30 px-2.5 py-1 text-[10px] font-black tracking-widest text-white shadow-lg"
+                >
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"
+                        ></span>
+                        <span
+                            class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"
+                        ></span>
+                    </span>
+                    <span class="uppercase text-amber-200">Live</span>
+                    {#if $hikerMode.liveBattery !== undefined && $hikerMode.liveBattery > 0}
+                        <span class="text-slate-400">·</span>
+                        <span class="text-emerald-400 flex items-center gap-1">
+                            <i class="hn hn-battery-full text-[12px]"></i>
+                            iPhone {$hikerMode.liveBattery}%
+                        </span>
+                    {/if}
+                    <span class="text-slate-400">·</span>
+                    <span class="text-slate-300">
+                        {(() => {
+                            const lastSeenTime = new Date(
+                                $hikerMode.liveLastSeen,
+                            ).getTime();
+                            const now = Date.now();
+                            const diffMs = Math.max(0, now - lastSeenTime);
+                            const diffMins = Math.floor(diffMs / 60000);
+                            return diffMins === 0
+                                ? "Just now"
+                                : `${diffMins}m ago`;
+                        })()}
+                    </span>
+                </div>
+            </div>
+        {/if}
     </div>
 </div>
 

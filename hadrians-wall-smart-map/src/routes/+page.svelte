@@ -4,6 +4,7 @@
     import HikerHUD from "$lib/components/HikerHUD.svelte";
     import { hikerMode } from "$lib/stores/hikerMode";
     import type { PageData } from "./$types";
+    import { page } from "$app/stores";
     import { fetchPageSummary } from "$lib/services/wikipedia";
     import {
         itinerary,
@@ -24,6 +25,7 @@
     import { wallcast } from "$lib/wallcast/store.svelte";
     import type { Episode } from "$lib/server/wallcast/schema";
     import { Radio } from "lucide-svelte";
+    import WallcastPlayer from "$lib/components/wallcast/WallcastPlayer.svelte";
 
     let { data }: { data: PageData } = $props();
 
@@ -56,6 +58,18 @@
     const isBrowser = typeof window !== "undefined";
     const PORTABLE_MQ = "(max-width: 1020px)";
     const MOBILE_MQ = "(max-width: 767px)";
+
+    let isVIP = $state(false);
+    $effect(() => {
+        if (typeof window !== "undefined") {
+            if ($page.url.searchParams.get("vip") === "true") {
+                isVIP = true;
+                localStorage.setItem("isVIP", "true");
+            } else if (localStorage.getItem("isVIP") === "true") {
+                isVIP = true;
+            }
+        }
+    });
 
     let isSidebarOpen = $state(true);
     let selectedPOI = $state<POI | null>(null);
@@ -2114,6 +2128,7 @@
             <Map
                 bind:this={mapComponent}
                 initialPOIs={data.initialPOIs}
+                {isVIP}
                 bind:selectedPOI
                 {selectedStageId}
                 {mapStyle}
@@ -2286,6 +2301,9 @@
                 >
             {/if}
         </div>
+
+        <!-- Mini Player Centered in Map Area -->
+        <WallcastPlayer />
     </main>
 
     <!-- Absolute Bottom Tab Bar (Mobile/Tablet) - using absolute instead of fixed to align with h-dvh container -->

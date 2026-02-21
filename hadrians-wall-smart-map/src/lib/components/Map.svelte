@@ -23,7 +23,9 @@
         navigationService,
         type NavigationMetrics,
     } from "$lib/services/navigation";
+    import { initAvatar3D } from "$lib/utils/avatar3D";
     import { wallcast } from "$lib/wallcast/store.svelte";
+    import { hikerMode } from "$lib/stores/hikerMode";
 
     interface Props {
         initialPOIs?: WikiPOI[];
@@ -44,6 +46,7 @@
         onHikerPoiSelect?: (poi: any) => void;
         onMapReady?: () => void;
         onInteraction?: () => void;
+        isVIP?: boolean;
     }
 
     let {
@@ -65,7 +68,13 @@
         onHikerPoiSelect,
         onMapReady,
         onInteraction,
+        isVIP = false,
     }: Props = $props();
+
+    let trackerBaseSize = 150;
+    let trackerFacing = 75;
+    let trackerVertical = -50;
+    let trackerScale = 100;
 
     let mapContainer: HTMLDivElement;
     let map = $state<maplibregl.Map | null>(null);
@@ -97,6 +106,16 @@
         "Chollerford",
         "Corbridge",
     ];
+
+    // Live Tracking (VIP Mode)
+    let liveTrackerMarker: maplibregl.Marker | null = null;
+    let liveLocationInterval: ReturnType<typeof setInterval> | null = null;
+    let lastLiveLocation = $state<{
+        lat: number;
+        lon: number;
+        batt?: number;
+        updatedAt?: string;
+    } | null>(null);
 
     const styles: Record<string, any> = {
         streets: "https://tiles.openfreemap.org/styles/bright",
@@ -1227,10 +1246,15 @@
                 updatePOIs();
                 refreshWikiMarkers();
             });
+
+            if (isVIP) {
+                startLiveTracking();
+            }
         }
 
         return () => {
             stopGlowPulse();
+            stopLiveTracking();
             clearFloatingMarkers();
             clearPaceMarkers();
             clearWikiMarkers();
@@ -1417,6 +1441,113 @@
     export function triggerLocateMe() {
         locateMe();
     }
+
+    // --- LIVE VIP TRACKING LOGIC ---
+    let liveTracker3DCleanup: (() => void) | null = null;
+    async function fetchLiveLocation() {
+        if (!map) return;
+        try {
+            const res = await fetch("/api/location");
+            if (!res.ok) return;
+
+            const { data } = await res.json();
+            if (data && data.lat && data.lon) {
+                lastLiveLocation = data;
+
+                hikerMode.updateMetrics({
+                    liveBattery: data.batt,
+                    liveLastSeen: data.updatedAt,
+                });
+
+                // Update or create the marker
+                if (!liveTrackerMarker) {
+                    const el = document.createElement("div");
+                    el.className =
+                        "relative z-50 pointer-events-none group live-tracker-scale";
+                    // Use CSS variable for dynamic sizing from slider
+                    el.style.width = `var(--tracker-base-size)`;
+                    el.style.height = `var(--tracker-base-size)`;
+                    el.style.marginTop = `calc(var(--tracker-base-size) / -2)`;
+                    el.style.marginLeft = `calc(var(--tracker-base-size) / -2)`;
+                    el.innerHTML = `
+                        <div class="absolute inset-0 flex items-center justify-center drop-shadow-[0_0_15px_rgba(245,158,11,0.8)] filter view-3d-active">
+                            <canvas class="w-full h-full" id="avatar-canvas"></canvas>
+                        </div>
+                        <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="text-amber-300">COREY</span>
+                            <span class="mx-1 text-slate-500">•</span>
+                            <span class="${data.batt && data.batt < 20 ? "text-rose-400" : "text-emerald-400"}">${data.batt ? data.batt + "%" : "??%"}</span>
+                        </div>
+                    `;
+                    liveTrackerMarker = new maplibregl.Marker({ element: el })
+                        .setLngLat([data.lon, data.lat])
+                        .addTo(map);
+
+                    const canvasEl = el.querySelector(
+                        "#avatar-canvas",
+                    ) as HTMLCanvasElement;
+                    if (canvasEl) {
+                        try {
+                            liveTracker3DCleanup = initAvatar3D(canvasEl, {
+                                facing: trackerFacing,
+                                verticalNudge: trackerVertical,
+                                scalePercent: trackerScale,
+                            });
+                        } catch (err) {
+                            console.error("Failed to init 3D Avatar", err);
+                        }
+                    }
+
+                    // Initial fly-to if we just found him for the first time
+                    // map.flyTo({ center: [data.lon, data.lat], zoom: 11, duration: 2500 });
+                } else {
+                    liveTrackerMarker.setLngLat([data.lon, data.lat]);
+                    // Update the battery indicator in the tooltip if needed
+                    const tooltip = liveTrackerMarker
+                        .getElement()
+                        .querySelector(".bg-slate-900\\/90");
+                    if (tooltip) {
+                        tooltip.innerHTML = `
+                            <span class="text-amber-300">COREY</span>
+                            <span class="mx-1 text-slate-500">•</span>
+                            <span class="${data.batt && data.batt < 20 ? "text-rose-400" : "text-emerald-400"}">${data.batt ? data.batt + "%" : "??%"}</span>
+                        `;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Live tracking poll failed:", e);
+        }
+    }
+
+    function startLiveTracking() {
+        if (liveLocationInterval) return;
+        fetchLiveLocation(); // Initial fetch
+        liveLocationInterval = setInterval(fetchLiveLocation, 30000); // Poll every 30s
+    }
+
+    function stopLiveTracking() {
+        if (liveLocationInterval) {
+            clearInterval(liveLocationInterval);
+            liveLocationInterval = null;
+        }
+        if (liveTracker3DCleanup) {
+            liveTracker3DCleanup();
+            liveTracker3DCleanup = null;
+        }
+        if (liveTrackerMarker) {
+            liveTrackerMarker.remove();
+            liveTrackerMarker = null;
+        }
+    }
+
+    $effect(() => {
+        if (isVIP) {
+            startLiveTracking();
+        } else {
+            stopLiveTracking();
+        }
+    });
 </script>
 
 <div
@@ -1424,6 +1555,7 @@
         zoomLevel,
     )}"
     bind:this={mapContainer}
+    style="--tracker-base-size: {trackerBaseSize}px; --tracker-facing: {trackerFacing}deg; --tracker-vertical: {trackerVertical}; --tracker-scale: {trackerScale}"
 >
     <a
         href="https://www.google.com/maps/search/?api=1&query={mouseCoords.lat},{mouseCoords.lng}"

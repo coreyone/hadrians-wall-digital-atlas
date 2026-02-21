@@ -11,5 +11,3 @@
 </script>
 
 {@render children()}
-
-<WallcastPlayer />
